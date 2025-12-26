@@ -284,8 +284,6 @@ def cmd_reset(args):
         print(f"📁 找到 {len(raw_files)} 个RAW文件")
         stats = exiftool_mgr.batch_reset_metadata(raw_files, log_callback=print)
         print(f"✅ 已重置 {stats['success']} 个文件")
-        if stats['skipped'] > 0:
-            print(f"⏭️  {stats['skipped']} 个文件跳过（4-5星）")
         if stats['failed'] > 0:
             print(f"⚠️  {stats['failed']} 个文件重置失败")
     except Exception as e:
