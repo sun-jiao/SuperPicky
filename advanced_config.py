@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SuperPicky V3.1 - 高级配置管理
+SuperPicky V3.2 - 高级配置管理
 用于管理所有可配置的硬编码参数
 """
 
@@ -19,8 +19,8 @@ class AdvancedConfig:
         # 评分阈值（影响0星判定）
         "min_confidence": 0.5,      # AI置信度最低阈值 (0.3-0.7) - 低于此值判定为0星
         "min_sharpness": 250,       # 锐度最低阈值 (100-1000) - 低于此值判定为0星（头部区域锐度）
-        "min_nima": 4.2,            # NIMA美学最低阈值 (3.0-5.0) - 低于此值判定为0星
-        "max_brisque": 30,          # BRISQUE噪点最高阈值 (20-50) - 高于此值判定为0星
+        "min_nima": 4.0,            # NIMA美学最低阈值 (3.0-5.0) - 低于此值判定为0星
+        # V3.2: 移除 max_brisque（不再使用 BRISQUE 评估）
 
         # 精选设置
         "picked_top_percentage": 25, # 精选旗标Top百分比 (10-50) - 3星照片中美学+锐度双排名在此百分比内的设为精选
@@ -96,9 +96,7 @@ class AdvancedConfig:
     def min_nima(self):
         return self.config["min_nima"]
 
-    @property
-    def max_brisque(self):
-        return self.config["max_brisque"]
+    # V3.2: 移除 max_brisque 属性
 
     @property
     def picked_top_percentage(self):
@@ -129,9 +127,7 @@ class AdvancedConfig:
         """设置美学最低阈值 (3.0-5.0)"""
         self.config["min_nima"] = max(3.0, min(5.0, float(value)))
 
-    def set_max_brisque(self, value):
-        """设置噪点最高阈值 (20-50)"""
-        self.config["max_brisque"] = max(20, min(50, int(value)))
+    # V3.2: 移除 set_max_brisque 方法
 
     def set_picked_top_percentage(self, value):
         """设置精选旗标Top百分比 (10-50)"""

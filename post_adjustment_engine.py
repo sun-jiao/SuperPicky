@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SuperPicky V3.1 - Post Digital Adjustment Engine
+SuperPicky V3.2 - Post Digital Adjustment Engine
 后期评分调整引擎 - 基于已有CSV数据重新计算星级评分
 """
 
@@ -41,8 +41,8 @@ class PostAdjustmentEngine:
             with open(self.report_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f)
 
-                # 验证必需字段
-                required_fields = ['filename', 'has_bird', 'confidence', 'sharpness_norm',
+                # V3.2: 使用 head_sharpness 替代 sharpness_norm
+                required_fields = ['filename', 'has_bird', 'confidence', 'head_sharpness',
                                   'nima_score', 'rating']
 
                 if not all(field in reader.fieldnames for field in required_fields):
@@ -118,7 +118,9 @@ class PostAdjustmentEngine:
             # 解析CSV中的数据
             try:
                 conf = float(photo['confidence'])
-                sharpness = float(photo['sharpness_norm'])
+                # V3.2: 使用 head_sharpness 替代 sharpness_norm
+                sharpness_str = photo['head_sharpness']
+                sharpness = float(sharpness_str) if sharpness_str != '-' else 0.0
 
                 # 处理 "-" 值（某些照片可能没有美学评分）
                 nima_str = photo['nima_score']
@@ -196,9 +198,14 @@ class PostAdjustmentEngine:
         nima_top_files = set([photo['filename'] for photo in sorted_by_nima[:top_count]])
 
         # 按锐度排序，取Top N%
+        # V3.2: 使用 head_sharpness 替代 sharpness_norm
+        photos_with_sharpness = [
+            p for p in star_3_photos
+            if p['head_sharpness'] != '-'
+        ]
         sorted_by_sharpness = sorted(
-            star_3_photos,
-            key=lambda x: float(x['sharpness_norm']),
+            photos_with_sharpness,
+            key=lambda x: float(x['head_sharpness']),
             reverse=True
         )
         sharpness_top_files = set([photo['filename'] for photo in sorted_by_sharpness[:top_count]])

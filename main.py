@@ -37,13 +37,15 @@ except ImportError:
     PIL_AVAILABLE = False
     print("提示: 需要安装 Pillow 才能显示图标 (pip install Pillow)")
 
-# V3.3: 文件夹名称映射（用于分类照片）
+# V3.3: 文件夹名称映射（支持所有星级）
 RATING_FOLDER_NAMES = {
     3: "3星_优选",
     2: "2星_良好",
-    1: "1星_普通"
+    1: "1星_普通",
+    0: "0星_放弃",
+    -1: "0星_放弃"
 }
-# 注意：0星和-1星（无鸟）照片保留原位，不移动
+
 
 
 class WorkerThread(threading.Thread):
@@ -297,7 +299,7 @@ YouTube: youtube.com/@JamesZhenYu
    项目地址: github.com/ultralytics/ultralytics
 
 2. PyIQA (Image Quality Assessment)
-   用于图像质量评估，包括NIMA美学评分和BRISQUE技术质量评分。
+   用于图像质量评估，主要使用NIMA美学评分模型。
    许可证: CC BY-NC-SA 4.0 (非商业使用)
    项目地址: github.com/chaofengc/IQA-PyTorch
    引用: Chen et al., "TOPIQ", IEEE TIP, 2024
@@ -462,10 +464,10 @@ class SuperPickyApp:
         nima_frame = ttk.Frame(settings_frame)
         nima_frame.pack(fill=tk.X, pady=5)
         ttk.Label(nima_frame, text=self.i18n.t("labels.nima"), width=14, font=("Arial", 11)).pack(side=tk.LEFT)
-        self.nima_var = tk.DoubleVar(value=4.8)
+        self.nima_var = tk.DoubleVar(value=5.0)
         self.nima_slider = ttk.Scale(nima_frame, from_=4.5, to=5.5, variable=self.nima_var, orient=tk.HORIZONTAL)
         self.nima_slider.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=5)
-        self.nima_label = ttk.Label(nima_frame, text="4.8", width=6, font=("Arial", 11))
+        self.nima_label = ttk.Label(nima_frame, text="5.0", width=6, font=("Arial", 11))
         self.nima_label.pack(side=tk.LEFT)
         self.nima_slider.configure(command=lambda v: self.nima_label.configure(text=f"{float(v):.1f}"))
 
@@ -698,8 +700,9 @@ class SuperPickyApp:
 • 3星优选 → 3星_优选/
 • 2星良好 → 2星_良好/
 • 1星普通 → 1星_普通/
-• 0星和无鸟照片保留原位
+• 0星/无鸟 → 0星_放弃/
 
+处理完成后原目录将清空。
 如需恢复原始目录结构，可使用"重置目录"功能。"""
         
         if not messagebox.askyesno("文件整理提示", confirm_message):

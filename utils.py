@@ -51,6 +51,7 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
     report_file = os.path.join(tmp_dir, "report.csv")
 
     # 定义CSV列顺序（英文字段名，便于代码分析）
+    # V3.2: 移除 brisque_score, sharpness_raw, sharpness_norm, norm_method（由keypoint_detector计算head_sharpness替代）
     fieldnames = [
         "filename",         # 文件名（不含扩展名）
         "has_bird",         # 是否有鸟 (yes/no)
@@ -61,9 +62,6 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
         "bbox_width",       # BBox宽度（像素）
         "bbox_height",      # BBox高度（像素）
         "mask_pixels",      # Mask有效像素数
-        "sharpness_raw",    # 原始锐度（拉普拉斯方差）
-        "sharpness_norm",   # 归一化锐度
-        "norm_method",      # 归一化方法 (log_compression/sqrt/linear等)
         "head_sharpness",   # 头部区域锐度（关键点检测）
         "left_eye_vis",     # 左眼可见性置信度 (0-1)
         "right_eye_vis",    # 右眼可见性置信度 (0-1)
@@ -71,7 +69,6 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
         "has_visible_eye",  # 是否有可见鸟眼 (yes/no)
         "has_visible_beak", # 是否有可见鸟喙 (yes/no)
         "nima_score",       # NIMA美学评分 (1-10)
-        "brisque_score",    # BRISQUE技术质量 (越低越好)
         "rating"            # 最终评分 (-1/0/1/2/3)
     ]
 

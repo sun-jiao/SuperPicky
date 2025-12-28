@@ -65,10 +65,8 @@ class RatingEngine:
         min_sharpness: float = 250,    # 头部区域锐度最低阈值
         min_nima: float = 4.2,
         # 2星达标阈值
-        sharpness_threshold: float = 500,  # 头部区域锐度2星达标阈值
+        sharpness_threshold: float = 500,  # 头部区域锐度达标阈值（2星和3星共用）
         nima_threshold: float = 5.0,
-        # 3星锐度阈值（更严格）
-        star3_sharpness_threshold: float = 600,
     ):
         """
         初始化评分引擎
@@ -77,19 +75,17 @@ class RatingEngine:
             min_confidence: AI 置信度最低阈值 (0-1)
             min_sharpness: 锐度最低阈值
             min_nima: NIMA 美学最低阈值 (0-10)
-            sharpness_threshold: 锐度2星达标阈值
+            sharpness_threshold: 锐度达标阈值（2星和3星共用）
             nima_threshold: NIMA 达标阈值 (2/3星)
-            star3_sharpness_threshold: 3星锐度阈值（需要同时满足NIMA）
         """
         # 最低标准
         self.min_confidence = min_confidence
         self.min_sharpness = min_sharpness
         self.min_nima = min_nima
         
-        # 达标标准
+        # 达标标准（2星和3星共用）
         self.sharpness_threshold = sharpness_threshold
         self.nima_threshold = nima_threshold
-        self.star3_sharpness_threshold = star3_sharpness_threshold
     
     def calculate(
         self,
@@ -152,21 +148,20 @@ class RatingEngine:
                 reason=f"锐度太低({sharpness:.0f}<{self.min_sharpness})"
             )
         
-        # 第五步：3 星判定（锐度 >= 600 AND 美学 >= 5.0）
-        sharpness_3star_ok = sharpness >= self.star3_sharpness_threshold
+        # 第五步：3 星判定（锐度 >= 阈值 AND 美学 >= 5.0）
+        sharpness_ok = sharpness >= self.sharpness_threshold
         nima_ok = nima is not None and nima >= self.nima_threshold
         
-        if sharpness_3star_ok and nima_ok:
+        if sharpness_ok and nima_ok:
             return RatingResult(
                 rating=3,
                 pick=0,  # 精选旗标由 PhotoProcessor 后续计算
                 reason="优选照片（锐度+美学双达标）"
             )
         
-        # 第六步：2 星判定（锐度≥500 OR 美学达标）
-        sharpness_2star_ok = sharpness >= self.sharpness_threshold
-        if sharpness_2star_ok or nima_ok:
-            if sharpness_2star_ok:
+        # 第六步：2 星判定（锐度达标 OR 美学达标）
+        if sharpness_ok or nima_ok:
+            if sharpness_ok:
                 return RatingResult(
                     rating=2,
                     pick=0,
@@ -212,8 +207,7 @@ def create_rating_engine_from_config(config) -> RatingEngine:
         min_confidence=config.min_confidence,
         min_sharpness=config.min_sharpness,
         min_nima=config.min_nima,
-        # 达标阈值
-        sharpness_threshold=500,  # 2星锐度阈值
-        nima_threshold=5.0,       # 2/3星NIMA阈值
-        star3_sharpness_threshold=600,  # 3星锐度阈值
+        # 达标阈值（由 UI 滑块覆盖）
+        sharpness_threshold=500,  # 默认值，会被 update_thresholds 覆盖
+        nima_threshold=5.0,       # 默认值，会被 update_thresholds 覆盖
     )

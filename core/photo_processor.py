@@ -30,13 +30,15 @@ from advanced_config import get_advanced_config
 from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 
-# 文件夹名称映射（新增 1 星支持）
+# 文件夹名称映射（支持所有星级）
 RATING_FOLDER_NAMES = {
     3: "3星_优选",
     2: "2星_良好",  # 默认目录
     "2_sharpness": "2星_良好_锐度",  # 锐度达标
     "2_nima": "2星_良好_美学",  # NIMA达标
-    1: "普通"
+    1: "1星_普通",
+    0: "0星_放弃",  # 0星和-1星都放这里
+    -1: "0星_放弃",  # 无鸟照片
 }
 
 
@@ -338,8 +340,8 @@ class PhotoProcessor:
                 self._log(f"  ❌ 处理异常: {e}", "error")
                 continue
             
-            # 解构 AI 结果 (包含bbox和图像尺寸用于缩放)
-            detected, _, confidence, sharpness, _, _, bird_bbox, img_dims = result
+            # 解构 AI 结果 (包含bbox和图像尺寸用于缩放) - V3.2移除BRISQUE
+            detected, _, confidence, sharpness, _, bird_bbox, img_dims = result
             
             # Phase 2: 关键点检测（在裁剪区域上执行，更准确）
             both_eyes_hidden = False
@@ -350,12 +352,16 @@ class PhotoProcessor:
             right_eye_vis = 0.0
             beak_vis = 0.0
             
+            # V3.2优化: 只读取原图一次，在关键点检测和NIMA计算中复用
+            orig_img = None  # 原图缓存
+            bird_crop_bgr = None  # 裁剪区域缓存（BGR）
+            
             if use_keypoints and detected and bird_bbox is not None and img_dims is not None:
                 try:
                     import cv2
-                    img = cv2.imread(filepath)
-                    if img is not None:
-                        h_orig, w_orig = img.shape[:2]
+                    orig_img = cv2.imread(filepath)  # 只读取一次!
+                    if orig_img is not None:
+                        h_orig, w_orig = orig_img.shape[:2]
                         # 获取YOLO处理时的图像尺寸
                         w_resized, h_resized = img_dims
                         
@@ -376,10 +382,10 @@ class PhotoProcessor:
                         w_orig_box = min(w_orig_box, w_orig - x_orig)
                         h_orig_box = min(h_orig_box, h_orig - y_orig)
                         
-                        # 裁剪鸟的区域
-                        bird_crop = img[y_orig:y_orig+h_orig_box, x_orig:x_orig+w_orig_box]
-                        if bird_crop.size > 0:
-                            crop_rgb = cv2.cvtColor(bird_crop, cv2.COLOR_BGR2RGB)
+                        # 裁剪鸟的区域（保存BGR版本供NIMA使用）
+                        bird_crop_bgr = orig_img[y_orig:y_orig+h_orig_box, x_orig:x_orig+w_orig_box]
+                        if bird_crop_bgr.size > 0:
+                            crop_rgb = cv2.cvtColor(bird_crop_bgr, cv2.COLOR_BGR2RGB)
                             # 在裁剪区域上进行关键点检测
                             kp_result = keypoint_detector.detect(crop_rgb, box=(x_orig, y_orig, w_orig_box, h_orig_box))
                             if kp_result is not None:
@@ -394,18 +400,35 @@ class PhotoProcessor:
                     self._log(f"  ⚠️  关键点检测失败: {e}", "warning")
             
             # Phase 3: 根据眼睛可见性决定是否计算NIMA
+            # V3.2优化: 复用已裁剪的鸟区域，避免重复读取原图
             nima = None
             if detected and not both_eyes_hidden:
                 # 双眼可见，需要计算NIMA以进行星级判定
                 try:
                     from iqa_scorer import get_iqa_scorer
                     import time as time_module
+                    import cv2
+                    import tempfile
+                    
                     step_start = time_module.time()
                     scorer = get_iqa_scorer(device='mps')
-                    nima = scorer.calculate_nima(filepath)
+                    
+                    # 优化: 直接使用已裁剪的区域（避免重复读取原图）
+                    if bird_crop_bgr is not None and bird_crop_bgr.size > 0:
+                        # 保存到临时文件供 NIMA 评估
+                        crop_temp_path = tempfile.mktemp(suffix='.jpg')
+                        cv2.imwrite(crop_temp_path, bird_crop_bgr)
+                        nima = scorer.calculate_nima(crop_temp_path)
+                        # 清理临时文件
+                        if os.path.exists(crop_temp_path):
+                            os.remove(crop_temp_path)
+                    else:
+                        # 回退：没有裁剪区域时用全图
+                        nima = scorer.calculate_nima(filepath)
+                    
                     nima_time = (time_module.time() - step_start) * 1000
                     if nima is not None:
-                        self._log(f"🎨 NIMA 美学评分: {nima:.2f} / 10")
+                        self._log(f"🎨 NIMA 美学评分: {nima:.2f} / 10 (裁剪区域)")
                         self._log(f"  ⏱️  [补充] NIMA评分: {nima_time:.1f}ms")
                 except Exception as e:
                     self._log(f"  ⚠️  NIMA计算失败: {e}", "warning")
@@ -613,6 +636,11 @@ class PhotoProcessor:
             self._log(f"  📌 锐度Top{self.config.picked_top_percentage}%: {len(sharpness_top_files)}张")
             self._log(f"  ⭐ 双排名交集: {len(picked_files)}张 → 设为精选")
             
+            # 调试：显示精选文件路径
+            for file_path in picked_files:
+                exists = os.path.exists(file_path)
+                self._log(f"    🔍 精选: {os.path.basename(file_path)} (存在: {exists})")
+            
             # 批量写入
             picked_batch = [{
                 'file': file_path,
@@ -635,10 +663,10 @@ class PhotoProcessor:
     
     def _move_files_to_rating_folders(self, raw_dict):
         """移动文件到分类文件夹"""
-        # 筛选需要移动的文件
+        # 筛选需要移动的文件（包括所有星级，确保原目录为空）
         files_to_move = []
         for prefix, rating in self.file_ratings.items():
-            if rating in [1, 2, 3] and prefix in raw_dict:
+            if rating in [-1, 0, 1, 2, 3] and prefix in raw_dict:
                 raw_ext = raw_dict[prefix]
                 raw_path = os.path.join(self.dir_path, prefix + raw_ext)
                 if os.path.exists(raw_path):
@@ -661,7 +689,7 @@ class PhotoProcessor:
                     })
         
         if not files_to_move:
-            self._log("\n📂 无需移动文件(没有1-3星照片)")
+            self._log("\n📂 无需移动文件")
             return
         
         self._log(f"\n📂 移动 {len(files_to_move)} 张照片到分类文件夹...")

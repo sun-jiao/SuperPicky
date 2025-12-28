@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SuperPicky V3.1 - 高级设置对话框
+SuperPicky V3.2 - 高级设置对话框
 """
 
 import tkinter as tk
@@ -93,16 +93,7 @@ class AdvancedSettingsDialog:
             format_func=lambda v: f"{v:.1f}"
         )
 
-        # 噪点最高阈值
-        self._create_slider_setting(
-            parent,
-            key="max_brisque",
-            label=self.i18n.t("advanced_settings.max_brisque_label"),
-            description=self.i18n.t("advanced_settings.max_brisque_description"),
-            from_=20, to=50, resolution=1,
-            default=30,
-            format_func=lambda v: f"{int(v)}"
-        )
+        # V3.2: 移除 BRISQUE 阈值滑块
 
     def _create_output_tab(self, parent):
         """创建输出设置选项卡"""
@@ -238,7 +229,7 @@ class AdvancedSettingsDialog:
         self.vars["min_confidence"].set(self.config.min_confidence)
         self.vars["min_sharpness"].set(self.config.min_sharpness)
         self.vars["min_nima"].set(self.config.min_nima)
-        self.vars["max_brisque"].set(self.config.max_brisque)
+        # V3.2: 移除 max_brisque
         self.vars["picked_top_percentage"].set(self.config.picked_top_percentage)
         self.vars["save_csv"].set(self.config.save_csv)
         self.vars["log_level"].set(self.config.log_level)
@@ -260,7 +251,7 @@ class AdvancedSettingsDialog:
         self.config.set_min_confidence(self.vars["min_confidence"].get())
         self.config.set_min_sharpness(self.vars["min_sharpness"].get())
         self.config.set_min_nima(self.vars["min_nima"].get())
-        self.config.set_max_brisque(self.vars["max_brisque"].get())
+        # V3.2: 移除 max_brisque
         self.config.set_picked_top_percentage(self.vars["picked_top_percentage"].get())
         # CSV保存强制为True,因为二次选鸟功能需要
         self.config.set_save_csv(True)

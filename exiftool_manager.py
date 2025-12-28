@@ -92,8 +92,7 @@ class ExifToolManager:
         rating: int,
         pick: int = 0,
         sharpness: float = None,
-        nima_score: float = None,
-        brisque_score: float = None
+        nima_score: float = None
     ) -> bool:
         """
         设置照片评分和旗标 (Lightroom标准)
@@ -104,7 +103,7 @@ class ExifToolManager:
             pick: 旗标 (-1=排除旗标, 0=无旗标, 1=精选旗标)
             sharpness: 锐度值（可选，写入IPTC:City字段，用于Lightroom排序）
             nima_score: NIMA美学评分（可选，写入IPTC:Province-State字段）
-            brisque_score: BRISQUE技术质量评分（可选，写入IPTC:Country-PrimaryLocationName字段）
+            # V3.2: 移除 brisque_score 参数
 
         Returns:
             是否成功
@@ -132,11 +131,7 @@ class ExifToolManager:
             nima_str = f'{nima_score:05.2f}'  # 5位总宽度，2位小数，前面补零
             cmd.append(f'-IPTC:Province-State={nima_str}')
 
-        # V3.1: BRISQUE技术质量评分 → IPTC:Country-PrimaryLocationName（国家）
-        # 格式：000.00 到 100.00（BRISQUE范围0-100，越低越好）
-        if brisque_score is not None:
-            brisque_str = f'{brisque_score:06.2f}'  # 6位总宽度，2位小数，前面补零
-            cmd.append(f'-IPTC:Country-PrimaryLocationName={brisque_str}')
+        # V3.2: 移除 BRISQUE 字段写入
 
         cmd.extend(['-overwrite_original', file_path])
 
@@ -153,8 +148,7 @@ class ExifToolManager:
                 pick_desc = {-1: "排除旗标", 0: "无旗标", 1: "精选旗标"}.get(pick, str(pick))
                 sharpness_info = f", 锐度={sharpness:06.2f}" if sharpness is not None else ""
                 nima_info = f", NIMA={nima_score:05.2f}" if nima_score is not None else ""
-                brisque_info = f", BRISQUE={brisque_score:06.2f}" if brisque_score is not None else ""
-                print(f"✅ EXIF已更新: {filename} (Rating={rating}, Pick={pick_desc}{sharpness_info}{nima_info}{brisque_info})")
+                print(f"✅ EXIF已更新: {filename} (Rating={rating}, Pick={pick_desc}{sharpness_info}{nima_info})")
                 return True
             else:
                 print(f"❌ ExifTool错误: {result.stderr}")
@@ -177,10 +171,11 @@ class ExifToolManager:
         Args:
             files_metadata: 文件元数据列表
                 [
-                    {'file': 'path1.NEF', 'rating': 3, 'pick': 1, 'sharpness': 95.3, 'nima_score': 7.5, 'brisque_score': 25.0},
-                    {'file': 'path2.NEF', 'rating': 2, 'pick': 0, 'sharpness': 78.5, 'nima_score': 6.8, 'brisque_score': 35.2},
-                    {'file': 'path3.NEF', 'rating': -1, 'pick': -1, 'sharpness': 45.2, 'nima_score': 5.2, 'brisque_score': 55.8},
+                    {'file': 'path1.NEF', 'rating': 3, 'pick': 1, 'sharpness': 95.3, 'nima_score': 7.5},
+                    {'file': 'path2.NEF', 'rating': 2, 'pick': 0, 'sharpness': 78.5, 'nima_score': 6.8},
+                    {'file': 'path3.NEF', 'rating': -1, 'pick': -1, 'sharpness': 45.2, 'nima_score': 5.2},
                 ]
+                # V3.2: 移除 brisque_score
 
         Returns:
             统计结果 {'success': 成功数, 'failed': 失败数}
@@ -197,7 +192,7 @@ class ExifToolManager:
             pick = item.get('pick', 0)
             sharpness = item.get('sharpness', None)
             nima_score = item.get('nima_score', None)
-            brisque_score = item.get('brisque_score', None)
+            # V3.2: 移除 brisque_score
 
             if not os.path.exists(file_path):
                 print(f"⏭️  跳过不存在的文件: {file_path}")
@@ -221,10 +216,7 @@ class ExifToolManager:
                 nima_str = f'{nima_score:05.2f}'
                 cmd.append(f'-IPTC:Province-State={nima_str}')
 
-            # V3.1: BRISQUE技术质量评分 → IPTC:Country-PrimaryLocationName（国家）
-            if brisque_score is not None:
-                brisque_str = f'{brisque_score:06.2f}'
-                cmd.append(f'-IPTC:Country-PrimaryLocationName={brisque_str}')
+            # V3.2: 移除 BRISQUE
 
             cmd.append(file_path)
             cmd.append('-overwrite_original')  # 放在每个文件之后
@@ -419,7 +411,7 @@ class ExifToolManager:
                     # 所有文件都被处理
                     stats['success'] += len(valid_files)
                     if i18n:
-                        log(i18n.t("logs.batch_progress", start=batch_start+1, end=batch_end, success=len(valid_files)))
+                        log(i18n.t("logs.batch_progress", start=batch_start+1, end=batch_end, success=len(valid_files), skipped=0))
                     else:
                         log(f"  ✅ 批次 {batch_start+1}-{batch_end}: {len(valid_files)} 个文件已处理")
                 else:
@@ -463,11 +455,13 @@ class ExifToolManager:
         import json
         import shutil
         
-        # 评分文件夹名称
+        # 评分文件夹名称（支持所有星级）
         RATING_FOLDER_NAMES = {
             3: "3星_优选",
             2: "2星_良好",
-            1: "1星_普通"
+            1: "1星_普通",
+            0: "0星_放弃",
+            -1: "0星_放弃"
         }
         
         def log(msg):
@@ -591,10 +585,10 @@ def get_exiftool_manager() -> ExifToolManager:
 
 # 便捷函数
 def set_photo_metadata(file_path: str, rating: int, pick: int = 0, sharpness: float = None,
-                      nima_score: float = None, brisque_score: float = None) -> bool:
-    """设置照片元数据的便捷函数"""
+                      nima_score: float = None) -> bool:
+    """设置照片元数据的便捷函数 (V3.2: 移除brisque_score)"""
     manager = get_exiftool_manager()
-    return manager.set_rating_and_pick(file_path, rating, pick, sharpness, nima_score, brisque_score)
+    return manager.set_rating_and_pick(file_path, rating, pick, sharpness, nima_score)
 
 
 if __name__ == "__main__":

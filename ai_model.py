@@ -5,7 +5,7 @@ import numpy as np
 from ultralytics import YOLO
 from utils import log_message, write_to_csv
 from config import config
-from sharpness import MaskBasedSharpnessCalculator
+# V3.2: 移除未使用的 sharpness 计算器导入
 from iqa_scorer import get_iqa_scorer
 from advanced_config import get_advanced_config
 
@@ -45,18 +45,7 @@ def preprocess_image(image_path, target_size=None):
     return img
 
 
-# 锐度计算器将根据用户选择动态创建
-def _get_sharpness_calculator(normalization_mode=None):
-    """
-    获取锐度计算器实例
-
-    Args:
-        normalization_mode: 归一化模式 (None, 'sqrt', 'linear', 'log', 'gentle')
-
-    Returns:
-        MaskBasedSharpnessCalculator 实例
-    """
-    return MaskBasedSharpnessCalculator(method='variance', normalization=normalization_mode)
+# V3.2: 移除 _get_sharpness_calculator（锐度现在由 keypoint_detector 计算）
 
 # 初始化全局 IQA 评分器（延迟加载）
 _iqa_scorer = None
@@ -91,18 +80,14 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     # V3.1: 不再保存Crop图片（移除预览功能）
     save_crop = False
 
-    # 锐度归一化模式（V3.1默认log_compression）
-    normalization_mode = ui_settings[4] if len(ui_settings) >= 5 else 'log_compression'
-
-    # 根据用户选择的归一化模式创建锐度计算器
-    sharpness_calculator = _get_sharpness_calculator(normalization_mode)
+    # V3.2: 移除未使用的 normalization_mode 和 sharpness_calculator
+    # 锐度现在由 photo_processor 中的 keypoint_detector 计算
 
     found_bird = False
     bird_sharp = False
     bird_result = False
-    nima_score = None  # 美学评分（全图）
-    brisque_score = None  # 技术质量评分（crop图）
-    # V3.1: 移除 bird_dominant, bird_centred（不再使用）
+    nima_score = None  # 美学评分
+    # V3.2: 移除 BRISQUE（不再使用）
 
     # 使用配置检查文件类型
     if not config.is_jpg_file(image_path):
@@ -121,7 +106,7 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     image = preprocess_image(image_path)
     height, width, _ = image.shape
     preprocess_time = (time.time() - step_start) * 1000
-    log_message(f"  ⏱️  [1/7] 图像预处理: {preprocess_time:.1f}ms", dir)
+    log_message(f"  ⏱️  [1/4] 图像预处理: {preprocess_time:.1f}ms", dir)
 
     # Step 2: YOLO推理
     step_start = time.time()
@@ -147,21 +132,18 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 "bbox_width": 0,
                 "bbox_height": 0,
                 "mask_pixels": 0,
-                "sharpness_raw": 0.0,
-                "sharpness_norm": 0.0,
-                "norm_method": "-",
+                "head_sharpness": "-",
                 "nima_score": "-",
-                "brisque_score": "-",
                 "rating": -1
             }
             write_to_csv(data, dir, False)
-            return found_bird, bird_result, 0.0, 0.0, None, None, None, None  # 最后两个是bbox和图像尺寸
+            return found_bird, bird_result, 0.0, 0.0, None, None, None  # V3.2: 移除brisque
 
     yolo_time = (time.time() - step_start) * 1000
     if i18n:
         log_message(i18n.t("logs.yolo_inference", time=yolo_time), dir)
     else:
-        log_message(f"  ⏱️  [2/7] YOLO推理: {yolo_time:.1f}ms", dir)
+        log_message(f"  ⏱️  [2/4] YOLO推理: {yolo_time:.1f}ms", dir)
 
     # Step 3: 解析检测结果
     step_start = time.time()
@@ -174,23 +156,21 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     if hasattr(results[0], 'masks') and results[0].masks is not None:
         masks = results[0].masks.data.cpu().numpy()
 
-    # 只处理面积最大的鸟
+    # 只处理置信度最高的鸟
     bird_idx = -1
-    max_area = 0
+    max_conf = 0
 
     for idx, (detection, conf, class_id) in enumerate(zip(detections, confidences, class_ids)):
         if int(class_id) == config.ai.BIRD_CLASS_ID:
-            x1, y1, x2, y2 = detection
-            area = (x2 - x1) * (y2 - y1)
-            if area > max_area:
-                max_area = area
+            if conf > max_conf:
+                max_conf = conf
                 bird_idx = idx
 
     parse_time = (time.time() - step_start) * 1000
     if i18n:
         log_message(i18n.t("logs.result_parsing", time=parse_time), dir)
     else:
-        log_message(f"  ⏱️  [3/7] 结果解析: {parse_time:.1f}ms", dir)
+        log_message(f"  ⏱️  [3/4] 结果解析: {parse_time:.1f}ms", dir)
 
     # 如果没有找到鸟，记录到CSV并返回（V3.1）
     if bird_idx == -1:
@@ -204,44 +184,15 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             "bbox_width": 0,
             "bbox_height": 0,
             "mask_pixels": 0,
-            "sharpness_raw": 0.0,
-            "sharpness_norm": 0.0,
-            "norm_method": "-",
+            "head_sharpness": "-",
             "nima_score": "-",
-            "brisque_score": "-",
             "rating": -1
         }
         write_to_csv(data, dir, False)
-        return found_bird, bird_result, 0.0, 0.0, None, None, None, None
-
-    # Step 4: 计算 NIMA 美学评分（使用全图，只计算一次）
-    nima_time = 0
-    if bird_idx != -1 and not skip_nima:
-        step_start = time.time()
-        try:
-            scorer = _get_iqa_scorer()
-            nima_score = scorer.calculate_nima(image_path)
-            nima_time = (time.time() - step_start) * 1000
-            if nima_score is not None:
-                if i18n:
-                    log_message(i18n.t("logs.nima_score", score=nima_score), dir)
-                    log_message(i18n.t("logs.nima_timing", time=nima_time), dir)
-                else:
-                    log_message(f"🎨 NIMA 美学评分: {nima_score:.2f} / 10", dir)
-                    log_message(f"  ⏱️  [4/7] NIMA评分: {nima_time:.1f}ms", dir)
-        except Exception as e:
-            nima_time = (time.time() - step_start) * 1000
-            if i18n:
-                log_message(i18n.t("logs.nima_failed", error=str(e)), dir)
-                log_message(i18n.t("logs.nima_timing_failed", time=nima_time), dir)
-            else:
-                log_message(f"⚠️  NIMA 计算失败: {e}", dir)
-                log_message(f"  ⏱️  [4/7] NIMA评分(失败): {nima_time:.1f}ms", dir)
-            nima_score = None
-    elif skip_nima and bird_idx != -1:
-        # 跳过NIMA计算（双眼不可见时）
-        log_message(f"⚡ NIMA 已跳过（双眼不可见，耗时: 0.0ms）", dir)
-        log_message(f"  ⏱️  [4/7] NIMA评分: 0.0ms (已跳过)", dir)
+        return found_bird, bird_result, 0.0, 0.0, None, None, None
+    # V3.2: 移除 NIMA 计算（现在由 photo_processor 在裁剪区域上计算）
+    # nima_score 设为 None，photo_processor 会重新计算
+    nima_score = None
 
     # 只处理面积最大的那只鸟
     for idx, (detection, conf, class_id) in enumerate(zip(detections, confidences, class_ids)):
@@ -280,98 +231,13 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 log_message(f"ERROR: Crop image is empty for {image_path}", dir)
                 continue
 
-            # Step 5: 使用新的基于掩码的锐度计算（提前计算用于优化BRISQUE）
-            step_start = time.time()
-            mask_crop = None
-            if masks is not None and idx < len(masks):
-                mask = masks[idx]
-                # 调整mask大小到图像尺寸
-                if mask.shape != (height, width):
-                    mask_resized = cv2.resize(mask, (width, height))
-                else:
-                    mask_resized = mask
+            # V3.2: 移除 Step 5 锐度计算（现在由 photo_processor 中的 keypoint_detector 计算 head_sharpness）
+            # 设置占位值以保持 CSV 兼容性
+            real_sharpness = 0.0
+            sharpness = 0.0
+            effective_pixels = 0
 
-                # 裁剪掩码到鸟的区域
-                mask_crop = mask_resized[y:y + h, x:x + w]
-
-                # 创建带掩码的裁剪图用于可视化
-                crop_with_mask = crop_img.copy()
-
-                # 创建彩色掩码（半透明绿色）
-                mask_binary = (mask_crop > 0.5).astype(np.uint8)
-                colored_mask = np.zeros_like(crop_img)
-                colored_mask[:, :, 1] = 255  # 绿色通道
-
-                # 应用半透明掩码
-                crop_with_mask = cv2.addWeighted(
-                    crop_with_mask, 1.0,
-                    cv2.bitwise_and(colored_mask, colored_mask,
-                                   mask=mask_binary),
-                    0.4, 0
-                )
-
-                # 只有在 save_crop=True 时才保存带掩码的可视化图片
-                if crop_path:
-                    cv2.imwrite(crop_path, crop_with_mask)
-
-                # 使用新算法计算锐度（基于掩码）
-                sharpness_result = sharpness_calculator.calculate(crop_img, mask_crop)
-                real_sharpness = sharpness_result['total_sharpness']
-                sharpness = sharpness_result['normalized_sharpness']
-                effective_pixels = sharpness_result['effective_pixels']
-            else:
-                # 如果没有掩码，只在 save_crop=True 时保存普通裁剪图
-                if crop_path:
-                    cv2.imwrite(crop_path, crop_img)
-
-                # 创建全1掩码（退化为整个BBox）
-                full_mask = np.ones((h, w), dtype=np.uint8)
-                sharpness_result = sharpness_calculator.calculate(crop_img, full_mask)
-                real_sharpness = sharpness_result['total_sharpness']
-                sharpness = sharpness_result['normalized_sharpness']
-                effective_pixels = sharpness_result['effective_pixels']
-
-            sharpness_time = (time.time() - step_start) * 1000
-            if i18n:
-                log_message(i18n.t("logs.sharpness_timing", time=sharpness_time), dir)
-            else:
-                log_message(f"  ⏱️  [5/7] 锐度计算: {sharpness_time:.1f}ms", dir)
-
-            # Step 6: 计算 BRISQUE 技术质量评分（优化：锐度或美学达标则跳过）
-            # 优化策略：如果锐度 >= 阈值 或 NIMA >= 阈值，跳过BRISQUE计算以节省时间
-            # 因为这些照片很可能被评为2星或3星，BRISQUE不会影响最终评分
-            step_start = time.time()
-            skip_brisque = False
-            if sharpness >= sharpness_threshold or (nima_score is not None and nima_score >= nima_threshold):
-                skip_brisque = True
-                brisque_score = None
-                brisque_time = (time.time() - step_start) * 1000
-                if i18n:
-                    log_message(i18n.t("logs.brisque_skipped", time=brisque_time), dir)
-                else:
-                    log_message(f"⚡ BRISQUE 已跳过（锐度或美学达标，耗时: {brisque_time:.1f}ms）", dir)
-            else:
-                # 只对不达标的照片计算BRISQUE
-                try:
-                    scorer = _get_iqa_scorer()
-                    brisque_score = scorer.calculate_brisque(crop_img)
-                    brisque_time = (time.time() - step_start) * 1000
-                    if brisque_score is not None:
-                        if i18n:
-                            log_message(i18n.t("logs.brisque_score", score=brisque_score), dir)
-                            log_message(i18n.t("logs.brisque_timing", time=brisque_time), dir)
-                        else:
-                            log_message(f"🔧 BRISQUE 技术质量: {brisque_score:.2f} / 100 (越低越好)", dir)
-                            log_message(f"  ⏱️  [6/7] BRISQUE评分: {brisque_time:.1f}ms", dir)
-                except Exception as e:
-                    brisque_time = (time.time() - step_start) * 1000
-                    if i18n:
-                        log_message(i18n.t("logs.brisque_failed", error=str(e)), dir)
-                        log_message(i18n.t("logs.brisque_timing_failed", time=brisque_time), dir)
-                    else:
-                        log_message(f"⚠️  BRISQUE 计算失败: {e}", dir)
-                        log_message(f"  ⏱️  [6/7] BRISQUE评分(失败): {brisque_time:.1f}ms", dir)
-                    brisque_score = None
+            # V3.2: 移除 BRISQUE 评估（不再使用）
 
             cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
 
@@ -381,47 +247,13 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             center_y = (y + h / 2) / height
 
             # 日志输出
-            nima_str = f"{nima_score:.2f}" if nima_score is not None else "-"
-            brisque_str = f"{brisque_score:.2f}" if brisque_score is not None else "-"
             log_message(f" AI: {conf:.2f} - Class: {class_id} "
-                        f"- Sharpness:{real_sharpness:.2f} (Norm:{sharpness:.2f}) "
                         f"- Area:{area_ratio * 100:.2f}% - Pixels:{effective_pixels:,d}"
-                        f" - NIMA:{nima_str}"
-                        f" - BRISQUE:{brisque_str}"
                         f" - Center_x:{center_x:.2f} - Center_y:{center_y:.2f}", dir)
 
-            # V3.1 星级评定规则：
-            # V3.1: 使用高级配置的阈值
-            # 1. 完全没鸟 → -1星（Rejected）
-            # 2. 置信度/噪点/美学/锐度不达标 → 0星（技术质量差）
-            # 3. 锐度 ≥ 阈值 且 NIMA ≥ 阈值 → 3星（优选）
-            # 4. 锐度 ≥ 阈值 或 NIMA ≥ 阈值 → 2星（良好）
-            # 5. 其他 → 1星（普通）
-
-            adv_config = get_advanced_config()
-
-            if conf < adv_config.min_confidence or \
-               (brisque_score is not None and brisque_score > adv_config.max_brisque) or \
-               (nima_score is not None and nima_score < adv_config.min_nima) or \
-               sharpness < adv_config.min_sharpness:
-                # 技术质量太差
-                rating_stars = "0星"
-                rating_value = 0
-            elif sharpness >= sharpness_threshold and \
-                 (nima_score is not None and nima_score >= nima_threshold):
-                # 同时满足锐度和美学标准
-                rating_stars = "⭐⭐⭐"
-                rating_value = 3
-                bird_result = True  # 标记为优选
-            elif sharpness >= sharpness_threshold or \
-                 (nima_score is not None and nima_score >= nima_threshold):
-                # 满足锐度或美学标准之一
-                rating_stars = "⭐⭐"
-                rating_value = 2
-            else:
-                # 普通照片
-                rating_stars = "⭐"
-                rating_value = 1
+            # V3.2: 移除评分逻辑（现在由 photo_processor 的 RatingEngine 计算）
+            # rating_value 设为占位值，photo_processor 会重新计算
+            rating_value = 0
 
             data = {
                 "filename": os.path.splitext(os.path.basename(image_path))[0],
@@ -433,22 +265,18 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 "bbox_width": w,
                 "bbox_height": h,
                 "mask_pixels": int(effective_pixels),
-                "sharpness_raw": float(f"{real_sharpness:.2f}"),
-                "sharpness_norm": float(f"{sharpness:.2f}"),
-                "norm_method": normalization_mode if normalization_mode else "none",
                 "head_sharpness": "-",          # 将由 photo_processor 填充
                 "has_visible_eye": "-",         # 将由 photo_processor 填充
                 "has_visible_beak": "-",        # 将由 photo_processor 填充
                 "nima_score": float(f"{nima_score:.2f}") if nima_score is not None else "-",
-                "brisque_score": float(f"{brisque_score:.2f}") if brisque_score is not None else "-",
                 "rating": rating_value
             }
 
-            # Step 7: CSV写入
+            # Step 5: CSV写入
             step_start = time.time()
             write_to_csv(data, dir, False)
             csv_time = (time.time() - step_start) * 1000
-            log_message(f"  ⏱️  [7/7] CSV写入: {csv_time:.1f}ms", dir)
+            log_message(f"  ⏱️  [4/4] CSV写入: {csv_time:.1f}ms", dir)
 
     # --- 修改开始 ---
     # 只有在 found_bird 为 True 且 output_path 有效时，才保存带框的图片
@@ -460,11 +288,11 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     total_time = (time.time() - total_start) * 1000
     log_message(f"  ⏱️  ========== 总耗时: {total_time:.1f}ms ==========", dir)
 
-    # 返回 found_bird, bird_result, AI置信度, 归一化锐度, NIMA分数, BRISQUE分数, bbox, 图像尺寸
+    # 返回 found_bird, bird_result, AI置信度, 归一化锐度, NIMA分数, bbox, 图像尺寸
     bird_confidence = float(confidences[bird_idx]) if bird_idx != -1 else 0.0
     bird_sharpness = sharpness if bird_idx != -1 else 0.0
     # bbox 格式: (x, y, w, h) - 在缩放后的图像上
     # img_dims 格式: (width, height) - 缩放后图像的尺寸，用于计算缩放比例
     bird_bbox = (x, y, w, h) if found_bird else None
     img_dims = (width, height) if found_bird else None
-    return found_bird, bird_result, bird_confidence, bird_sharpness, nima_score, brisque_score, bird_bbox, img_dims
+    return found_bird, bird_result, bird_confidence, bird_sharpness, nima_score, bird_bbox, img_dims
