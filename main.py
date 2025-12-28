@@ -542,7 +542,7 @@ class SuperPickyApp:
             self.post_da_btn.config(state='disabled')
             return
 
-        report_path = os.path.join(self.directory_path, "_tmp", "report.csv")
+        report_path = os.path.join(self.directory_path, ".superpicky", "report.csv")
         if os.path.exists(report_path):
             self.post_da_btn.config(state='normal')
             self.log(f"📊 {self.i18n.t('messages.report_detected')}\n")
@@ -555,7 +555,7 @@ class SuperPickyApp:
             messagebox.showwarning(self.i18n.t("messages.hint"), self.i18n.t("messages.select_dir_first"))
             return
 
-        report_path = os.path.join(self.directory_path, "_tmp", "report.csv")
+        report_path = os.path.join(self.directory_path, ".superpicky", "report.csv")
         if not os.path.exists(report_path):
             messagebox.showwarning(self.i18n.t("messages.hint"), self.i18n.t("messages.no_report_csv"))
             return
@@ -897,22 +897,20 @@ class SuperPickyApp:
   3️⃣ {self.i18n.t("lightroom_guide.sort_step3")}
      {self.i18n.t("lightroom_guide.sort_step3_city")}
      {self.i18n.t("lightroom_guide.sort_step3_state")}
-     {self.i18n.t("lightroom_guide.sort_step3_country")}
-  4️⃣ {self.i18n.t("lightroom_guide.sort_step4")}
+   4️⃣ {self.i18n.t("lightroom_guide.sort_step4")}
 
 【{self.i18n.t("lightroom_guide.fields_title")}】
   • {self.i18n.t("lightroom_guide.field_rating")}
   • {self.i18n.t("lightroom_guide.field_pick")}
   • {self.i18n.t("lightroom_guide.field_city")}
   • {self.i18n.t("lightroom_guide.field_state")}
-  • {self.i18n.t("lightroom_guide.field_country")}
 
 【{self.i18n.t("lightroom_guide.workflow_title")}】
   ✅ {self.i18n.t("lightroom_guide.workflow_step1")}
   ✅ {self.i18n.t("lightroom_guide.workflow_step2")}
   ✅ {self.i18n.t("lightroom_guide.workflow_step3")}
 
-💡 {self.i18n.t("lightroom_guide.csv_note")}
+{self.i18n.t("lightroom_guide.bridge_tip")}
 {separator}
 """
         self.log(guide)

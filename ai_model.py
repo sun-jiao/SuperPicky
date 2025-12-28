@@ -106,7 +106,8 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     image = preprocess_image(image_path)
     height, width, _ = image.shape
     preprocess_time = (time.time() - step_start) * 1000
-    log_message(f"  ⏱️  [1/4] 图像预处理: {preprocess_time:.1f}ms", dir)
+    # V3.3: 简化日志，移除步骤详情
+    # log_message(f"  ⏱️  [1/4] 图像预处理: {preprocess_time:.1f}ms", dir)
 
     # Step 2: YOLO推理
     step_start = time.time()
@@ -123,27 +124,27 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             log_message(f"❌ AI推理完全失败: {cpu_error}", dir)
             # 返回"无鸟"结果（V3.1）
             data = {
-                "filename": os.path.splitext(os.path.basename(image_path))[0],
-                "has_bird": "no",
-                "confidence": 0.0,
-                "center_x": 0.0,
-                "center_y": 0.0,
-                "area_ratio": 0.0,
-                "bbox_width": 0,
-                "bbox_height": 0,
-                "mask_pixels": 0,
-                "head_sharpness": "-",
-                "nima_score": "-",
-                "rating": -1
+                "文件名": os.path.splitext(os.path.basename(image_path))[0],
+                "有鸟": "no",
+                "置信度": 0.0,
+                "头部锐度": "-",
+                "左眼可见": "-",
+                "右眼可见": "-",
+                "喙可见": "-",
+                "眼睛可见": "-",
+                "喙部可见": "-",
+                "美学评分": "-",
+                "星级": -1
             }
             write_to_csv(data, dir, False)
             return found_bird, bird_result, 0.0, 0.0, None, None, None  # V3.2: 移除brisque
 
     yolo_time = (time.time() - step_start) * 1000
-    if i18n:
-        log_message(i18n.t("logs.yolo_inference", time=yolo_time), dir)
-    else:
-        log_message(f"  ⏱️  [2/4] YOLO推理: {yolo_time:.1f}ms", dir)
+    # V3.3: 简化日志，移除步骤详情
+    # if i18n:
+    #     log_message(i18n.t("logs.yolo_inference", time=yolo_time), dir)
+    # else:
+    #     log_message(f"  ⏱️  [2/4] YOLO推理: {yolo_time:.1f}ms", dir)
 
     # Step 3: 解析检测结果
     step_start = time.time()
@@ -167,26 +168,26 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
                 bird_idx = idx
 
     parse_time = (time.time() - step_start) * 1000
-    if i18n:
-        log_message(i18n.t("logs.result_parsing", time=parse_time), dir)
-    else:
-        log_message(f"  ⏱️  [3/4] 结果解析: {parse_time:.1f}ms", dir)
+    # V3.3: 简化日志，移除步骤详情
+    # if i18n:
+    #     log_message(i18n.t("logs.result_parsing", time=parse_time), dir)
+    # else:
+    #     log_message(f"  ⏱️  [3/4] 结果解析: {parse_time:.1f}ms", dir)
 
     # 如果没有找到鸟，记录到CSV并返回（V3.1）
     if bird_idx == -1:
         data = {
-            "filename": os.path.splitext(os.path.basename(image_path))[0],
-            "has_bird": "no",
-            "confidence": 0.0,
-            "center_x": 0.0,
-            "center_y": 0.0,
-            "area_ratio": 0.0,
-            "bbox_width": 0,
-            "bbox_height": 0,
-            "mask_pixels": 0,
-            "head_sharpness": "-",
-            "nima_score": "-",
-            "rating": -1
+            "文件名": os.path.splitext(os.path.basename(image_path))[0],
+            "有鸟": "no",
+            "置信度": 0.0,
+            "头部锐度": "-",
+            "左眼可见": "-",
+            "右眼可见": "-",
+            "喙可见": "-",
+            "眼睛可见": "-",
+            "喙部可见": "-",
+            "美学评分": "-",
+            "星级": -1
         }
         write_to_csv(data, dir, False)
         return found_bird, bird_result, 0.0, 0.0, None, None, None
@@ -246,37 +247,35 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             center_x = (x + w / 2) / width
             center_y = (y + h / 2) / height
 
-            # 日志输出
-            log_message(f" AI: {conf:.2f} - Class: {class_id} "
-                        f"- Area:{area_ratio * 100:.2f}% - Pixels:{effective_pixels:,d}"
-                        f" - Center_x:{center_x:.2f} - Center_y:{center_y:.2f}", dir)
+            # V3.3: 简化日志，移除AI详情输出
+            # log_message(f" AI: {conf:.2f} - Class: {class_id} "
+            #             f"- Area:{area_ratio * 100:.2f}% - Pixels:{effective_pixels:,d}"
+            #             f" - Center_x:{center_x:.2f} - Center_y:{center_y:.2f}", dir)
 
             # V3.2: 移除评分逻辑（现在由 photo_processor 的 RatingEngine 计算）
             # rating_value 设为占位值，photo_processor 会重新计算
             rating_value = 0
 
             data = {
-                "filename": os.path.splitext(os.path.basename(image_path))[0],
-                "has_bird": "yes" if found_bird else "no",
-                "confidence": float(f"{conf:.2f}"),
-                "center_x": float(f"{center_x:.2f}"),
-                "center_y": float(f"{center_y:.2f}"),
-                "area_ratio": float(f"{area_ratio:.4f}"),
-                "bbox_width": w,
-                "bbox_height": h,
-                "mask_pixels": int(effective_pixels),
-                "head_sharpness": "-",          # 将由 photo_processor 填充
-                "has_visible_eye": "-",         # 将由 photo_processor 填充
-                "has_visible_beak": "-",        # 将由 photo_processor 填充
-                "nima_score": float(f"{nima_score:.2f}") if nima_score is not None else "-",
-                "rating": rating_value
+                "文件名": os.path.splitext(os.path.basename(image_path))[0],
+                "有鸟": "yes" if found_bird else "no",
+                "置信度": float(f"{conf:.2f}"),
+                "头部锐度": "-",          # 将由 photo_processor 填充
+                "左眼可见": "-",          # 将由 photo_processor 填充
+                "右眼可见": "-",          # 将由 photo_processor 填充
+                "喙可见": "-",            # 将由 photo_processor 填充
+                "眼睛可见": "-",          # 将由 photo_processor 填充
+                "喙部可见": "-",          # 将由 photo_processor 填充
+                "美学评分": float(f"{nima_score:.2f}") if nima_score is not None else "-",
+                "星级": rating_value
             }
 
             # Step 5: CSV写入
             step_start = time.time()
             write_to_csv(data, dir, False)
             csv_time = (time.time() - step_start) * 1000
-            log_message(f"  ⏱️  [4/4] CSV写入: {csv_time:.1f}ms", dir)
+            # V3.3: 简化日志
+            # log_message(f"  ⏱️  [4/4] CSV写入: {csv_time:.1f}ms", dir)
 
     # --- 修改开始 ---
     # 只有在 found_bird 为 True 且 output_path 有效时，才保存带框的图片
@@ -284,9 +283,9 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
         cv2.imwrite(output_path, image)
     # --- 修改结束 ---
 
-    # 计算总处理时间
+    # 计算总处理时间 (V3.3: 移除此处日志, 由 photo_processor 输出真正总耗时)
     total_time = (time.time() - total_start) * 1000
-    log_message(f"  ⏱️  ========== 总耗时: {total_time:.1f}ms ==========", dir)
+    # log_message(f"  ⏱️  ========== 总耗时: {total_time:.1f}ms ==========", dir)
 
     # 返回 found_bird, bird_result, AI置信度, 归一化锐度, NIMA分数, bbox, 图像尺寸
     bird_confidence = float(confidences[bird_idx]) if bird_idx != -1 else 0.0

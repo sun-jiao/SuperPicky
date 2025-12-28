@@ -308,19 +308,17 @@
     "sort_step3": "Click customize, add:",
     "sort_step3_city": "☑ City (Head sharpness value - higher is sharper)",
     "sort_step3_state": "☑ Province-State (Aesthetics - higher is better)",
-    "sort_step3_country": "(Deprecated)",
     "sort_step4": "Click sort by (e.g., click 'City' to sort by sharpness)",
     "fields_title": "Rating Field Descriptions",
     "field_rating": "Rating: -1 star (rejected) / 0 star (poor quality) / 1 star / 2 stars / 3 stars (excellent)",
     "field_pick": "Pick: 🏆Picked (top 25% in both aesthetics & sharpness among 3-star) / 🚫Rejected (-1 star)",
     "field_city": "City: Head sharpness value, range 0-2000+, higher is sharper",
     "field_state": "Province-State: Aesthetic score, range 0-10, higher matches human aesthetics better",
-    "field_country": "Country: Deprecated (BRISQUE removed in V3.2)",
     "workflow_title": "Quick Workflow",
     "workflow_step1": "Step 1: Filter 3-star + picked photos → These are the best quality",
     "workflow_step2": "Step 2: Sort by 'City' descending → View sharpest photos",
     "workflow_step3": "Step 3: Start post-processing!",
-    "csv_note": "Tip: CSV report saved in report.csv in photo directory"
+    "bridge_tip": "💡 Simplest: Use Bridge to open different star folders (3星_优选/, 2星_良好/, etc.)"
   },
   "report": {
     "title": "Processing Statistics Report",

@@ -272,15 +272,15 @@
     "rule_1_star": "⭐ = 有鸟但未达标（1星）",
     "rule_0_star": "0星 = 技术质量太差（置信度/美学/锐度不达标或双眼不可见）",
     "rule_rejected": "❌ = 完全没鸟 → 0星_放弃/",
-    "folder_info": "📂 目录分配: 3星→3星_优选/ | 2星→2星_良好/ | 1星→1星_普通/ | 0星/-1星→0星_放弃/",
+    "folder_info": "📂 目录分配: 3星_优选/ | 2星_良好/ | 1星_普通/ | 0星_放弃/",
     "ready": "准备好了吗？选择目录开始吧！",
     "tools_list_title": "詹姆斯独立开发的更多免费工具：",
-    "tool_1": "慧眼选鸟：AI 鸟类摄影选片工具",
-    "tool_2": "慧眼识鸟：AI 鸟种识别工具 （Mac/Win Lightroom 插件）",
-    "tool_3": "慧眼找鸟：eBird信息检索工具 Web 测试版",
-    "tool_4": "慧眼去星：AI 银河去星软件（Mac Photoshop 插件）",
-    "tool_5": "图忆作品集：Tui Portfolio IOS 手机专用 鸟种统计工具",
-    "tool_6": "镜书：AI 旅游日记写作助手 IOS 手机专用"
+    "tool_1": "慧眼观鸟：AI 智能懂鸟与鸟种统计 IOS 手机专用",
+    "tool_2": "彗星星轨：一键生成星轨与延时影片 / Mac & Win",
+    "tool_3": "慧眼去星：AI 银河去星软件（Mac Photoshop 插件）",
+    "tool_4": "图忆作品集：Tui Portfolio IOS 手机专用 鸟种统计工具",
+    "tool_5": "镜书：AI 旅游日记写作助手 IOS 手机专用",
+    "tool_6": "猫头鹰：专有算法长曝光计算器"
   },
   "lightroom_guide": {
     "title": "Lightroom Classic 使用指南 - 如何查看与使用慧眼选鸟的评分结果",
@@ -308,19 +308,17 @@
     "sort_step3": "点击自定义，添加：",
     "sort_step3_city": "☑ 城市（头部锐度值 - 数值越高越清晰）",
     "sort_step3_state": "☑ 省/州（摄影美学 - 数值越高越美）",
-    "sort_step3_country": "（已停用）",
     "sort_step4": "点击排序依据（例如点击'城市'按锐度排序）",
     "fields_title": "评分字段说明",
     "field_rating": "星级(Rating): -1星(拒绝) / 0星(质量差) / 1星 / 2星 / 3星(优选)",
     "field_pick": "旗标(Pick): 🏆精选(3星中美学+锐度双Top 25%) / 🚫排除(-1星)",
     "field_city": "城市(City): 头部锐度值，范围0-2000+，越高越清晰",
     "field_state": "省/州(Province-State): 摄影美学，范围0-10，越高越符合人类审美",
-    "field_country": "国家(Country): 已停用（V3.2移除BRISQUE评估）",
     "workflow_title": "快捷工作流程",
     "workflow_step1": "步骤1: 筛选3星+精选照片 → 这是最优质的照片",
     "workflow_step2": "步骤2: 按'城市'降序排序 → 查看最锐利的照片",
     "workflow_step3": "步骤3: 开始后期处理！",
-    "csv_note": "提示：CSV报告保存在照片目录的 report.csv 文件中"
+    "bridge_tip": "💡 最简单: 用 Bridge 直接打开不同星级目录 (3星_优选/, 2星_良好/, 等)"
   },
   "report": {
     "title": "处理统计报告",

@@ -291,7 +291,7 @@ def cmd_reset(args):
         return 1
     
     # 清理 _tmp 目录
-    tmp_dir = os.path.join(args.directory, "_tmp")
+    tmp_dir = os.path.join(args.directory, ".superpicky")
     if os.path.exists(tmp_dir):
         print("\n🧹 清理临时目录...")
         try:

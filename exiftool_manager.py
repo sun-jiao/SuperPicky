@@ -471,7 +471,7 @@ class ExifToolManager:
                 print(msg)
         
         stats = {'restored': 0, 'failed': 0, 'not_found': 0}
-        manifest_path = os.path.join(dir_path, "_superpicky_manifest.json")
+        manifest_path = os.path.join(dir_path, ".superpicky_manifest.json")
         folders_to_check = set()
         
         # 第一步：从 manifest 恢复文件（如果存在）
@@ -523,7 +523,12 @@ class ExifToolManager:
         
         # 第二步：扫描评分子目录，恢复任何剩余文件
         log("\n📂 扫描评分子目录...")
-        for rating, folder_name in RATING_FOLDER_NAMES.items():
+        
+        # V3.3: 添加旧版目录到扫描列表（兼容旧版本）
+        legacy_folders = ["2星_良好_锐度", "2星_良好_美学"]
+        all_folders = list(RATING_FOLDER_NAMES.values()) + legacy_folders
+        
+        for folder_name in set(all_folders):  # 使用 set 去重
             folder_path = os.path.join(dir_path, folder_name)
             folders_to_check.add(folder_path)
             

@@ -35,7 +35,7 @@ def process_directory(dir_path, settings=None):
     print(f"{'='*80}\n")
 
     # 创建临时目录
-    work_dir = Path(dir_path) / "_tmp"
+    work_dir = Path(dir_path) / ".superpicky"
     work_dir.mkdir(exist_ok=True)
 
     # 获取所有NEF文件

@@ -25,7 +25,7 @@ class TempFileManager:
             工作目录路径（源目录/_tmp）
         """
         # 在源目录下创建 _tmp 子目录
-        work_dir = Path(source_dir) / "_tmp"
+        work_dir = Path(source_dir) / ".superpicky"
         work_dir.mkdir(parents=True, exist_ok=True)
         return work_dir
 

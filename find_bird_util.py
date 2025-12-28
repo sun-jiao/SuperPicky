@@ -72,7 +72,7 @@ def reset(directory, log_callback=None, i18n=None):
         log("\n📁 清理临时文件...")
 
     # 1.1 清理 _tmp 目录（包含所有临时文件、日志、crop图片等）
-    tmp_dir = os.path.join(directory, "_tmp")
+    tmp_dir = os.path.join(directory, ".superpicky")
     if os.path.exists(tmp_dir) and os.path.isdir(tmp_dir):
         try:
             # 先尝试修改权限，然后删除

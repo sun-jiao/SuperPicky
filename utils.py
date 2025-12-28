@@ -13,7 +13,7 @@ def log_message(message: str, directory: str = None, file_only: bool = False):
 
     Args:
         message: 日志消息
-        directory: 工作目录（可选，如果提供则写入该目录/_tmp/process_log.txt）
+        directory: 工作目录（可选，如果提供则写入该目录/.superpicky/process_log.txt）
         file_only: 仅写入文件，不打印到控制台（避免重复输出）
     """
     # 打印到控制台（除非指定只写文件）
@@ -23,7 +23,7 @@ def log_message(message: str, directory: str = None, file_only: bool = False):
     # 如果提供了目录，写入日志文件到_tmp子目录
     if directory:
         # 确保_tmp目录存在
-        tmp_dir = os.path.join(directory, "_tmp")
+        tmp_dir = os.path.join(directory, ".superpicky")
         os.makedirs(tmp_dir, exist_ok=True)
 
         log_file = os.path.join(tmp_dir, "process_log.txt")
@@ -45,31 +45,27 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
         header: 是否写入表头（第一次写入时为True）
     """
     # 确保_tmp目录存在
-    tmp_dir = os.path.join(directory, "_tmp")
+    tmp_dir = os.path.join(directory, ".superpicky")
     os.makedirs(tmp_dir, exist_ok=True)
 
     report_file = os.path.join(tmp_dir, "report.csv")
 
-    # 定义CSV列顺序（英文字段名，便于代码分析）
+    # 定义CSV列顺序
     # V3.2: 移除 brisque_score, sharpness_raw, sharpness_norm, norm_method（由keypoint_detector计算head_sharpness替代）
+    # V3.3: 移除 center_x, center_y, area_ratio, bbox_width, bbox_height, mask_pixels（无实际用途）
+    # V3.3: 字段名改为中文
     fieldnames = [
-        "filename",         # 文件名（不含扩展名）
-        "has_bird",         # 是否有鸟 (yes/no)
-        "confidence",       # AI置信度 (0-1)
-        "center_x",         # 鸟中心X坐标（归一化 0-1）
-        "center_y",         # 鸟中心Y坐标（归一化 0-1）
-        "area_ratio",       # BBox面积占比 (0-1)
-        "bbox_width",       # BBox宽度（像素）
-        "bbox_height",      # BBox高度（像素）
-        "mask_pixels",      # Mask有效像素数
-        "head_sharpness",   # 头部区域锐度（关键点检测）
-        "left_eye_vis",     # 左眼可见性置信度 (0-1)
-        "right_eye_vis",    # 右眼可见性置信度 (0-1)
-        "beak_vis",         # 喙可见性置信度 (0-1)
-        "has_visible_eye",  # 是否有可见鸟眼 (yes/no)
-        "has_visible_beak", # 是否有可见鸟喙 (yes/no)
-        "nima_score",       # NIMA美学评分 (1-10)
-        "rating"            # 最终评分 (-1/0/1/2/3)
+        "文件名",           # 文件名（不含扩展名）
+        "有鸟",             # 是否有鸟 (yes/no)
+        "置信度",           # AI置信度 (0-1)
+        "头部锐度",         # 头部区域锐度（关键点检测）
+        "左眼可见",         # 左眼可见性置信度 (0-1)
+        "右眼可见",         # 右眼可见性置信度 (0-1)
+        "喙可见",           # 喙可见性置信度 (0-1)
+        "眼睛可见",         # 是否有可见鸟眼 (yes/no)
+        "喙部可见",         # 是否有可见鸟喙 (yes/no)
+        "美学评分",         # NIMA美学评分 (1-10)
+        "星级"              # 最终评分 (-1/0/1/2/3)
     ]
 
     try:

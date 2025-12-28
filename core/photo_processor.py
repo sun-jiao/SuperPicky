@@ -30,12 +30,10 @@ from advanced_config import get_advanced_config
 from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 
-# 文件夹名称映射（支持所有星级）
+# 文件夹名称映射（V3.3: 简化 2 星目录）
 RATING_FOLDER_NAMES = {
     3: "3星_优选",
-    2: "2星_良好",  # 默认目录
-    "2_sharpness": "2星_良好_锐度",  # 锐度达标
-    "2_nima": "2星_良好_美学",  # NIMA达标
+    2: "2星_良好",
     1: "1星_普通",
     0: "0星_放弃",  # 0星和-1星都放这里
     -1: "0星_放弃",  # 无鸟照片
@@ -315,11 +313,11 @@ class PhotoProcessor:
         ai_total_start = time.time()
         
         for i, filename in enumerate(files_tbr, 1):
-
+            # 记录每张照片的开始时间
+            photo_start_time = time.time()
+            
             filepath = os.path.join(self.dir_path, filename)
             file_prefix, _ = os.path.splitext(filename)
-            
-            self._log(f"[{i}/{total_files}] {filename}")
             
             # 更新进度
             should_update = (i % 5 == 0 or i == total_files or i == 1)
@@ -397,7 +395,7 @@ class PhotoProcessor:
                                 beak_vis = kp_result.beak_vis
                                 head_sharpness = kp_result.head_sharpness
                 except Exception as e:
-                    self._log(f"  ⚠️  关键点检测失败: {e}", "warning")
+                    pass  # V3.3: 简化日志，静默关键点检测失败
             
             # Phase 3: 根据眼睛可见性决定是否计算NIMA
             # V3.2优化: 复用已裁剪的鸟区域，避免重复读取原图
@@ -427,13 +425,15 @@ class PhotoProcessor:
                         nima = scorer.calculate_nima(filepath)
                     
                     nima_time = (time_module.time() - step_start) * 1000
-                    if nima is not None:
-                        self._log(f"🎨 NIMA 美学评分: {nima:.2f} / 10 (裁剪区域)")
-                        self._log(f"  ⏱️  [补充] NIMA评分: {nima_time:.1f}ms")
+                    # V3.3: 简化日志，移除 NIMA 详情
+                    # if nima is not None:
+                    #     self._log(f"🎨 NIMA 美学评分: {nima:.2f} / 10 (裁剪区域)")
+                    #     self._log(f"  ⏱️  [补充] NIMA评分: {nima_time:.1f}ms")
                 except Exception as e:
-                    self._log(f"  ⚠️  NIMA计算失败: {e}", "warning")
-            elif detected and both_eyes_hidden:
-                self._log(f"⚡ NIMA 已跳过（双眼不可见）")
+                    pass  # V3.3: 简化日志，静默 NIMA 计算失败
+            # V3.3: 移除跳过 NIMA 日志
+            # elif detected and both_eyes_hidden:
+            #     self._log(f"⚡ NIMA 已跳过（双眼不可见）")
             
             # 使用 RatingEngine 计算评分
             rating_result = self.rating_engine.calculate(
@@ -447,8 +447,9 @@ class PhotoProcessor:
             pick = rating_result.pick
             reason = rating_result.reason
             
-            # 显示结果（使用头部锐度）
-            self._log_photo_result(rating_value, reason, confidence, head_sharpness, nima)
+            # 计算真正总耗时并输出简化日志
+            photo_time_ms = (time.time() - photo_start_time) * 1000
+            self._log_photo_result_simple(i, total_files, filename, rating_value, reason, photo_time_ms)
             
             # 记录统计
             self._update_stats(rating_value)
@@ -518,7 +519,7 @@ class PhotoProcessor:
         sharp: float, 
         nima: Optional[float]
     ):
-        """记录照片处理结果"""
+        """记录照片处理结果（详细版，保留用于调试）"""
         iqa_text = ""
         if nima is not None:
             iqa_text += f", 美学:{nima:.2f}"
@@ -533,6 +534,32 @@ class PhotoProcessor:
             self._log(f"  普通照片 - {reason}", "warning")
         else:  # -1
             self._log(f"  ❌ 无鸟 - {reason}", "error")
+    
+    def _log_photo_result_simple(
+        self,
+        index: int,
+        total: int,
+        filename: str,
+        rating: int,
+        reason: str,
+        time_ms: float
+    ):
+        """记录照片处理结果（简化版，单行输出）"""
+        # 星级标识
+        star_map = {3: "3星", 2: "2星", 1: "1星", 0: "0星", -1: "-1星"}
+        star_text = star_map.get(rating, "?星")
+        
+        # 简化原因显示
+        reason_short = reason if len(reason) < 20 else reason[:17] + "..."
+        
+        # 时间格式化
+        if time_ms >= 1000:
+            time_text = f"{time_ms/1000:.1f}s"
+        else:
+            time_text = f"{time_ms:.0f}ms"
+        
+        # 输出简化格式
+        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) | {time_text}")
     
     def _update_stats(self, rating: int):
         """更新统计数据"""
@@ -562,7 +589,7 @@ class PhotoProcessor:
         """更新CSV中的关键点数据和评分"""
         import csv
         
-        csv_path = os.path.join(self.dir_path, "_tmp", "report.csv")
+        csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
         if not os.path.exists(csv_path):
             return
         
@@ -670,17 +697,8 @@ class PhotoProcessor:
                 raw_ext = raw_dict[prefix]
                 raw_path = os.path.join(self.dir_path, prefix + raw_ext)
                 if os.path.exists(raw_path):
-                    # 确定目标文件夹
-                    if rating == 2 and prefix in self.star2_reasons:
-                        reason = self.star2_reasons[prefix]
-                        if reason == 'sharpness':
-                            folder = RATING_FOLDER_NAMES["2_sharpness"]
-                        elif reason == 'nima':
-                            folder = RATING_FOLDER_NAMES["2_nima"]
-                        else:
-                            folder = RATING_FOLDER_NAMES[2]  # both - 用默认
-                    else:
-                        folder = RATING_FOLDER_NAMES.get(rating, str(rating))
+                    # V3.3: 简化，统一使用星级对应目录
+                    folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
                     
                     files_to_move.append({
                         'filename': prefix + raw_ext,
@@ -728,12 +746,12 @@ class PhotoProcessor:
             "stats": {"total_moved": moved_count}
         }
         
-        manifest_path = os.path.join(self.dir_path, "_superpicky_manifest.json")
+        manifest_path = os.path.join(self.dir_path, ".superpicky_manifest.json")
         try:
             with open(manifest_path, 'w', encoding='utf-8') as f:
                 json.dump(manifest, f, ensure_ascii=False, indent=2)
             self._log(f"  ✅ 已移动 {moved_count} 张照片")
-            self._log(f"  📋 Manifest: _superpicky_manifest.json")
+            self._log(f"  📋 Manifest: .superpicky_manifest.json")
         except Exception as e:
             self._log(f"  ⚠️  保存manifest失败: {e}", "warning")
     

@@ -21,7 +21,7 @@ class PostAdjustmentEngine:
             directory: 照片目录路径
         """
         self.directory = directory
-        self.report_path = os.path.join(directory, "_tmp", "report.csv")
+        self.report_path = os.path.join(directory, ".superpicky", "report.csv")
         self.photos_data: List[Dict] = []
         self.image_extensions = ['.nef', '.NEF', '.cr2', '.CR2', '.arw', '.ARW',
                                 '.jpg', '.JPG', '.jpeg', '.JPEG', '.dng', '.DNG']
