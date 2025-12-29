@@ -50,22 +50,17 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
 
     report_file = os.path.join(tmp_dir, "report.csv")
 
-    # 定义CSV列顺序
-    # V3.2: 移除 brisque_score, sharpness_raw, sharpness_norm, norm_method（由keypoint_detector计算head_sharpness替代）
-    # V3.3: 移除 center_x, center_y, area_ratio, bbox_width, bbox_height, mask_pixels（无实际用途）
-    # V3.3: 字段名改为中文
+    # V3.3: 全英文列名，简化代码并避免中英文映射
     fieldnames = [
-        "文件名",           # 文件名（不含扩展名）
-        "有鸟",             # 是否有鸟 (yes/no)
-        "置信度",           # AI置信度 (0-1)
-        "头部锐度",         # 头部区域锐度（关键点检测）
-        "左眼可见",         # 左眼可见性置信度 (0-1)
-        "右眼可见",         # 右眼可见性置信度 (0-1)
-        "喙可见",           # 喙可见性置信度 (0-1)
-        "眼睛可见",         # 是否有可见鸟眼 (yes/no)
-        "喙部可见",         # 是否有可见鸟喙 (yes/no)
-        "美学评分",         # NIMA美学评分 (1-10)
-        "星级"              # 最终评分 (-1/0/1/2/3)
+        "filename",        # 文件名（不含扩展名）
+        "has_bird",        # 是否有鸟 (yes/no)
+        "confidence",      # AI置信度 (0-1)
+        "head_sharp",      # 头部区域锐度
+        "left_eye",        # 左眼可见性 (0-1)
+        "right_eye",       # 右眼可见性 (0-1)
+        "beak",            # 喙可见性 (0-1)
+        "nima_score",      # NIMA美学评分 (0-10)
+        "rating"           # 最终评分 (-1/0/1/2/3)
     ]
 
     try:

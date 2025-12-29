@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SuperPicky V3.2 - Post Digital Adjustment Dialog
-二次选鸟对话框 - 简洁专业风格
+SuperPicky V3.3 - Re-Star Dialog
+重新评星对话框 - 完全重写版本
 """
 
 import tkinter as tk
 from tkinter import ttk, messagebox
 from typing import Dict, List, Set, Optional
-from post_adjustment_engine import PostAdjustmentEngine
+from post_adjustment_engine import PostAdjustmentEngine, safe_int, safe_float
 from exiftool_manager import get_exiftool_manager
 from advanced_config import get_advanced_config
 from i18n import get_i18n
 
 
 class PostAdjustmentDialog:
-    """二次选鸟对话框"""
+    """重新评星对话框"""
 
     def __init__(self, parent, directory: str, current_sharpness: int = 500,
-                 current_nima: float = 4.8, on_complete_callback=None):
+                 current_nima: float = 5.0, on_complete_callback=None):
         """
         初始化对话框
 
@@ -36,8 +36,26 @@ class PostAdjustmentDialog:
         self.i18n = get_i18n(self.config.language)
 
         self.window.title(self.i18n.t("post_adjustment.title"))
-        self.window.geometry("750x800")  # 高度增加100
-        self.window.resizable(False, False)
+        # V3.4: 优化窗口高度 - 默认紧凑，展开高级时动态扩展
+        self.window.geometry("750x550")  # 默认紧凑高度
+        self.window.resizable(True, True)  # 允许调整大小
+        self.window.minsize(750, 520)  # 设置最小尺寸
+        
+        # 保存默认和扩展高度
+        self.compact_height = 550
+        self.expanded_height = 850
+        
+        # V3.3: 配置窗口样式，与主程序保持一致（不改变主题）
+        self.window.configure(bg='#f0f0f0')  # 浅灰色背景
+        
+        # 配置 ttk 样式（只配置必要的颜色，不改变主题）
+        style = ttk.Style()
+        # 不调用 theme_use，保持与主窗口一致的主题
+        
+        # 只配置背景色
+        style.configure('TFrame', background='#f0f0f0')
+        style.configure('TLabelframe', background='#f0f0f0')
+        style.configure('TLabelframe.Label', background='#f0f0f0', font=('PingFang SC', 14, 'bold'))
 
         self.directory = directory
         self.on_complete_callback = on_complete_callback
@@ -77,81 +95,94 @@ class PostAdjustmentDialog:
         self._center_window()
 
     def _create_widgets(self):
-        """创建UI组件 - 与主界面风格一致"""
+        """创建UI组件 - V3.4: 两列布局设计"""
 
-        # ===== 1. 顶部说明 =====
-        desc_frame = ttk.Frame(self.window, padding=15)
-        desc_frame.pack(fill=tk.X)
+        # ===== 顶部：两列布局 =====
+        top_frame = ttk.Frame(self.window, padding=15)
+        top_frame.pack(fill=tk.BOTH, expand=False, padx=15, pady=(15, 0))
+        
+        # 配置两列等宽
+        top_frame.columnconfigure(0, weight=1)
+        top_frame.columnconfigure(1, weight=1)
 
-        ttk.Label(
-            desc_frame,
-            text=self.i18n.t("post_adjustment.description"),
-            font=("PingFang SC", 16),
-            foreground="#666"
-        ).pack()
-
-        # ===== 2. 当前统计区域 =====
-        stats_frame = ttk.LabelFrame(
-            self.window,
-            text=self.i18n.t("stats.current_stats"),
+        # 左列：当前评星统计
+        current_frame = ttk.LabelFrame(
+            top_frame,
+            text="  当前评星统计  ",
             padding=15
         )
-        stats_frame.pack(fill=tk.X, padx=15, pady=(15, 10))
+        current_frame.grid(row=0, column=0, sticky='nsew', padx=(0, 7))
 
-        # 配置LabelFrame标题字体
-        stats_frame_style = ttk.Style()
-        stats_frame_style.configure('Stats.TLabelframe.Label', font=('PingFang SC', 16))
-        stats_frame.configure(style='Stats.TLabelframe')
-
-        # 使用Text组件以支持行间距设置
         self.current_stats_label = tk.Text(
-            stats_frame,
+            current_frame,
             height=7,
-            font=("Arial", 14),
+            width=35,
+            font=("PingFang SC", 13),
             spacing1=4,
             spacing2=2,
             spacing3=4,
+            padx=10,  # 增加水平内边距
+            pady=8,   # 增加垂直内边距
             relief=tk.FLAT,
             wrap=tk.WORD,
+            bg='#fafafa',
+            fg='#333',
+            highlightthickness=0,
+            borderwidth=0,
             state='disabled'
         )
-        self.current_stats_label.pack(fill=tk.BOTH)
+        self.current_stats_label.pack(fill=tk.BOTH, expand=True)
 
-        # ===== 3. 阈值调整区域 =====
-        threshold_frame = ttk.LabelFrame(
-            self.window,
-            text=self.i18n.t("post_adjustment.threshold_group"),
+        # 右列：调整后预览
+        preview_frame = ttk.LabelFrame(
+            top_frame,
+            text="  调整后预览  ",
             padding=15
         )
-        threshold_frame.pack(fill=tk.X, padx=15, pady=(0, 10))
+        preview_frame.grid(row=0, column=1, sticky='nsew', padx=(7, 0))
 
-        # 配置LabelFrame标题字体
-        threshold_frame_style = ttk.Style()
-        threshold_frame_style.configure('Threshold.TLabelframe.Label', font=('PingFang SC', 16))
-        threshold_frame.configure(style='Threshold.TLabelframe')
+        self.preview_stats_label = tk.Text(
+            preview_frame,
+            height=7,
+            width=35,
+            font=("PingFang SC", 13),
+            spacing1=4,
+            spacing2=2,
+            spacing3=4,
+            padx=10,  # 增加水平内边距
+            pady=8,   # 增加垂直内边距
+            relief=tk.FLAT,
+            wrap=tk.WORD,
+            bg='#fafafa',
+            fg='#333',  # 改为默认深灰色，让红色tag能正常显示
+            highlightthickness=0,
+            borderwidth=0,
+            state='disabled'
+        )
+        self.preview_stats_label.pack(fill=tk.BOTH, expand=True)
 
-        # 说明
-        ttk.Label(
-            threshold_frame,
-            text=self.i18n.t("post_adjustment.threshold_description"),
-            font=("PingFang SC", 11),
-            foreground="#666"
-        ).pack(pady=(0, 12))
+        # ===== 中间：阈值调整区域 =====
+        threshold_frame = ttk.LabelFrame(
+            self.window,
+            text="  阈值调整（2/3星）  ",
+            padding=15
+        )
+        threshold_frame.pack(fill=tk.X, padx=15, pady=(15, 10))
 
         # 锐度阈值
         self._create_slider(
             threshold_frame,
-            self.i18n.t("post_adjustment.sharpness_threshold"),
+            "🔍 鸟锐度阈值 (2/3星):",
             self.sharpness_threshold_var,
-            from_=6000, to=9000,
-            step=100,
+            from_=300, to=1000,
+            step=50,
             format_func=lambda v: f"{v:.0f}"
         )
 
         # 美学阈值
         self._create_slider(
             threshold_frame,
-            self.i18n.t("post_adjustment.nima_threshold"),
+            "🎨 摄影美学阈值 (2/3星):",
             self.nima_threshold_var,
             from_=4.5, to=5.5,
             step=0.1,
@@ -161,59 +192,21 @@ class PostAdjustmentDialog:
         # 精选百分比
         self._create_slider(
             threshold_frame,
-            self.i18n.t("post_adjustment.picked_percentage"),
+            "🏆 精选旗标百分比:",
             self.picked_percentage_var,
             from_=10, to=50,
             step=5,
             format_func=lambda v: f"{v:.0f}%"
         )
 
-        # ===== 4. 预览区域 =====
-        preview_frame = ttk.LabelFrame(
-            self.window,
-            text=self.i18n.t("post_adjustment.preview_title"),
-            padding=15
-        )
-        preview_frame.pack(fill=tk.X, padx=15, pady=(0, 10))
-
-        # 配置LabelFrame标题字体
-        preview_frame_style = ttk.Style()
-        preview_frame_style.configure('Preview.TLabelframe.Label', font=('PingFang SC', 16))
-        preview_frame.configure(style='Preview.TLabelframe')
-
-        # 使用Text组件以支持行间距设置
-        self.preview_stats_label = tk.Text(
-            preview_frame,
-            height=7,
-            font=("Arial", 14),
-            spacing1=4,
-            spacing2=2,
-            spacing3=4,
-            relief=tk.FLAT,
-            wrap=tk.WORD,
-            state='disabled'
-        )
-        self.preview_stats_label.pack(fill=tk.BOTH)
-
-        # ===== 5. 进度区域（隐藏）=====
-        self.progress_frame = ttk.Frame(self.window, padding=10)
-        # 不pack，需要时再显示
-
-        self.progress_label = ttk.Label(
-            self.progress_frame,
-            text="",
-            font=("Arial", 13)
-        )
-        self.progress_label.pack()
-
-        # ===== 6. 底部按钮 =====
+        # ===== 底部按钮（包含中间进度区域）=====
         btn_frame = ttk.Frame(self.window, padding=15)
-        btn_frame.pack(fill=tk.X, side=tk.BOTTOM)
-
+        btn_frame.pack(fill=tk.X)
+        
         # 左侧取消按钮
         ttk.Button(
             btn_frame,
-            text=self.i18n.t("buttons.cancel"),
+            text="取消",
             command=self.window.destroy,
             width=15
         ).pack(side=tk.LEFT, padx=5)
@@ -221,12 +214,91 @@ class PostAdjustmentDialog:
         # 右侧应用按钮
         self.apply_btn = ttk.Button(
             btn_frame,
-            text=self.i18n.t("buttons.apply"),
+            text="✓ 应用新评星",
             command=self._apply_new_ratings,
             width=15,
             state='disabled'
         )
         self.apply_btn.pack(side=tk.RIGHT, padx=5)
+        
+        # 中间进度区域（初始隐藏，只在处理时显示）
+        self.progress_frame = ttk.Frame(btn_frame)
+        self.progress_label = ttk.Label(
+            self.progress_frame,
+            text="",
+            font=("PingFang SC", 11),
+            foreground="#333"
+        )
+        self.progress_label.pack()
+        
+        # ===== 高级设置（折叠，放在按钮之下）=====
+        self.advanced_expanded = tk.BooleanVar(value=False)
+        
+        # 高级设置折叠按钮
+        advanced_btn_frame = ttk.Frame(self.window)
+        advanced_btn_frame.pack(fill=tk.X, padx=15, pady=(5, 0))
+        
+        self.advanced_btn = ttk.Checkbutton(
+            advanced_btn_frame,
+            text="▶ 高级: 0星筛选设置",
+            variable=self.advanced_expanded,
+            command=self._toggle_advanced,
+            style='Toolbutton'
+        )
+        self.advanced_btn.pack(anchor=tk.W)
+
+        # 高级设置内容区域
+        self.advanced_frame = ttk.LabelFrame(
+            self.window,
+            text="  0星筛选阈值（技术质量不达标）  ",
+            padding=15
+        )
+        # 默认不显示
+
+        # 最低置信度
+        self._create_slider(
+            self.advanced_frame,
+            "AI 最低置信度:",
+            self.min_confidence_var,
+            from_=0.3, to=0.8,
+            step=0.05,
+            format_func=lambda v: f"{v:.2f}"
+        )
+
+        # 最低锐度
+        self._create_slider(
+            self.advanced_frame,
+            "头部最低锐度:",
+            self.min_sharpness_var,
+            from_=100, to=500,
+            step=50,
+            format_func=lambda v: f"{v:.0f}"
+        )
+
+        # 最低美学
+        self._create_slider(
+            self.advanced_frame,
+            "最低美学评分:",
+            self.min_nima_var,
+            from_=3.0, to=5.0,
+            step=0.1,
+            format_func=lambda v: f"{v:.1f}"
+        )
+
+    def _toggle_advanced(self):
+        """切换高级设置区域显示，并动态调整窗口高度"""
+        if self.advanced_expanded.get():
+            # 展开 - 增加窗口高度
+            current_width = self.window.winfo_width()
+            self.window.geometry(f"{current_width}x{self.expanded_height}")
+            self.advanced_frame.pack(fill=tk.X, padx=15, pady=(5, 10))
+            self.advanced_btn.config(text="▼ 高级: 0星筛选设置")
+        else:
+            # 折叠 - 恢复紧凑高度
+            current_width = self.window.winfo_width()
+            self.window.geometry(f"{current_width}x{self.compact_height}")
+            self.advanced_frame.pack_forget()
+            self.advanced_btn.config(text="▶ 高级: 0星筛选设置")
 
     def _create_slider(self, parent, label_text, variable, from_, to, step, format_func):
         """创建滑块组件，支持步进"""
@@ -292,11 +364,21 @@ class PostAdjustmentDialog:
             return
 
         self.original_photos = self.engine.photos_data.copy()
+
+        # DEBUG: 打印加载的照片数量
+        print(f"DEBUG: 加载了 {len(self.original_photos)} 张照片的数据")
+
         self.current_stats = self._get_original_statistics()
+
+        # DEBUG: 打印统计结果
+        print(f"DEBUG: 当前统计 = {self.current_stats}")
+
         self._update_current_stats_display()
 
         self.apply_btn.config(state='normal')
+        # 初始化时触发预览计算，显示与当前相同的数据
         self._on_threshold_changed()
+
 
     def _get_original_statistics(self) -> Dict[str, int]:
         """获取原始统计（包括重新计算picked）"""
@@ -312,8 +394,8 @@ class PostAdjustmentDialog:
         star_3_photos = []
 
         for photo in self.original_photos:
-            rating_str = photo.get('rating', 0)
-            rating = int(rating_str) if isinstance(rating_str, (int, str)) and str(rating_str).isdigit() else 0
+            # 使用 safe_int 处理评分
+            rating = safe_int(photo.get('rating', '0'), 0)
 
             if rating == 0:
                 stats['star_0'] += 1
@@ -334,28 +416,31 @@ class PostAdjustmentDialog:
 
         return stats
 
-    def _update_current_stats_display(self):
-        """更新当前统计显示 - 大字体"""
+
+    def _display_statistics(self):
+        """显示统计信息（垂直多行格式）"""
         if not self.current_stats:
             return
 
         stats = self.current_stats
         total = stats['total']
-
-        text = self.i18n.t("stats.total_bird_photos", total=total) + "\n\n"
-
-        if stats.get('picked', 0) > 0:
-            text += self.i18n.t("stats.picked_count", count=stats['picked']) + "\n"
-
-        text += self.i18n.t("stats.star_3_count", count=stats['star_3'], percent=stats['star_3']/total*100) + "\n"
-        text += self.i18n.t("stats.star_2_count", count=stats['star_2'], percent=stats['star_2']/total*100) + "\n"
-        text += self.i18n.t("stats.star_1_count", count=stats['star_1'], percent=stats['star_1']/total*100) + "\n"
-        text += self.i18n.t("stats.star_0_count", count=stats['star_0'], percent=stats['star_0']/total*100)
+        
+        # 垂直格式显示，优化汉字和数字间距
+        text = f"总共 {total} 张有鸟照片\n\n"
+        text += f"⭐⭐⭐ 三星 ({stats['star_3']}) 张\n"
+        text += f"  └─🏆 精选 ({stats['picked']}) 张\n"
+        text += f"⭐⭐ 两星 ({stats['star_2']}) 张\n"
+        text += f"⭐ 一星 ({stats['star_1']}) 张\n"
+        text += f"0星 ({stats['star_0']}) 张"
 
         self.current_stats_label.config(state=tk.NORMAL)
         self.current_stats_label.delete("1.0", tk.END)
         self.current_stats_label.insert("1.0", text)
         self.current_stats_label.config(state=tk.DISABLED)
+
+    def _update_current_stats_display(self):
+        """更新当前统计显示"""
+        self._display_statistics()
 
     def _on_threshold_changed(self):
         """阈值改变回调（防抖）"""
@@ -393,55 +478,76 @@ class PostAdjustmentDialog:
         self._update_preview_display()
 
     def _update_preview_display(self):
-        """更新预览显示 - 大字体"""
+        """更新预览显示（垂直多行格式，变化量红色高亮）"""
         if not self.preview_stats or not self.current_stats:
             return
 
         old = self.current_stats
         new = self.preview_stats
-
-        def format_diff(old_val, new_val, total):
-            diff = new_val - old_val
-            pct = new_val / total * 100 if total > 0 else 0
-
-            if diff > 0:
-                return self.i18n.t("stats.count_with_percent_increase", count=new_val, percent=pct, diff=diff)
-            elif diff < 0:
-                return self.i18n.t("stats.count_with_percent_decrease", count=new_val, percent=pct, diff=diff)
-            else:
-                return self.i18n.t("stats.count_with_percent_nochange", count=new_val, percent=pct)
-
         total = new['total']
-        text = ""
-
-        # 精选旗标
-        picked_count = new['picked']
-        star_3_count = new['star_3']
-        if star_3_count > 0:
-            picked_pct = picked_count / star_3_count * 100
-            old_picked = old.get('picked', 0)
-            picked_diff = picked_count - old_picked
-            if picked_diff > 0:
-                text += self.i18n.t("stats.picked_diff_increase", count=picked_count, pct=picked_pct, diff=picked_diff) + "\n\n"
-            elif picked_diff < 0:
-                text += self.i18n.t("stats.picked_diff_decrease", count=picked_count, pct=picked_pct, diff=picked_diff) + "\n\n"
-            else:
-                text += self.i18n.t("stats.picked_diff_nochange", count=picked_count, pct=picked_pct) + "\n\n"
-        else:
-            text += self.i18n.t("stats.picked_no_three_star") + "\n\n"
-
-        text += "⭐⭐⭐ 3星: " + format_diff(old['star_3'], new['star_3'], total) + "\n"
-        text += "⭐⭐ 2星: " + format_diff(old['star_2'], new['star_2'], total) + "\n"
-        text += "⭐ 1星: " + format_diff(old['star_1'], new['star_1'], total) + "\n"
-        text += "0星: " + format_diff(old['star_0'], new['star_0'], total)
-
+        
+        # 检查是否有任何变化
+        has_change = (
+            new['star_3'] != old['star_3'] or
+            new['star_2'] != old['star_2'] or
+            new['star_1'] != old['star_1'] or
+            new['star_0'] != old['star_0'] or
+            new['picked'] != old.get('picked', 0)
+        )
+        
+        # 启用编辑
         self.preview_stats_label.config(state=tk.NORMAL)
         self.preview_stats_label.delete("1.0", tk.END)
-        self.preview_stats_label.insert("1.0", text)
+        
+        # 配置红色tag用于高亮变化量
+        self.preview_stats_label.tag_config("red", foreground="#d32f2f")
+        
+        # 总数
+        self.preview_stats_label.insert("end", f"总共 {total} 张有鸟照片\n\n")
+        
+        # 三星 + 变化
+        self.preview_stats_label.insert("end", f"⭐⭐⭐ 三星 ({new['star_3']}) 张")
+        diff_3 = new['star_3'] - old['star_3']
+        if diff_3 != 0:
+            change_text = f" [{diff_3:+d}]"
+            self.preview_stats_label.insert("end", change_text, "red")
+        self.preview_stats_label.insert("end", "\n")
+        
+        # 精选 + 变化
+        self.preview_stats_label.insert("end", f"  └─🏆 精选 ({new['picked']}) 张")
+        diff_picked = new['picked'] - old.get('picked', 0)
+        if diff_picked != 0:
+            change_text = f" [{diff_picked:+d}]"
+            self.preview_stats_label.insert("end", change_text, "red")
+        self.preview_stats_label.insert("end", "\n")
+        
+        # 两星 + 变化
+        self.preview_stats_label.insert("end", f"⭐⭐ 两星 ({new['star_2']}) 张")
+        diff_2 = new['star_2'] - old['star_2']
+        if diff_2 != 0:
+            change_text = f" [{diff_2:+d}]"
+            self.preview_stats_label.insert("end", change_text, "red")
+        self.preview_stats_label.insert("end", "\n")
+        
+        # 一星 + 变化
+        self.preview_stats_label.insert("end", f"⭐ 一星 ({new['star_1']}) 张")
+        diff_1 = new['star_1'] - old['star_1']
+        if diff_1 != 0:
+            change_text = f" [{diff_1:+d}]"
+            self.preview_stats_label.insert("end", change_text, "red")
+        self.preview_stats_label.insert("end", "\n")
+        
+        # 0星 + 变化
+        self.preview_stats_label.insert("end", f"0星 ({new['star_0']}) 张")
+        diff_0 = new['star_0'] - old['star_0']
+        if diff_0 != 0:
+            change_text = f" [{diff_0:+d}]"
+            self.preview_stats_label.insert("end", change_text, "red")
+        # 禁止编辑
         self.preview_stats_label.config(state=tk.DISABLED)
 
     def _apply_new_ratings(self):
-        """应用新评分"""
+        """应用新评星（只处理评分有变化的照片）"""
         if not self.updated_photos:
             messagebox.showwarning(
                 self.i18n.t("messages.hint"),
@@ -449,7 +555,23 @@ class PostAdjustmentDialog:
             )
             return
 
-        msg = self.i18n.t("post_adjustment.apply_confirm_msg", count=len(self.updated_photos))
+        # 过滤出评分有变化的照片
+        changed_photos = []
+        for photo in self.updated_photos:
+            new_rating = photo.get('新星级', 0)
+            old_rating = int(photo.get('rating', 0))
+            if new_rating != old_rating:
+                changed_photos.append(photo)
+        
+        if not changed_photos:
+            messagebox.showinfo(
+                self.i18n.t("messages.hint"),
+                "当前阈值设置与原始评星一致，无需调整"
+            )
+            return
+
+        # 确认对话框显示实际变化数量
+        msg = f"将更新 {len(changed_photos)} 张照片的评星\n（共 {len(self.updated_photos)} 张有鸟照片）\n\n确定应用新评星？"
 
         if not messagebox.askyesno(self.i18n.t("post_adjustment.apply_confirm_title"), msg):
             return
@@ -457,54 +579,91 @@ class PostAdjustmentDialog:
         self.apply_btn.config(state='disabled')
         self.window.protocol("WM_DELETE_WINDOW", lambda: None)
 
+        # 显示进度区域
         self.progress_frame.pack(fill=tk.X, padx=15, pady=10)
-        self.progress_label.config(text=self.i18n.t("post_adjustment.preparing_data", count=len(self.updated_photos)))
+        self.progress_label.config(text="开始处理...")
         self.window.update()
-
+        
+        total_changed = len(changed_photos)
         batch_data = []
         not_found_count = 0
 
-        for photo in self.updated_photos:
+        # 准备数据阶段 - 数字进度显示
+        for i, photo in enumerate(changed_photos):
             filename = photo['filename']
             file_path = self.engine.find_image_file(filename)
 
             if not file_path:
                 not_found_count += 1
-                continue
+            else:
+                rating = photo.get('新星级', 0)
+                pick = 1 if filename in self.picked_files else 0
+                batch_data.append({
+                    'file': file_path,
+                    'rating': rating,
+                    'pick': pick
+                })
+            
+            # 每10张更新一次进度显示
+            if (i + 1) % 10 == 0 or i == total_changed - 1:
+                self.progress_label.config(text=f"查找文件 {i+1}/{total_changed}")
+                self.window.update()
 
-            rating = photo.get('新星级', 0)
-            pick = 1 if filename in self.picked_files else 0
-
-            batch_data.append({
-                'file': file_path,
-                'rating': rating,
-                'pick': pick
-            })
-
-        if not_found_count > 0:
-            self.progress_label.config(text=self.i18n.t("post_adjustment.files_not_found", count=not_found_count))
-            self.window.update()
+        if not batch_data:
+            self.progress_frame.pack_forget()
+            self.apply_btn.config(state='normal')
+            messagebox.showwarning(
+                self.i18n.t("messages.hint"),
+                f"未找到任何需要处理的文件（{not_found_count} 个文件不存在）"
+            )
+            return
 
         try:
-            self.progress_label.config(
-                text=self.i18n.t("post_adjustment.writing_exif", count=len(batch_data))
-            )
+            # EXIF写入阶段 - 分批处理，每批20个文件
+            exiftool_mgr = get_exiftool_manager()
+            total_files = len(batch_data)
+            batch_size = 20
+            
+            success_count = 0
+            failed_count = 0
+            
+            for i in range(0, total_files, batch_size):
+                batch = batch_data[i:i+batch_size]
+                current = min(i + batch_size, total_files)
+                
+                # 显示进度
+                self.progress_label.config(text=f"写入EXIF {current}/{total_files}")
+                self.window.update()
+                
+                # 处理这一批
+                stats = exiftool_mgr.batch_set_metadata(batch)
+                success_count += stats['success']
+                failed_count += stats['failed']
+            
+            # CSV更新阶段
+            self.progress_label.config(text="更新CSV报告...")
             self.window.update()
 
-            exiftool_mgr = get_exiftool_manager()
-            stats = exiftool_mgr.batch_set_metadata(batch_data)
+            csv_success, csv_msg = self.engine.update_report_csv(
+                changed_photos,
+                self.picked_files
+            )
+            
+            if csv_success:
+                print(f"✅ {csv_msg}")
+            else:
+                print(f"⚠️ {csv_msg}")
+
+            self.progress_label.config(text="✅ 完成!")
+            self.window.update()
 
             self.progress_frame.pack_forget()
 
+            # 结果消息
             if not_found_count > 0:
-                result_msg = self.i18n.t("post_adjustment.apply_success_with_skip",
-                                        success=stats['success'],
-                                        failed=stats['failed'],
-                                        skipped=not_found_count)
+                result_msg = f"✅ 成功: {success_count} 张\n❌ 失败: {failed_count} 张\n⏭️ 跳过(未找到): {not_found_count} 张"
             else:
-                result_msg = self.i18n.t("post_adjustment.apply_success_msg",
-                                        success=stats['success'],
-                                        failed=stats['failed'])
+                result_msg = f"✅ 成功: {success_count} 张\n❌ 失败: {failed_count} 张"
 
             messagebox.showinfo(self.i18n.t("post_adjustment.apply_success_title"), result_msg)
 
@@ -527,9 +686,9 @@ class PostAdjustmentDialog:
             # 确保窗口已经完全创建
             self.window.update_idletasks()
 
-            # 使用指定的宽高（750x800）
+            # 使用紧凑高度（不是硬编码的900）
             width = 750
-            height = 800
+            height = self.compact_height  # 使用动态高度
 
             # 计算居中位置
             screen_width = self.window.winfo_screenwidth()

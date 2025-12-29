@@ -479,6 +479,7 @@ class PhotoProcessor:
                         left_eye_vis,
                         right_eye_vis,
                         beak_vis,
+                        nima,
                         rating_value
                     )
                     
@@ -584,9 +585,10 @@ class PhotoProcessor:
         left_eye_vis: float,
         right_eye_vis: float,
         beak_vis: float,
+        nima: float,
         rating: int
     ):
-        """更新CSV中的关键点数据和评分"""
+        """更新CSV中的关键点数据和评分（V3.3: 使用英文列名）"""
         import csv
         
         csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
@@ -596,42 +598,25 @@ class PhotoProcessor:
         try:
             # 读取现有CSV
             rows = []
-            fieldnames = None
             with open(csv_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f)
                 fieldnames = list(reader.fieldnames) if reader.fieldnames else []
                 
-                # 确保新字段存在
-                new_fields = ['head_sharpness', 'left_eye_vis', 'right_eye_vis', 'beak_vis', 'has_visible_eye', 'has_visible_beak']
-                for field in new_fields:
-                    if field not in fieldnames:
-                        # 在 'nima_score' 之前插入新字段
-                        if 'nima_score' in fieldnames:
-                            idx = fieldnames.index('nima_score')
-                            fieldnames.insert(idx, field)
-                        else:
-                            fieldnames.append(field)
-                
                 for row in reader:
                     if row.get('filename') == filename:
-                        # 更新关键点数据和评分
-                        row['head_sharpness'] = f"{head_sharpness:.0f}" if head_sharpness > 0 else "-"
-                        row['left_eye_vis'] = f"{left_eye_vis:.2f}"
-                        row['right_eye_vis'] = f"{right_eye_vis:.2f}"
-                        row['beak_vis'] = f"{beak_vis:.2f}"
-                        row['has_visible_eye'] = "yes" if has_visible_eye else "no"
-                        row['has_visible_beak'] = "yes" if has_visible_beak else "no"
+                        # V3.3: 使用新的英文字段名更新数据
+                        row['head_sharp'] = f"{head_sharpness:.0f}" if head_sharpness > 0 else "-"
+                        row['left_eye'] = f"{left_eye_vis:.2f}"
+                        row['right_eye'] = f"{right_eye_vis:.2f}"
+                        row['beak'] = f"{beak_vis:.2f}"
+                        row['nima_score'] = f"{nima:.2f}" if nima is not None else "-"
                         row['rating'] = str(rating)
-                    # 为缺失字段设置默认值
-                    for field in new_fields:
-                        if field not in row:
-                            row[field] = "-"
                     rows.append(row)
             
-            # 写回CSV（使用新的字段列表）
+            # 写回CSV
             if fieldnames and rows:
                 with open(csv_path, 'w', newline='', encoding='utf-8-sig') as f:
-                    writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction='ignore')
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
                     writer.writeheader()
                     writer.writerows(rows)
         except Exception as e:

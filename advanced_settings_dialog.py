@@ -114,7 +114,7 @@ class AdvancedSettingsDialog:
         )
 
         # CSV报告 - 隐藏（不再显示，因为用户不需要了解这个技术细节）
-        # CSV保存强制启用,因为二次选鸟功能需要
+        # CSV保存强制启用,因为重新评星功能需要
         self.vars["save_csv"] = tk.BooleanVar(value=True)
 
         # 日志详细程度
@@ -253,7 +253,7 @@ class AdvancedSettingsDialog:
         self.config.set_min_nima(self.vars["min_nima"].get())
         # V3.2: 移除 max_brisque
         self.config.set_picked_top_percentage(self.vars["picked_top_percentage"].get())
-        # CSV保存强制为True,因为二次选鸟功能需要
+        # CSV保存强制为True,因为重新评星功能需要
         self.config.set_save_csv(True)
         self.config.set_log_level(self.vars["log_level"].get())
 

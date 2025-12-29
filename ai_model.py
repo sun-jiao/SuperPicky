@@ -123,18 +123,17 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
         except Exception as cpu_error:
             log_message(f"❌ AI推理完全失败: {cpu_error}", dir)
             # 返回"无鸟"结果（V3.1）
+            # V3.3: 使用英文列名
             data = {
-                "文件名": os.path.splitext(os.path.basename(image_path))[0],
-                "有鸟": "no",
-                "置信度": 0.0,
-                "头部锐度": "-",
-                "左眼可见": "-",
-                "右眼可见": "-",
-                "喙可见": "-",
-                "眼睛可见": "-",
-                "喙部可见": "-",
-                "美学评分": "-",
-                "星级": -1
+                "filename": os.path.splitext(os.path.basename(image_path))[0],
+                "has_bird": "no",
+                "confidence": 0.0,
+                "head_sharp": "-",
+                "left_eye": "-",
+                "right_eye": "-",
+                "beak": "-",
+                "nima_score": "-",
+                "rating": -1
             }
             write_to_csv(data, dir, False)
             return found_bird, bird_result, 0.0, 0.0, None, None, None  # V3.2: 移除brisque
@@ -176,18 +175,17 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
 
     # 如果没有找到鸟，记录到CSV并返回（V3.1）
     if bird_idx == -1:
+        # V3.3: 使用英文列名
         data = {
-            "文件名": os.path.splitext(os.path.basename(image_path))[0],
-            "有鸟": "no",
-            "置信度": 0.0,
-            "头部锐度": "-",
-            "左眼可见": "-",
-            "右眼可见": "-",
-            "喙可见": "-",
-            "眼睛可见": "-",
-            "喙部可见": "-",
-            "美学评分": "-",
-            "星级": -1
+            "filename": os.path.splitext(os.path.basename(image_path))[0],
+            "has_bird": "no",
+            "confidence": 0.0,
+            "head_sharp": "-",
+            "left_eye": "-",
+            "right_eye": "-",
+            "beak": "-",
+            "nima_score": "-",
+            "rating": -1
         }
         write_to_csv(data, dir, False)
         return found_bird, bird_result, 0.0, 0.0, None, None, None
@@ -256,18 +254,17 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
             # rating_value 设为占位值，photo_processor 会重新计算
             rating_value = 0
 
+            # V3.3: 使用英文列名
             data = {
-                "文件名": os.path.splitext(os.path.basename(image_path))[0],
-                "有鸟": "yes" if found_bird else "no",
-                "置信度": float(f"{conf:.2f}"),
-                "头部锐度": "-",          # 将由 photo_processor 填充
-                "左眼可见": "-",          # 将由 photo_processor 填充
-                "右眼可见": "-",          # 将由 photo_processor 填充
-                "喙可见": "-",            # 将由 photo_processor 填充
-                "眼睛可见": "-",          # 将由 photo_processor 填充
-                "喙部可见": "-",          # 将由 photo_processor 填充
-                "美学评分": float(f"{nima_score:.2f}") if nima_score is not None else "-",
-                "星级": rating_value
+                "filename": os.path.splitext(os.path.basename(image_path))[0],
+                "has_bird": "yes" if found_bird else "no",
+                "confidence": float(f"{conf:.2f}"),
+                "head_sharp": "-",        # 将由 photo_processor 填充
+                "left_eye": "-",          # 将由 photo_processor 填充
+                "right_eye": "-",         # 将由 photo_processor 填充
+                "beak": "-",              # 将由 photo_processor 填充
+                "nima_score": float(f"{nima_score:.2f}") if nima_score is not None else "-",
+                "rating": rating_value
             }
 
             # Step 5: CSV写入

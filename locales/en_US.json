@@ -68,7 +68,9 @@
     "warning": "Warning",
     "error": "Error",
     "dir_selected": "Selected directory: {directory}",
-    "report_detected": "Historical analysis data detected, 'Post Adjustment' feature available"
+    "report_detected": "Historical analysis data detected, 'Post Adjustment' feature available",
+    "history_detected_title": "History Detected",
+    "history_detected_msg": "SuperPicky processing records detected in this directory.\n\nDo you want to enter [Re-Star] mode directly to adjust ratings?\n(Select 'No' to stay on main screen and restart processing)"
   },
   "logs": {
     "reset_start": "🔄 Starting directory reset",
@@ -187,10 +189,11 @@
     "zero_star_group": "0 Star Threshold (Poor Technical Quality)",
     "two_three_star_group": "2/3 Star Threshold",
     "picked_group": "Pick Flag Settings",
-    "min_confidence": "Min Confidence (0.3-0.7):",
-    "min_sharpness": "Min Sharpness (2000-6000):",
-    "min_nima": "Min Aesthetic (3.0-5.0):",
-    "max_brisque": "Max Noise (20-50):",
+    "advanced_settings": "▶ Advanced: 0-Star Baseline",
+    "advanced_tip": "Values below these will be rated as 0 Star",
+    "min_confidence": "Min Confidence",
+    "min_sharpness": "Min Sharpness",
+    "min_nima": "Min Aesthetics",
     "sharpness_threshold": "Bird Sharpness Threshold (2/3 stars):",
     "nima_threshold": "Aesthetic Threshold (2/3 stars):",
     "picked_percentage": "Pick Flag Percentage:",

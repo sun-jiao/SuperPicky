@@ -1,13 +1,52 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-SuperPicky V3.2 - Post Digital Adjustment Engine
+SuperPicky V3.3 - Re-Star Engine
 后期评分调整引擎 - 基于已有CSV数据重新计算星级评分
+完全重写版本，增强数据处理的健壮性
 """
 
 import os
 import csv
 from typing import List, Dict, Set, Optional, Tuple
+
+
+def safe_float(value, default=0.0) -> float:
+    """
+    安全地将值转换为浮点数
+    
+    Args:
+        value: 要转换的值
+        default: 如果转换失败时的默认值
+        
+    Returns:
+        浮点数
+    """
+    if value is None or value == '' or value == '-':
+        return default
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return default
+
+
+def safe_int(value, default=0) -> int:
+    """
+    安全地将值转换为整数
+    
+    Args:
+        value: 要转换的值
+        default: 如果转换失败时的默认值
+        
+    Returns:
+        整数
+    """
+    if value is None or value == '' or value == '-':
+        return default
+    try:
+        return int(float(value))  # 支持 "3.0" 这种格式
+    except (ValueError, TypeError):
+        return default
 
 
 class PostAdjustmentEngine:
@@ -41,20 +80,14 @@ class PostAdjustmentEngine:
             with open(self.report_path, 'r', encoding='utf-8-sig') as f:
                 reader = csv.DictReader(f)
 
-                # V3.2: 使用 head_sharpness 替代 sharpness_norm
-                required_fields = ['filename', 'has_bird', 'confidence', 'head_sharpness',
-                                  'nima_score', 'rating']
-
-                if not all(field in reader.fieldnames for field in required_fields):
-                    return False, "CSV文件格式不正确，缺少必需字段"
-
+                # V3.3: 直接使用英文列名，无需映射
                 # 读取所有数据
                 all_photos = list(reader)
 
-                # 只加载有鸟的照片（评分 >= 0）
+                # 只加载有鸟的照片
                 self.photos_data = [
                     photo for photo in all_photos
-                    if photo['has_bird'] == 'yes'
+                    if photo.get('has_bird') == 'yes'
                 ]
 
                 total_count = len(all_photos)
@@ -67,7 +100,7 @@ class PostAdjustmentEngine:
 
     def find_image_file(self, filename_without_ext: str) -> Optional[str]:
         """
-        根据文件名（无扩展名）查找实际图片文件
+        根据文件名（无扩展名）查找实际图片文件，支持递归搜索子目录
 
         Args:
             filename_without_ext: 不含扩展名的文件名
@@ -82,12 +115,20 @@ class PostAdjustmentEngine:
 
         all_extensions = priority_extensions + secondary_extensions + tertiary_extensions
 
+        # 先在根目录查找
         for ext in all_extensions:
             file_path = os.path.join(self.directory, filename_without_ext + ext)
             if os.path.exists(file_path):
                 return file_path
 
-        return None  # 文件不存在
+        # 如果根目录找不到，递归搜索子目录
+        for root, dirs, files in os.walk(self.directory):
+            for ext in all_extensions:
+                target_filename = filename_without_ext + ext
+                if target_filename in files:
+                    return os.path.join(root, target_filename)
+
+        return None
 
     def recalculate_ratings(
         self,
@@ -115,21 +156,10 @@ class PostAdjustmentEngine:
         new_photos = []
 
         for photo in photos:
-            # 解析CSV中的数据
-            try:
-                conf = float(photo['confidence'])
-                # V3.2: 使用 head_sharpness 替代 sharpness_norm
-                sharpness_str = photo['head_sharpness']
-                sharpness = float(sharpness_str) if sharpness_str != '-' else 0.0
-
-                # 处理 "-" 值（某些照片可能没有美学评分）
-                nima_str = photo['nima_score']
-                nima_score = float(nima_str) if nima_str != '-' else None
-
-            except (ValueError, KeyError) as e:
-                # 数据格式错误，跳过该照片
-                print(f"警告: 照片 {photo.get('filename', 'unknown')} 数据格式错误: {e}")
-                continue
+            # 使用安全转换函数处理数据（V3.3: 使用新的英文列名）
+            conf = safe_float(photo.get('confidence'), 0.0)
+            sharpness = safe_float(photo.get('head_sharp'), 0.0)  # 新列名
+            nima_score = safe_float(photo.get('nima_score'), None)
 
             # 判定星级
             # 0星判定（技术质量差）
@@ -164,8 +194,6 @@ class PostAdjustmentEngine:
         """
         重新计算精选旗标（3星照片的双Top%交集）
 
-        实现与 main.py:355-399 相同的精选逻辑
-
         Args:
             star_3_photos: 3星照片列表
             picked_percentage: 精选百分比 (10-50)
@@ -181,10 +209,9 @@ class PostAdjustmentEngine:
         top_count = max(1, int(len(star_3_photos) * top_percent))
 
         # 按美学排序，取Top N%
-        # 需要过滤掉没有美学评分的照片
         photos_with_nima = [
             p for p in star_3_photos
-            if p['nima_score'] != '-'
+            if safe_float(p.get('nima_score'), None) is not None
         ]
 
         if len(photos_with_nima) == 0:
@@ -192,20 +219,20 @@ class PostAdjustmentEngine:
 
         sorted_by_nima = sorted(
             photos_with_nima,
-            key=lambda x: float(x['nima_score']),
+            key=lambda x: safe_float(x.get('nima_score'), 0.0),
             reverse=True
         )
         nima_top_files = set([photo['filename'] for photo in sorted_by_nima[:top_count]])
 
-        # 按锐度排序，取Top N%
-        # V3.2: 使用 head_sharpness 替代 sharpness_norm
+        # 按锐度排序，取Top N%（V3.3: 使用新列名 head_sharp）
         photos_with_sharpness = [
             p for p in star_3_photos
-            if p['head_sharpness'] != '-'
+            if safe_float(p.get('head_sharp'), 0.0) > 0
         ]
+        
         sorted_by_sharpness = sorted(
             photos_with_sharpness,
-            key=lambda x: float(x['head_sharpness']),
+            key=lambda x: safe_float(x.get('head_sharp'), 0.0),
             reverse=True
         )
         sharpness_top_files = set([photo['filename'] for photo in sorted_by_sharpness[:top_count]])
@@ -234,9 +261,7 @@ class PostAdjustmentEngine:
         }
 
         for photo in photos:
-            rating = photo.get('新星级', photo.get('rating', 0))
-            if isinstance(rating, str):
-                rating = int(rating)
+            rating = safe_int(photo.get('新星级', photo.get('rating', 0)), 0)
 
             if rating == 0:
                 stats['star_0'] += 1
@@ -248,3 +273,43 @@ class PostAdjustmentEngine:
                 stats['star_3'] += 1
 
         return stats
+
+    def update_report_csv(self, updated_photos: List[Dict], picked_files: set) -> Tuple[bool, str]:
+        """
+        更新 report.csv 中的评分数据
+
+        Args:
+            updated_photos: 更新后的照片数据（包含 '新星级' 字段）
+            picked_files: 被标记为精选的文件名集合
+
+        Returns:
+            (成功标志, 消息)
+        """
+        try:
+            # 读取现有CSV
+            with open(self.report_path, 'r', encoding='utf-8-sig') as f:
+                reader = csv.DictReader(f)
+                fieldnames = reader.fieldnames
+                all_rows = list(reader)
+
+            # 创建文件名到新评分的映射
+            rating_map = {photo['filename']: photo.get('新星级', 0) for photo in updated_photos}
+
+            # 更新每行的 rating
+            updated_count = 0
+            for row in all_rows:
+                filename = row.get('filename')
+                if filename in rating_map:
+                    row['rating'] = str(rating_map[filename])
+                    updated_count += 1
+
+            # 写回CSV
+            with open(self.report_path, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(all_rows)
+
+            return True, f"成功更新 {updated_count} 条记录"
+
+        except Exception as e:
+            return False, f"更新CSV失败: {str(e)}"

@@ -537,7 +537,7 @@ class SuperPickyApp:
         AboutWindow(self.root, self.i18n)
 
     def _check_report_csv(self):
-        """检测目录中是否存在 report.csv，控制二次选鸟按钮状态"""
+        """检测目录中是否存在 report.csv，控制重新评星按钮状态"""
         if not self.directory_path:
             self.post_da_btn.config(state='disabled')
             return
@@ -550,7 +550,7 @@ class SuperPickyApp:
             self.post_da_btn.config(state='disabled')
 
     def open_post_adjustment(self):
-        """打开二次选鸟对话框"""
+        """打开重新评星对话框"""
         if not self.directory_path:
             messagebox.showwarning(self.i18n.t("messages.hint"), self.i18n.t("messages.select_dir_first"))
             return
@@ -570,8 +570,8 @@ class SuperPickyApp:
         )
 
     def _on_post_adjustment_complete(self):
-        """二次选鸟完成后的回调"""
-        self.log("✅ 二次选鸟完成！评分已更新到EXIF元数据\n")
+        """重新评星完成后的回调"""
+        self.log("✅ 重新评星完成！评分已更新到EXIF元数据\n")
 
     def _update_sharp_label(self, value):
         """更新锐度滑块标签（步长50）"""
@@ -602,11 +602,36 @@ class SuperPickyApp:
         self.directory_path = directory
         self.dir_entry.delete(0, tk.END)
         self.dir_entry.insert(0, directory)
-        self.reset_btn.config(state='normal')
-        self.log(f"📂 {self.i18n.t('messages.dir_selected', directory=directory)}\n")
-
-        # 检测是否存在 report.csv，启用/禁用"二次选鸟"按钮
+        
+        self.log(self.i18n.t("messages.dir_selected", directory=directory) + "\n")
+        
+        # 启用开始按钮
+        self.start_btn.configure(state="normal")
+        self.reset_btn.configure(state="normal")
+        
+        # 检查重新评星状态
         self._check_report_csv()
+        
+        # V3.3: 自动检测历史记录并询问是否重新评星
+        history_csv = os.path.join(directory, ".superpicky", "report.csv")
+        history_manifest = os.path.join(directory, ".superpicky_manifest.json")
+        
+        # DEBUG LOG
+        self.log(f"🔍 检测历史记录: CSV={os.path.exists(history_csv)}, Manifest={os.path.exists(history_manifest)}\n")
+        self.log(f"🔍 路径: {history_csv}\n")
+
+        if os.path.exists(history_csv) or os.path.exists(history_manifest):
+            # 弹窗询问
+            choice = messagebox.askyesno(
+                self.i18n.t("messages.history_detected_title"),
+                self.i18n.t("messages.history_detected_msg"),
+                icon='question'
+            )
+            
+            if choice:  # 是 -> 打开重新评星
+                # 稍微延迟一下以确保UI更新
+                self.root.after(100, self.open_post_adjustment)
+
 
     def reset_directory(self):
         """重置目录"""
@@ -645,18 +670,35 @@ class SuperPickyApp:
                     # 然后清除 EXIF 元数据（原有逻辑）
                     success = reset(self.directory_path, log_callback=self.thread_safe_log, i18n=self.i18n)
                     # 在主线程中处理完成后的UI更新
-                    self.root.after(0, lambda: self._on_reset_complete(success))
+                    self.root.after(0, lambda: self._on_reset_complete(success, restore_stats))
                 except Exception as e:
                     self.root.after(0, lambda: self._on_reset_error(str(e)))
 
             reset_thread = threading.Thread(target=run_reset, daemon=True)
             reset_thread.start()
 
-    def _on_reset_complete(self, success):
+    def _on_reset_complete(self, success, restore_stats=None):
         """重置完成回调（在主线程中执行）"""
         if success:
             self.log("\n" + self.i18n.t("logs.separator"))
             self.log(self.i18n.t("logs.reset_complete"))
+            
+            # 显示恢复统计
+            if restore_stats:
+                restored = restore_stats.get('restored', 0)
+                failed = restore_stats.get('failed', 0)
+                
+                if restored > 0:
+                    msg = f"✅ 已成功恢复 {restored} 张照片到主目录"
+                    if failed > 0:
+                        msg += f"\n❌ {failed} 张恢复失败"
+                    
+                    self.log(msg)
+                    messagebox.showinfo(self.i18n.t("settings_saved_title"), msg)
+                elif failed > 0:
+                    msg = f"❌ {failed} 张照片恢复失败"
+                    self.log(msg)
+                    messagebox.showwarning(self.i18n.t("warning"), msg)
             self.log(self.i18n.t("logs.separator"))
             messagebox.showinfo(self.i18n.t("messages.reset_complete_title"), self.i18n.t("messages.reset_complete"))
         else:
@@ -780,7 +822,7 @@ class SuperPickyApp:
         """处理完成回调"""
         self.start_btn.config(state='normal')
         self.reset_btn.config(state='normal')
-        self.post_da_btn.config(state='normal')  # 启用二次选鸟
+        self.post_da_btn.config(state='normal')  # 启用重新评星
         self.progress_bar['value'] = 100
 
         # V3.1: 清空日志窗口，然后显示最终报告（方便查看，无需滚动）
