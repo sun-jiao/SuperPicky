@@ -29,6 +29,7 @@ from exiftool_manager import get_exiftool_manager
 from advanced_config import get_advanced_config
 from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
+from core.flight_detector import FlightDetector, get_flight_detector, FlightResult
 
 # 文件夹名称映射（V3.3: 简化 2 星目录）
 RATING_FOLDER_NAMES = {
@@ -48,6 +49,7 @@ class ProcessingSettings:
     nima_threshold: float = 4.8
     save_crop: bool = False
     normalization_mode: str = 'log_compression'  # 默认使用log_compression，与GUI一致
+    detect_flight: bool = True  # V3.4: 飞版检测开关
 
 
 @dataclass
@@ -107,6 +109,7 @@ class PhotoProcessor:
         self._log(f"  📏 锐度阈值: {settings.sharpness_threshold}")
         self._log(f"  🎨 NIMA阈值: {settings.nima_threshold}")
         self._log(f"  🔧 归一化模式: {settings.normalization_mode}")
+        self._log(f"  🦅 飞鸟检测: {'开启' if settings.detect_flight else '关闭'}")
         self._log(f"  ⚙️  高级配置 - min_sharpness: {self.config.min_sharpness}")
         self._log(f"  ⚙️  高级配置 - min_nima: {self.config.min_nima}\n")
         
@@ -296,6 +299,20 @@ class PhotoProcessor:
             self._log("⚠️  关键点模型未找到，使用传统锐度计算", "warning")
             use_keypoints = False
         
+        # V3.4: 加载飞版检测模型
+        use_flight = False
+        flight_detector = None
+        if self.settings.detect_flight:
+            self._log("🦅 加载飞版检测模型...")
+            flight_detector = get_flight_detector()
+            try:
+                flight_detector.load_model()
+                self._log("✅ 飞版检测模型加载成功")
+                use_flight = True
+            except FileNotFoundError:
+                self._log("⚠️  飞版检测模型未找到，跳过飞版检测", "warning")
+                use_flight = False
+        
         total_files = len(files_tbr)
         self._log(f"📁 共 {total_files} 个文件待处理\n")
         
@@ -435,6 +452,19 @@ class PhotoProcessor:
             # elif detected and both_eyes_hidden:
             #     self._log(f"⚡ NIMA 已跳过（双眼不可见）")
             
+            # Phase 4: V3.4 飞版检测（在鸟的裁剪区域上执行）
+            is_flying = False
+            flight_confidence = 0.0
+            if use_flight and detected and bird_crop_bgr is not None and bird_crop_bgr.size > 0:
+                try:
+                    flight_result = flight_detector.detect(bird_crop_bgr)
+                    is_flying = flight_result.is_flying
+                    flight_confidence = flight_result.confidence
+                    # DEBUG: 输出飞版检测结果
+                    # self._log(f"  🦅 飞版检测: is_flying={is_flying}, conf={flight_confidence:.2f}")
+                except Exception as e:
+                    self._log(f"  ⚠️ 飞版检测异常: {e}", "warning")
+            
             # 使用 RatingEngine 计算评分
             rating_result = self.rating_engine.calculate(
                 detected=detected,
@@ -449,61 +479,75 @@ class PhotoProcessor:
             
             # 计算真正总耗时并输出简化日志
             photo_time_ms = (time.time() - photo_start_time) * 1000
-            self._log_photo_result_simple(i, total_files, filename, rating_value, reason, photo_time_ms)
+            self._log_photo_result_simple(i, total_files, filename, rating_value, reason, photo_time_ms, is_flying)
             
             # 记录统计
             self._update_stats(rating_value)
             
-            # 写入EXIF
-            raw_file_path = None
+            # V3.4: 确定要处理的目标文件（RAW 优先，没有则用 JPEG）
+            target_file_path = None
+            target_extension = None
+            
             if file_prefix in raw_dict:
+                # 有对应的 RAW 文件
                 raw_extension = raw_dict[file_prefix]
-                raw_file_path = os.path.join(self.dir_path, file_prefix + raw_extension)
+                target_file_path = os.path.join(self.dir_path, file_prefix + raw_extension)
+                target_extension = raw_extension
                 
-                if os.path.exists(raw_file_path):
+                # 写入 EXIF（仅限 RAW 文件）
+                if os.path.exists(target_file_path):
                     single_batch = [{
-                        'file': raw_file_path,
+                        'file': target_file_path,
                         'rating': rating_value if rating_value >= 0 else 0,
                         'pick': pick,
-                        'sharpness': head_sharpness,  # 使用头部锐度
-                        'nima_score': nima
+                        'sharpness': head_sharpness,
+                        'nima_score': nima,
+                        'label': 'Green' if is_flying else None  # V3.4: 飞鸟标绿色
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)
-                    
-                    # 更新CSV中的关键点数据
-                    self._update_csv_keypoint_data(
-                        file_prefix, 
-                        head_sharpness, 
-                        has_visible_eye, 
-                        has_visible_beak,
-                        left_eye_vis,
-                        right_eye_vis,
-                        beak_vis,
-                        nima,
-                        rating_value
-                    )
-                    
-                    # 收集3星照片
-                    if rating_value == 3 and nima is not None:
-                        self.star_3_photos.append({
-                            'file': raw_file_path,
-                            'nima': nima,
-                            'sharpness': head_sharpness
-                        })
-                    
-                    # 记录评分
-                    self.file_ratings[file_prefix] = rating_value
-                    
-                    # 记录2星原因（用于分目录）
-                    if rating_value == 2:
-                        sharpness_ok = head_sharpness >= self.settings.sharpness_threshold
-                        nima_ok = nima is not None and nima >= self.settings.nima_threshold
-                        if sharpness_ok and not nima_ok:
-                            self.star2_reasons[file_prefix] = 'sharpness'
-                        elif nima_ok and not sharpness_ok:
-                            self.star2_reasons[file_prefix] = 'nima'
-                        else:
-                            self.star2_reasons[file_prefix] = 'both'  # 两者都达标
+            else:
+                # V3.4: 纯 JPEG 文件（没有对应 RAW）
+                target_file_path = filepath  # 使用当前处理的 JPEG 路径
+                target_extension = os.path.splitext(filename)[1]
+            
+            # V3.4: 以下操作对 RAW 和纯 JPEG 都执行
+            if target_file_path and os.path.exists(target_file_path):
+                # 更新 CSV 中的关键点数据
+                self._update_csv_keypoint_data(
+                    file_prefix, 
+                    head_sharpness, 
+                    has_visible_eye, 
+                    has_visible_beak,
+                    left_eye_vis,
+                    right_eye_vis,
+                    beak_vis,
+                    nima,
+                    rating_value,
+                    is_flying,
+                    flight_confidence
+                )
+                
+                # 收集3星照片
+                if rating_value == 3 and nima is not None:
+                    self.star_3_photos.append({
+                        'file': target_file_path,
+                        'nima': nima,
+                        'sharpness': head_sharpness
+                    })
+                
+                # 记录评分（用于文件移动）
+                self.file_ratings[file_prefix] = rating_value
+                
+                # 记录2星原因（用于分目录）
+                if rating_value == 2:
+                    sharpness_ok = head_sharpness >= self.settings.sharpness_threshold
+                    nima_ok = nima is not None and nima >= self.settings.nima_threshold
+                    if sharpness_ok and not nima_ok:
+                        self.star2_reasons[file_prefix] = 'sharpness'
+                    elif nima_ok and not sharpness_ok:
+                        self.star2_reasons[file_prefix] = 'nima'
+                    else:
+                        self.star2_reasons[file_prefix] = 'both'
         
         ai_total_time = time.time() - ai_total_start
         avg_ai_time = ai_total_time / total_files if total_files > 0 else 0
@@ -543,12 +587,16 @@ class PhotoProcessor:
         filename: str,
         rating: int,
         reason: str,
-        time_ms: float
+        time_ms: float,
+        is_flying: bool = False  # V3.4: 飞鸟标识
     ):
         """记录照片处理结果（简化版，单行输出）"""
         # 星级标识
         star_map = {3: "3星", 2: "2星", 1: "1星", 0: "0星", -1: "-1星"}
         star_text = star_map.get(rating, "?星")
+        
+        # V3.4: 飞鸟标识
+        flight_tag = "【飞鸟】" if is_flying else ""
         
         # 简化原因显示
         reason_short = reason if len(reason) < 20 else reason[:17] + "..."
@@ -560,7 +608,7 @@ class PhotoProcessor:
             time_text = f"{time_ms:.0f}ms"
         
         # 输出简化格式
-        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) | {time_text}")
+        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) {flight_tag}| {time_text}")
     
     def _update_stats(self, rating: int):
         """更新统计数据"""
@@ -586,9 +634,11 @@ class PhotoProcessor:
         right_eye_vis: float,
         beak_vis: float,
         nima: float,
-        rating: int
+        rating: int,
+        is_flying: bool = False,
+        flight_confidence: float = 0.0
     ):
-        """更新CSV中的关键点数据和评分（V3.3: 使用英文列名）"""
+        """更新CSV中的关键点数据和评分（V3.4: 添加飞版检测字段）"""
         import csv
         
         csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
@@ -604,12 +654,15 @@ class PhotoProcessor:
                 
                 for row in reader:
                     if row.get('filename') == filename:
-                        # V3.3: 使用新的英文字段名更新数据
+                        # V3.4: 使用英文字段名更新数据
                         row['head_sharp'] = f"{head_sharpness:.0f}" if head_sharpness > 0 else "-"
                         row['left_eye'] = f"{left_eye_vis:.2f}"
                         row['right_eye'] = f"{right_eye_vis:.2f}"
                         row['beak'] = f"{beak_vis:.2f}"
                         row['nima_score'] = f"{nima:.2f}" if nima is not None else "-"
+                        # V3.4: 飞版检测字段
+                        row['is_flying'] = "yes" if is_flying else "no"
+                        row['flight_conf'] = f"{flight_confidence:.2f}"
                         row['rating'] = str(rating)
                     rows.append(row)
             
@@ -674,22 +727,35 @@ class PhotoProcessor:
             self.stats['picked'] = 0
     
     def _move_files_to_rating_folders(self, raw_dict):
-        """移动文件到分类文件夹"""
+        """移动文件到分类文件夹（V3.4: 支持纯 JPEG）"""
         # 筛选需要移动的文件（包括所有星级，确保原目录为空）
         files_to_move = []
         for prefix, rating in self.file_ratings.items():
-            if rating in [-1, 0, 1, 2, 3] and prefix in raw_dict:
-                raw_ext = raw_dict[prefix]
-                raw_path = os.path.join(self.dir_path, prefix + raw_ext)
-                if os.path.exists(raw_path):
-                    # V3.3: 简化，统一使用星级对应目录
-                    folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
-                    
-                    files_to_move.append({
-                        'filename': prefix + raw_ext,
-                        'rating': rating,
-                        'folder': folder
-                    })
+            if rating in [-1, 0, 1, 2, 3]:
+                # V3.4: 优先使用 RAW，没有则使用 JPEG
+                if prefix in raw_dict:
+                    # 有对应的 RAW 文件
+                    raw_ext = raw_dict[prefix]
+                    file_path = os.path.join(self.dir_path, prefix + raw_ext)
+                    if os.path.exists(file_path):
+                        folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
+                        files_to_move.append({
+                            'filename': prefix + raw_ext,
+                            'rating': rating,
+                            'folder': folder
+                        })
+                else:
+                    # V3.4: 纯 JPEG 文件
+                    for jpg_ext in ['.jpg', '.jpeg', '.JPG', '.JPEG']:
+                        jpg_path = os.path.join(self.dir_path, prefix + jpg_ext)
+                        if os.path.exists(jpg_path):
+                            folder = RATING_FOLDER_NAMES.get(rating, "0星_放弃")
+                            files_to_move.append({
+                                'filename': prefix + jpg_ext,
+                                'rating': rating,
+                                'folder': folder
+                            })
+                            break  # 找到就跳出
         
         if not files_to_move:
             self._log("\n📂 无需移动文件")

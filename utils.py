@@ -50,7 +50,7 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
 
     report_file = os.path.join(tmp_dir, "report.csv")
 
-    # V3.3: 全英文列名，简化代码并避免中英文映射
+    # V3.4: 全英文列名，添加飞版检测字段
     fieldnames = [
         "filename",        # 文件名（不含扩展名）
         "has_bird",        # 是否有鸟 (yes/no)
@@ -60,6 +60,8 @@ def write_to_csv(data: dict, directory: str, header: bool = False):
         "right_eye",       # 右眼可见性 (0-1)
         "beak",            # 喙可见性 (0-1)
         "nima_score",      # NIMA美学评分 (0-10)
+        "is_flying",       # V3.4: 是否飞行 (yes/no/-)
+        "flight_conf",     # V3.4: 飞行置信度 (0-1)
         "rating"           # 最终评分 (-1/0/1/2/3)
     ]
 

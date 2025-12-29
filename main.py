@@ -163,7 +163,8 @@ class WorkerThread(threading.Thread):
             sharpness_threshold=self.ui_settings[1],
             nima_threshold=self.ui_settings[2],
             save_crop=self.ui_settings[3] if len(self.ui_settings) > 3 else False,
-            normalization_mode=self.ui_settings[4] if len(self.ui_settings) > 4 else 'log_compression'
+            normalization_mode=self.ui_settings[4] if len(self.ui_settings) > 4 else 'log_compression',
+            detect_flight=self.ui_settings[5] if len(self.ui_settings) > 5 else True  # V3.4: 飞版检测
         )
         
         # 创建回调（包装日志以支持 i18n）
@@ -189,9 +190,13 @@ class WorkerThread(threading.Thread):
         self.stats = result.stats
     
     def _log_wrapper(self, msg: str, level: str = "info"):
-        """日志包装器 - 支持 i18n（如果需要的话）"""
-        # 目前直接传递，未来可以在这里添加 i18n 翻译
+        """日志包装器 - 同时输出到 GUI 和写入日志文件"""
+        # 传递到 GUI
         self.log_callback(msg)
+        
+        # V3.4: 同时写入日志文件
+        from utils import log_message
+        log_message(msg, self.dir_path, file_only=True)  # file_only=True 避免重复 print
 
 
 
@@ -739,13 +744,14 @@ class SuperPickyApp:
         }
         selected_norm = norm_mapping.get(mode_key, "log_compression")
 
-        # V3.1: ui_settings = [ai_confidence, sharpness_threshold, nima_threshold, save_crop, normalization]
+        # V3.4: ui_settings = [ai_confidence, sharpness_threshold, nima_threshold, save_crop, normalization, detect_flight]
         ui_settings = [
             self.ai_var.get(),
             self.sharp_var.get(),
             self.nima_var.get(),
             False,  # V3.1: 不保存crop图片
-            selected_norm
+            selected_norm,
+            self.flight_var.get()  # V3.4: 飞版检测开关
         ]
 
         # 启动Worker线程
@@ -771,7 +777,10 @@ class SuperPickyApp:
         self.root.after(0, lambda: self.log(message, tag))
 
     def log(self, message, tag=None):
-        """输出日志"""
+        """输出日志（同时输出到 GUI 和 Terminal）"""
+        # V3.4: 同时输出到 Terminal
+        print(message)
+        
         self.log_text.config(state='normal')
         if tag:
             self.log_text.insert(tk.END, message + "\n", tag)

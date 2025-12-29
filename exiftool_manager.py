@@ -171,11 +171,11 @@ class ExifToolManager:
         Args:
             files_metadata: 文件元数据列表
                 [
-                    {'file': 'path1.NEF', 'rating': 3, 'pick': 1, 'sharpness': 95.3, 'nima_score': 7.5},
+                    {'file': 'path1.NEF', 'rating': 3, 'pick': 1, 'sharpness': 95.3, 'nima_score': 7.5, 'label': 'Green'},
                     {'file': 'path2.NEF', 'rating': 2, 'pick': 0, 'sharpness': 78.5, 'nima_score': 6.8},
                     {'file': 'path3.NEF', 'rating': -1, 'pick': -1, 'sharpness': 45.2, 'nima_score': 5.2},
                 ]
-                # V3.2: 移除 brisque_score
+                # V3.4: 添加 label 参数（颜色标签，如 'Green' 用于飞鸟）
 
         Returns:
             统计结果 {'success': 成功数, 'failed': 失败数}
@@ -192,7 +192,7 @@ class ExifToolManager:
             pick = item.get('pick', 0)
             sharpness = item.get('sharpness', None)
             nima_score = item.get('nima_score', None)
-            # V3.2: 移除 brisque_score
+            label = item.get('label', None)  # V3.4: 颜色标签
 
             if not os.path.exists(file_path):
                 print(f"⏭️  跳过不存在的文件: {file_path}")
@@ -216,7 +216,9 @@ class ExifToolManager:
                 nima_str = f'{nima_score:05.2f}'
                 cmd.append(f'-IPTC:Province-State={nima_str}')
 
-            # V3.2: 移除 BRISQUE
+            # V3.4: 颜色标签（如 'Green' 用于飞鸟）
+            if label is not None:
+                cmd.append(f'-XMP:Label={label}')
 
             cmd.append(file_path)
             cmd.append('-overwrite_original')  # 放在每个文件之后
