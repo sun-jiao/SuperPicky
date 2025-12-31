@@ -733,7 +733,9 @@ class SuperPickyMainWindow(QMainWindow):
         else:
             color = "#d4d4d4"
         
-        cursor.insertHtml(f'<span style="color: {color};">{message}</span><br>')
+        # 将换行符转换为 <br>，保留格式
+        html_message = message.replace('\n', '<br>')
+        cursor.insertHtml(f'<span style="color: {color}; white-space: pre-wrap;">{html_message}</span><br>')
         
         self.log_text.setTextCursor(cursor)
         self.log_text.ensureCursorVisible()

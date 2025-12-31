@@ -75,7 +75,7 @@ class PostAdjustmentDialog(QDialog):
         """设置 UI"""
         self.setWindowTitle(self.i18n.t("post_adjustment.title"))
         self.setMinimumSize(750, 520)
-        self.resize(750, 550)
+        self.resize(750, 580)
         self.setModal(True)
         
         layout = QVBoxLayout(self)
@@ -88,11 +88,11 @@ class PostAdjustmentDialog(QDialog):
         # 阈值调整
         self._create_threshold_section(layout)
         
+        # 高级设置（折叠）- 放在按钮前面
+        self._create_advanced_section(layout)
+        
         # 底部按钮
         self._create_button_section(layout)
-        
-        # 高级设置（折叠）
-        self._create_advanced_section(layout)
     
     def _create_stats_section(self, layout):
         """创建统计区域（两列）"""
@@ -101,6 +101,7 @@ class PostAdjustmentDialog(QDialog):
         # 左列：当前统计
         current_group = QGroupBox("  当前评星统计  ")
         current_group.setFont(QFont("PingFang SC", 14, QFont.Bold))
+        current_group.setFixedHeight(220)  # 固定高度
         current_layout = QVBoxLayout(current_group)
         
         self.current_stats_text = QTextEdit()
@@ -108,13 +109,13 @@ class PostAdjustmentDialog(QDialog):
         self.current_stats_text.setFont(QFont("PingFang SC", 13))
         self.current_stats_text.setStyleSheet("""
             QTextEdit {
-                background-color: #fafafa;
-                color: #333;
-                border: none;
+                background-color: #2d2d2d;
+                color: #e0e0e0;
+                border: 1px solid #444;
+                border-radius: 6px;
                 padding: 8px;
             }
         """)
-        self.current_stats_text.setMaximumHeight(180)
         current_layout.addWidget(self.current_stats_text)
         
         stats_layout.addWidget(current_group)
@@ -122,6 +123,7 @@ class PostAdjustmentDialog(QDialog):
         # 右列：预览
         preview_group = QGroupBox("  调整后预览  ")
         preview_group.setFont(QFont("PingFang SC", 14, QFont.Bold))
+        preview_group.setFixedHeight(220)  # 固定高度
         preview_layout = QVBoxLayout(preview_group)
         
         self.preview_stats_text = QTextEdit()
@@ -129,13 +131,13 @@ class PostAdjustmentDialog(QDialog):
         self.preview_stats_text.setFont(QFont("PingFang SC", 13))
         self.preview_stats_text.setStyleSheet("""
             QTextEdit {
-                background-color: #fafafa;
-                color: #333;
-                border: none;
+                background-color: #2d2d2d;
+                color: #e0e0e0;
+                border: 1px solid #444;
+                border-radius: 6px;
                 padding: 8px;
             }
         """)
-        self.preview_stats_text.setMaximumHeight(180)
         preview_layout.addWidget(self.preview_stats_text)
         
         stats_layout.addWidget(preview_group)
@@ -246,7 +248,7 @@ class PostAdjustmentDialog(QDialog):
     
     def _create_advanced_section(self, layout):
         """创建高级设置区域（折叠）"""
-        # 折叠按钮
+        # 折叠按钮（先添加）
         self.advanced_check = QCheckBox("▶ 高级: 0星筛选设置")
         self.advanced_check.setFont(QFont("Arial", 12))
         self.advanced_check.stateChanged.connect(self._toggle_advanced)
@@ -289,14 +291,22 @@ class PostAdjustmentDialog(QDialog):
     @Slot(int)
     def _toggle_advanced(self, state):
         """切换高级设置显示"""
+        from PySide6.QtWidgets import QApplication
+        
         if state == Qt.Checked:
             self.advanced_group.show()
             self.advanced_check.setText("▼ 高级: 0星筛选设置")
-            self.resize(self.width(), 850)
+            # 强制更新布局
+            QApplication.processEvents()
+            self.adjustSize()
+            # 确保最小高度
+            new_height = max(self.height(), 780)
+            self.resize(self.width(), new_height)
         else:
             self.advanced_group.hide()
             self.advanced_check.setText("▶ 高级: 0星筛选设置")
-            self.resize(self.width(), 550)
+            QApplication.processEvents()
+            self.adjustSize()
     
     def _load_data(self):
         """加载 CSV 数据"""
