@@ -58,16 +58,17 @@ a = Analysis(
         'torch',
         'torchvision',
         'PIL',
-        'PIL._tkinter_finder',
-        'tkinter',
-        'tkinter.ttk',
         'cv2',
         'numpy',
         'yaml',
-        'ttkthemes',
         'matplotlib',
         'matplotlib.pyplot',
         'matplotlib.backends.backend_agg',
+        # V3.6: PySide6 GUI
+        'PySide6',
+        'PySide6.QtCore',
+        'PySide6.QtGui',
+        'PySide6.QtWidgets',
         # V3.6: 独立 NIMA 依赖 timm
         'timm',
         'timm.models',
@@ -75,8 +76,8 @@ a = Analysis(
     ],
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
-    excludes=['PyQt5', 'PyQt6'],
+    runtime_hooks=['pyi_rth_cv2.py'],  # V3.6: cv2 预加载钩子防止递归错误
+    excludes=['PyQt5', 'PyQt6', 'tkinter'],
     noarchive=False,
     optimize=0,
 )
@@ -97,8 +98,8 @@ exe = EXE(
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
-    codesign_identity='Developer ID Application: James Zhen Yu (JWR6FDB52H)',
-    entitlements_file='entitlements.plist',
+    codesign_identity=None,  # V3.6: 禁用签名以便测试
+    entitlements_file=None,  # V3.6: 禁用权限以便测试
     icon='img/SuperPicky-V0.02.icns',
 )
 
@@ -122,8 +123,8 @@ app = BUNDLE(
         'NSHighResolutionCapable': 'True',
         'CFBundleName': 'SuperPicky',
         'CFBundleDisplayName': 'SuperPicky - 慧眼选鸟',
-        'CFBundleVersion': '3.5.1',
-        'CFBundleShortVersionString': '3.5.1',
+        'CFBundleVersion': '3.6.0',
+        'CFBundleShortVersionString': '3.6.0',
         'NSHumanReadableCopyright': 'Copyright © 2025 James Zhen Yu. All rights reserved.',
         'LSMinimumSystemVersion': '10.15',
         'NSRequiresAquaSystemAppearance': False,

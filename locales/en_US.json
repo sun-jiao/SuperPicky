@@ -5,8 +5,9 @@
     "version": "3.3.0"
   },
   "app": {
-    "title": "SuperPicky - AI Photo Selector v3.5.1",
-    "window_title": "SuperPicky - AI Photo Selector"
+    "title": "SuperPicky - AI Photo Selector v3.6.0",
+    "window_title": "SuperPicky - AI Photo Selector",
+    "brand_name": "SuperPicky"
   },
   "menu": {
     "settings": "Settings",
@@ -40,7 +41,29 @@
     "app_title": "SuperPicky - Faster Photo Selection",
     "select_photo_dir": "Select Photo Directory",
     "rating_params": "Rating Parameters",
-    "browse": "Browse"
+    "browse": "Browse",
+    "subtitle": "AI Photo Selector",
+    "photo_directory": "Photo Directory",
+    "selection_params": "Selection Parameters",
+    "flight_detection": "Flight Detection",
+    "sharpness_short": "Sharpness",
+    "aesthetics": "Aesthetics",
+    "console": "Console",
+    "ready": "Ready",
+    "complete": "Complete",
+    "re_rate": "Re-rate",
+    "start_processing": "Start Processing",
+    "reset_short": "Reset",
+    "dir_placeholder": "Select or paste directory path...",
+    "yes": "Yes",
+    "no": "No",
+    "error": "Error",
+    "processing": "Processing",
+    "resetting": "Resetting"
+  },
+  "dialogs": {
+    "file_organization_title": "File Organization",
+    "file_organization_msg": "After analysis, photos will be organized into folders:\n\n• 3-Star → 3星_优选\n• 2-Star → 2星_良好\n• 1-Star → 1星_普通\n• 0-Star/No Bird → 0星_放弃\n\nUse 'Reset' to restore original structure if needed."
   },
   "messages": {
     "select_dir_first": "Please select a photo directory first",
@@ -70,10 +93,20 @@
     "dir_selected": "Selected directory: {directory}",
     "report_detected": "Historical analysis data detected, 'Post Adjustment' feature available",
     "history_detected_title": "History Detected",
-    "history_detected_msg": "SuperPicky processing records detected in this directory.\n\nDo you want to enter [Re-Star] mode directly to adjust ratings?\n(Select 'No' to stay on main screen and restart processing)"
+    "history_detected_msg": "SuperPicky processing records detected in this directory.\n\nDo you want to enter [Re-Star] mode directly to adjust ratings?\n(Select 'No' to stay on main screen and restart processing)",
+    "reset_complete_log": "Directory reset complete",
+    "reset_complete_msg": "Directory reset complete",
+    "files_restored": "Files restored: {count}",
+    "exif_reset_count": "EXIF reset: {count}",
+    "ready_for_analysis": "Ready for new analysis",
+    "reset_failed_log": "Reset failed"
   },
   "logs": {
     "reset_start": "🔄 Starting directory reset",
+    "reset_step1": "Step 1: Restoring files to main directory...",
+    "restored_files": "  Restored {count} files",
+    "no_files_to_restore": "  No files to restore",
+    "reset_step2": "Step 2: Cleaning up and resetting EXIF...",
     "reset_dir": "📁 Directory: {directory}",
     "reset_complete": "✅ Directory reset complete!",
     "reset_failed": "❌ Directory reset failed",
@@ -213,6 +246,32 @@
     "apply_error_title": "Error",
     "apply_error_msg": "Apply failed: {error}"
   },
+  "settings": {
+    "window_title": "Settings",
+    "header_title": "Settings",
+    "tab_thresholds": "0-Star Thresholds",
+    "tab_output": "Output",
+    "thresholds_desc": "Minimum thresholds for technical quality. Photos below these values get 0 stars.",
+    "ai_confidence": "AI Confidence",
+    "min_sharpness": "Min Sharpness",
+    "min_aesthetics": "Min Aesthetics",
+    "output_desc": "Configure output options and preferences.",
+    "pick_top_percent": "Pick Top %",
+    "language_section": "Language",
+    "interface_language": "Interface Language",
+    "restart_note": "Requires restart to take effect",
+    "reset_defaults": "Reset Defaults",
+    "cancel": "Cancel",
+    "save": "Save",
+    "reset_confirm_title": "Reset Settings",
+    "reset_confirm_msg": "Reset all settings to default values?",
+    "reset_done_title": "Settings Reset",
+    "reset_done_msg": "All settings have been reset to defaults.",
+    "save_success_title": "Settings Saved",
+    "save_success_msg": "Settings saved successfully.\nLanguage changes require restart.",
+    "save_error_title": "Error",
+    "save_error_msg": "Failed to save settings."
+  },
   "advanced_settings": {
     "title": "Advanced Settings",
     "zero_star_thresholds": "0 Star Rating Thresholds (Affects Technical Quality Judgment)",
@@ -262,15 +321,16 @@
     "normalization": "Sharpness normalization method, affects fairness between large and small birds"
   },
   "help": {
-    "welcome_title": "Welcome to SuperPicky V3.5.1 - AI-Powered Bird Photo Selector",
+    "welcome_title": "Welcome to SuperPicky V3.6.0 - AI-Powered Bird Photo Selector",
     "usage_steps_title": "Usage Steps:",
     "step1": "Click 'Browse' to select photo directory (supports RAW/JPG)",
     "step2": "Adjust 3-star and pick flag parameters (optional, defaults recommended)",
     "step3": "Click 'Start Processing' and wait for AI analysis to complete",
-    "step4": "Import to Lightroom or use Bridge for sorting and post-processing",
+    "step4": "Import to Lightroom for post-processing and management",
     "rating_rules_title": "Rating Rules:",
     "rule_3_star": "⭐⭐⭐ = Both sharpness and aesthetics meet threshold (3 stars)",
     "rule_picked": "🏆 Pick Flag = Top 25% in both aesthetics and sharpness among 3-star photos",
+    "rule_flying": "🟢 Green Label = Flying bird pose (auto-tagged)",
     "rule_2_star": "⭐⭐ = Either sharpness or aesthetics meets threshold (2 stars)",
     "rule_1_star": "⭐ = Bird detected but below threshold (1 star)",
     "rule_0_star": "0 star = Poor technical quality (confidence/aesthetics/sharpness below threshold or both eyes hidden)",

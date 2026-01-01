@@ -18,7 +18,7 @@ from utils import log_message
 class CLIProcessor:
     """CLI 处理器 - 只负责命令行交互"""
     
-    def __init__(self, dir_path: str, ui_settings: List = None, verbose: bool = True):
+    def __init__(self, dir_path: str, ui_settings: List = None, verbose: bool = True, detect_flight: bool = True):
         """
         初始化处理器
         
@@ -26,6 +26,7 @@ class CLIProcessor:
             dir_path: 处理目录
             ui_settings: [ai_confidence, sharpness_threshold, nima_threshold, save_crop, norm_mode]
             verbose: 详细输出
+            detect_flight: 是否启用飞鸟检测
         """
         self.verbose = verbose
         self.dir_path = dir_path  # 保存目录路径用于日志
@@ -40,7 +41,8 @@ class CLIProcessor:
             sharpness_threshold=ui_settings[1],
             nima_threshold=ui_settings[2],
             save_crop=ui_settings[3] if len(ui_settings) > 3 else False,
-            normalization_mode=ui_settings[4] if len(ui_settings) > 4 else 'log_compression'
+            normalization_mode=ui_settings[4] if len(ui_settings) > 4 else 'log_compression',
+            detect_flight=detect_flight
         )
         
         # 创建核心处理器
@@ -116,20 +118,8 @@ class CLIProcessor:
         self._log("📁 阶段1: 文件扫描", "info")
     
     def _print_summary(self, result: ProcessingResult):
-        """打印完成摘要"""
-        stats = result.stats
+        """打印完成摘要（使用共享格式化模块）"""
+        from core.stats_formatter import format_processing_summary, print_summary
         
-        self._log("\n" + "="*60)
-        self._log("📊 处理完成统计:", "success")
-        self._log("")
-        self._log(f"  总文件数: {stats['total']}")
-        self._log(f"  ├─ ⭐⭐⭐ 优选 (3星): {stats['star_3']}  (精选: {stats['picked']})")
-        self._log(f"  ├─ ⭐⭐   良好 (2星): {stats['star_2']}")
-        self._log(f"  ├─ ⭐ 普通 (1星): {stats.get('star_1', 0)}")
-        self._log(f"  ├─ 普通 (0星)  : {stats['star_0']}")
-        self._log(f"  └─ ❌    无鸟       : {stats['no_bird']}")
-        self._log("")
-        self._log(f"  总耗时: {stats['total_time']:.1f}秒")
-        self._log(f"  平均速度: {stats['avg_time']:.1f}秒/张")
-        self._log("="*60)
-        self._log("\n✅ 所有照片已写入EXIF元数据，可在Lightroom中查看\n", "success")
+        lines = format_processing_summary(result.stats, include_time=True)
+        print_summary(lines, self._log)

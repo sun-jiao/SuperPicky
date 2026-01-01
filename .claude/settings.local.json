@@ -153,7 +153,8 @@
       "Bash(dist/SuperPicky.app/Contents/Frameworks/exiftool_bundle/exiftool -ver)",
       "WebFetch(domain:mmpose.readthedocs.io)",
       "Bash(pip uninstall:*)",
-      "Bash(mim install:*)"
+      "Bash(mim install:*)",
+      "Bash(ls:*)"
     ],
     "deny": [],
     "ask": []
