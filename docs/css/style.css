@@ -430,6 +430,260 @@ header {
     color: var(--bg-void);
 }
 
+/* === Scoring Logic Section === */
+.logic-section {
+    padding: var(--space-2xl) 0;
+    background: var(--bg-primary);
+}
+
+.logic-block {
+    margin-bottom: var(--space-xl);
+}
+
+.logic-block:last-child {
+    margin-bottom: 0;
+}
+
+.logic-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.logic-icon {
+    font-size: 18px;
+}
+
+/* Four dimensions grid */
+.logic-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+}
+
+.logic-card {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.logic-card-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+}
+
+.logic-card p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Logic table */
+.logic-table {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.logic-table-row {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+    align-items: center;
+}
+
+.logic-table-row:last-child {
+    border-bottom: none;
+}
+
+.logic-table-row.header {
+    background: var(--bg-card);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.logic-table-cell {
+    font-size: 13px;
+}
+
+.star-cell {
+    text-align: center;
+}
+
+.condition-cell {
+    color: var(--text-secondary);
+}
+
+.meaning-cell {
+    color: var(--text-tertiary);
+}
+
+.star-display {
+    font-family: var(--font-mono);
+    font-size: 14px;
+}
+
+.star-display.gold {
+    color: var(--star-gold);
+}
+
+.star-display.dim {
+    color: var(--star-gold);
+    opacity: 0.6;
+}
+
+.star-display.muted {
+    color: var(--text-muted);
+}
+
+/* Logic flags */
+.logic-flags {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.logic-flag {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.flag-badge {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+
+.flag-badge.pick {
+    background: var(--accent);
+    color: var(--bg-void);
+}
+
+.flag-badge.fly {
+    background: var(--success);
+    color: var(--bg-void);
+}
+
+.flag-info strong {
+    display: block;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.flag-info p {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Logic note */
+.logic-note {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+}
+
+.logic-note p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+}
+
+.logic-note ul {
+    list-style: none;
+    margin-left: var(--space-md);
+}
+
+.logic-note li {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding: 4px 0;
+    position: relative;
+}
+
+.logic-note li::before {
+    content: "•";
+    position: absolute;
+    left: -12px;
+    color: var(--accent);
+}
+
+/* Logic tips */
+.logic-tips {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.tip-item:last-child {
+    border-bottom: none;
+}
+
+.tip-from {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 50px;
+    text-align: center;
+}
+
+.tip-from.gold {
+    color: var(--star-gold);
+}
+
+.tip-from.dim {
+    color: var(--star-gold);
+    opacity: 0.5;
+}
+
+.tip-from.dim2 {
+    color: var(--star-gold);
+    opacity: 0.7;
+}
+
+.tip-from.muted {
+    color: var(--text-muted);
+}
+
+.tip-arrow {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.tip-action {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
 /* === Download Section === */
 .download-section {
     padding: var(--space-2xl) 0;
@@ -730,6 +984,64 @@ footer {
     display: inline;
 }
 
+/* Logic section inline language */
+.logic-title .lang-cn,
+.logic-title .lang-en,
+.logic-card-header .lang-cn,
+.logic-card-header .lang-en,
+.logic-card p .lang-cn,
+.logic-card p .lang-en,
+.logic-table-cell .lang-cn,
+.logic-table-cell .lang-en,
+.star-display .lang-cn,
+.star-display .lang-en,
+.flag-badge .lang-cn,
+.flag-badge .lang-en,
+.flag-info strong .lang-cn,
+.flag-info strong .lang-en,
+.flag-info p .lang-cn,
+.flag-info p .lang-en,
+.logic-note p .lang-cn,
+.logic-note p .lang-en,
+.logic-note li .lang-cn,
+.logic-note li .lang-en,
+.tip-from .lang-cn,
+.tip-from .lang-en,
+.tip-action .lang-cn,
+.tip-action .lang-en {
+    display: none;
+}
+
+[data-lang="cn"] .logic-title .lang-cn,
+[data-lang="cn"] .logic-card-header .lang-cn,
+[data-lang="cn"] .logic-card p .lang-cn,
+[data-lang="cn"] .logic-table-cell .lang-cn,
+[data-lang="cn"] .star-display .lang-cn,
+[data-lang="cn"] .flag-badge .lang-cn,
+[data-lang="cn"] .flag-info strong .lang-cn,
+[data-lang="cn"] .flag-info p .lang-cn,
+[data-lang="cn"] .logic-note p .lang-cn,
+[data-lang="cn"] .logic-note li .lang-cn,
+[data-lang="cn"] .tip-from .lang-cn,
+[data-lang="cn"] .tip-action .lang-cn {
+    display: inline;
+}
+
+[data-lang="en"] .logic-title .lang-en,
+[data-lang="en"] .logic-card-header .lang-en,
+[data-lang="en"] .logic-card p .lang-en,
+[data-lang="en"] .logic-table-cell .lang-en,
+[data-lang="en"] .star-display .lang-en,
+[data-lang="en"] .flag-badge .lang-en,
+[data-lang="en"] .flag-info strong .lang-en,
+[data-lang="en"] .flag-info p .lang-en,
+[data-lang="en"] .logic-note p .lang-en,
+[data-lang="en"] .logic-note li .lang-en,
+[data-lang="en"] .tip-from .lang-en,
+[data-lang="en"] .tip-action .lang-en {
+    display: inline;
+}
+
 /* === Responsive === */
 @media (max-width: 768px) {
     .container {
@@ -771,6 +1083,35 @@ footer {
     .rating-badges {
         width: 100%;
         margin-top: var(--space-sm);
+    }
+
+    /* Logic section responsive */
+    .logic-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .logic-table-row {
+        grid-template-columns: 60px 1fr;
+        gap: var(--space-sm);
+    }
+
+    .logic-table-row.header .meaning-cell,
+    .logic-table-row .meaning-cell {
+        display: none;
+    }
+
+    .logic-flag {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tip-item {
+        flex-wrap: wrap;
+    }
+
+    .tip-action {
+        width: 100%;
+        margin-top: var(--space-xs);
     }
 
     .download-card {

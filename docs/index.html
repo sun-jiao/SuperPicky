@@ -202,6 +202,259 @@
         </div>
     </section>
 
+    <!-- Scoring Logic Section -->
+    <section class="logic-section" id="logic">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">
+                    <span class="lang-cn">评分逻辑</span>
+                    <span class="lang-en">How It Works</span>
+                </span>
+            </div>
+
+            <!-- Key Factors -->
+            <div class="logic-block">
+                <h3 class="logic-title">
+                    <span class="logic-icon">🔍</span>
+                    <span class="lang-cn">四大评估维度</span>
+                    <span class="lang-en">Four Evaluation Dimensions</span>
+                </h3>
+                <div class="logic-grid">
+                    <div class="logic-card">
+                        <div class="logic-card-header">
+                            <span class="lang-cn">AI 置信度</span>
+                            <span class="lang-en">AI Confidence</span>
+                        </div>
+                        <p>
+                            <span class="lang-cn">模型对「这是一只鸟」的把握程度。置信度太低会直接放弃该照片。</span>
+                            <span class="lang-en">How certain the model is that "this is a bird". Low confidence leads to rejection.</span>
+                        </p>
+                    </div>
+                    <div class="logic-card">
+                        <div class="logic-card-header">
+                            <span class="lang-cn">眼睛可见度</span>
+                            <span class="lang-en">Eye Visibility</span>
+                        </div>
+                        <p>
+                            <span class="lang-cn">鸟的眼睛是否清晰可见。眼睛不可见或模糊会限制最高评分。</span>
+                            <span class="lang-en">Whether the bird's eye is clearly visible. Invisible eyes cap the rating.</span>
+                        </p>
+                    </div>
+                    <div class="logic-card">
+                        <div class="logic-card-header">
+                            <span class="lang-cn">头部锐度</span>
+                            <span class="lang-en">Head Sharpness</span>
+                        </div>
+                        <p>
+                            <span class="lang-cn">鸟头部区域的清晰程度。锐度达标是获得高分的基础条件。</span>
+                            <span class="lang-en">Clarity of the bird's head region. Meeting sharpness threshold is fundamental.</span>
+                        </p>
+                    </div>
+                    <div class="logic-card">
+                        <div class="logic-card-header">
+                            <span class="lang-cn">美学评分</span>
+                            <span class="lang-en">Aesthetic Score</span>
+                        </div>
+                        <p>
+                            <span class="lang-cn">TOPIQ 模型评估画面的整体美感，包括构图、光影、背景等。</span>
+                            <span class="lang-en">TOPIQ model evaluates composition, lighting, background, and overall appeal.</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Star Rating Logic -->
+            <div class="logic-block">
+                <h3 class="logic-title">
+                    <span class="logic-icon">⭐</span>
+                    <span class="lang-cn">星级评定规则</span>
+                    <span class="lang-en">Star Rating Rules</span>
+                </h3>
+                <div class="logic-table">
+                    <div class="logic-table-row header">
+                        <div class="logic-table-cell star-cell">
+                            <span class="lang-cn">星级</span>
+                            <span class="lang-en">Stars</span>
+                        </div>
+                        <div class="logic-table-cell condition-cell">
+                            <span class="lang-cn">条件</span>
+                            <span class="lang-en">Condition</span>
+                        </div>
+                        <div class="logic-table-cell meaning-cell">
+                            <span class="lang-cn">含义</span>
+                            <span class="lang-en">Meaning</span>
+                        </div>
+                    </div>
+                    <div class="logic-table-row">
+                        <div class="logic-table-cell star-cell">
+                            <span class="star-display gold">★★★</span>
+                        </div>
+                        <div class="logic-table-cell condition-cell">
+                            <span class="lang-cn">锐度达标 + 美学达标</span>
+                            <span class="lang-en">Sharpness ✓ + Aesthetics ✓</span>
+                        </div>
+                        <div class="logic-table-cell meaning-cell">
+                            <span class="lang-cn">清晰且好看，值得后期处理</span>
+                            <span class="lang-en">Sharp and beautiful, worth editing</span>
+                        </div>
+                    </div>
+                    <div class="logic-table-row">
+                        <div class="logic-table-cell star-cell">
+                            <span class="star-display dim">★★</span>
+                        </div>
+                        <div class="logic-table-cell condition-cell">
+                            <span class="lang-cn">锐度达标 或 美学达标</span>
+                            <span class="lang-en">Sharpness ✓ or Aesthetics ✓</span>
+                        </div>
+                        <div class="logic-table-cell meaning-cell">
+                            <span class="lang-cn">某方面不错，可考虑保留</span>
+                            <span class="lang-en">Good in one aspect, consider keeping</span>
+                        </div>
+                    </div>
+                    <div class="logic-table-row">
+                        <div class="logic-table-cell star-cell">
+                            <span class="star-display dim">★</span>
+                        </div>
+                        <div class="logic-table-cell condition-cell">
+                            <span class="lang-cn">有鸟但都未达标</span>
+                            <span class="lang-en">Bird detected but neither passed</span>
+                        </div>
+                        <div class="logic-table-cell meaning-cell">
+                            <span class="lang-cn">质量一般，通常可删除</span>
+                            <span class="lang-en">Average quality, usually deletable</span>
+                        </div>
+                    </div>
+                    <div class="logic-table-row">
+                        <div class="logic-table-cell star-cell">
+                            <span class="star-display muted">0</span>
+                        </div>
+                        <div class="logic-table-cell condition-cell">
+                            <span class="lang-cn">无鸟 / 置信度太低 / 质量极差</span>
+                            <span class="lang-en">No bird / Low confidence / Very poor</span>
+                        </div>
+                        <div class="logic-table-cell meaning-cell">
+                            <span class="lang-cn">建议删除</span>
+                            <span class="lang-en">Recommend deleting</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Special Flags -->
+            <div class="logic-block">
+                <h3 class="logic-title">
+                    <span class="logic-icon">🏷️</span>
+                    <span class="lang-cn">特殊标记</span>
+                    <span class="lang-en">Special Flags</span>
+                </h3>
+                <div class="logic-flags">
+                    <div class="logic-flag">
+                        <span class="flag-badge pick">Pick</span>
+                        <div class="flag-info">
+                            <strong>
+                                <span class="lang-cn">精选旗标</span>
+                                <span class="lang-en">Pick Flag</span>
+                            </strong>
+                            <p>
+                                <span class="lang-cn">从所有 3 星照片中，选出锐度和美学都排名前 25% 的交集。双维度都出色才能获得精选。</span>
+                                <span class="lang-en">Among 3-star photos, selects top 25% in BOTH sharpness AND aesthetics. Must excel in both dimensions.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="logic-flag">
+                        <span class="flag-badge fly">
+                            <span class="lang-cn">飞鸟</span>
+                            <span class="lang-en">Flying</span>
+                        </span>
+                        <div class="flag-info">
+                            <strong>
+                                <span class="lang-cn">飞版加成</span>
+                                <span class="lang-en">Flying Bonus</span>
+                            </strong>
+                            <p>
+                                <span class="lang-cn">AI 检测到飞行姿态时会给予锐度和美学加分，补偿飞版拍摄的难度。飞行照片用绿色标签标记。</span>
+                                <span class="lang-en">When AI detects flying pose, bonus points are added to compensate for capture difficulty. Marked with green label.</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eye Visibility Impact -->
+            <div class="logic-block">
+                <h3 class="logic-title">
+                    <span class="logic-icon">👁️</span>
+                    <span class="lang-cn">眼睛可见度的影响</span>
+                    <span class="lang-en">Impact of Eye Visibility</span>
+                </h3>
+                <div class="logic-note">
+                    <p>
+                        <span class="lang-cn">眼睛是鸟类摄影的灵魂。如果眼睛不可见或非常模糊，即使其他指标达标，评分也会被限制：</span>
+                        <span class="lang-en">The eye is the soul of bird photography. If the eye is invisible or very blurry, the rating is capped:</span>
+                    </p>
+                    <ul>
+                        <li>
+                            <span class="lang-cn">眼睛完全不可见 → 最高 1 星</span>
+                            <span class="lang-en">Eye completely invisible → Max 1 star</span>
+                        </li>
+                        <li>
+                            <span class="lang-cn">眼睛略微可见但模糊 → 最高 2 星</span>
+                            <span class="lang-en">Eye slightly visible but blurry → Max 2 stars</span>
+                        </li>
+                        <li>
+                            <span class="lang-cn">眼睛清晰可见 → 不受限制</span>
+                            <span class="lang-en">Eye clearly visible → No cap</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Re-rating Tips -->
+            <div class="logic-block">
+                <h3 class="logic-title">
+                    <span class="logic-icon">💡</span>
+                    <span class="lang-cn">二次评星建议</span>
+                    <span class="lang-en">Re-rating Tips</span>
+                </h3>
+                <div class="logic-tips">
+                    <div class="tip-item">
+                        <span class="tip-from muted">0 星</span>
+                        <span class="tip-arrow">→</span>
+                        <span class="tip-action">
+                            <span class="lang-cn">检查是否真的没鸟，或者鸟太小/太模糊</span>
+                            <span class="lang-en">Check if there's really no bird, or bird is too small/blurry</span>
+                        </span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-from dim">1 星</span>
+                        <span class="tip-arrow">→</span>
+                        <span class="tip-action">
+                            <span class="lang-cn">如果眼睛清晰且你喜欢，可手动提升</span>
+                            <span class="lang-en">If eye is clear and you like it, consider upgrading</span>
+                        </span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-from dim2">2 星</span>
+                        <span class="tip-arrow">→</span>
+                        <span class="tip-action">
+                            <span class="lang-cn">缺的是锐度还是美学？后期能补吗？</span>
+                            <span class="lang-en">Missing sharpness or aesthetics? Can post-processing help?</span>
+                        </span>
+                    </div>
+                    <div class="tip-item">
+                        <span class="tip-from gold">3 星</span>
+                        <span class="tip-arrow">→</span>
+                        <span class="tip-action">
+                            <span class="lang-cn">已经很好，没有 Pick 可能只是竞争太激烈</span>
+                            <span class="lang-en">Already great, no Pick just means strong competition</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
     <!-- Download Section -->
     <section class="download-section" id="download">
         <div class="container">
