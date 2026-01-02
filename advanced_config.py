@@ -24,6 +24,9 @@ class AdvancedConfig:
 
         # 精选设置
         "picked_top_percentage": 25, # 精选旗标Top百分比 (10-50) - 3星照片中美学+锐度双排名在此百分比内的设为精选
+        
+        # 曝光检测设置 V3.8
+        "exposure_threshold": 0.10,  # 曝光阈值 (0.05-0.20) - 过曝/欠曝像素占比超过此值将降级一星
 
         # 输出设置
         "save_csv": True,           # 是否保存CSV报告
@@ -101,6 +104,10 @@ class AdvancedConfig:
     @property
     def picked_top_percentage(self):
         return self.config["picked_top_percentage"]
+    
+    @property
+    def exposure_threshold(self):
+        return self.config.get("exposure_threshold", 0.10)
 
     @property
     def save_csv(self):
@@ -132,6 +139,10 @@ class AdvancedConfig:
     def set_picked_top_percentage(self, value):
         """设置精选旗标Top百分比 (10-50)"""
         self.config["picked_top_percentage"] = max(10, min(50, int(value)))
+    
+    def set_exposure_threshold(self, value):
+        """设置曝光阈值 (0.05-0.20)"""
+        self.config["exposure_threshold"] = max(0.05, min(0.20, float(value)))
 
     def set_save_csv(self, value):
         """设置是否保存CSV"""

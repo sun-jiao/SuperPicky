@@ -27,7 +27,9 @@ class KeypointResult:
     beak_vis: float
     
     # 派生属性
-    both_eyes_hidden: bool             # 双眼是否都不可见
+    both_eyes_hidden: bool             # 双眼是否都不可见（保留兼容）
+    all_keypoints_hidden: bool         # 所有关键点（双眼+鸟喙）都不可见
+    best_eye_visibility: float         # 双眼中较高的置信度 max(左眼, 右眼)
     visible_eye: Optional[str]         # 'left', 'right', 'both', None
     head_sharpness: float              # 头部区域锐度
 
@@ -66,7 +68,7 @@ class KeypointDetector:
     
     # 默认配置
     IMG_SIZE = 416
-    VISIBILITY_THRESHOLD = 0.5  # 至少一只眼睛可见性需≥0.5才算"眼睛可见"
+    VISIBILITY_THRESHOLD = 0.3  # 至少一个关键点可见性需≥0.3才不算"全部不可见"
     RADIUS_MULTIPLIER = 1.2         # 有喙时的半径系数
     NO_BEAK_RADIUS_RATIO = 0.15     # 无喙时用检测框的15%
     
@@ -159,7 +161,10 @@ class KeypointDetector:
         right_visible = right_eye_vis >= self.VISIBILITY_THRESHOLD
         beak_visible = beak_vis >= self.VISIBILITY_THRESHOLD
         
+        # 保留旧属性（兼容）
         both_eyes_hidden = not left_visible and not right_visible
+        # 新逻辑：只有当双眼和鸟喙都不可见时才算"全部不可见"
+        all_keypoints_hidden = not left_visible and not right_visible and not beak_visible
         
         if left_visible and right_visible:
             visible_eye = 'both'
@@ -179,6 +184,9 @@ class KeypointDetector:
                 box, seg_mask
             )
         
+        # V3.8: 计算双眼中较高的置信度，用于评分封顶逻辑
+        best_eye_visibility = max(left_eye_vis, right_eye_vis)
+        
         return KeypointResult(
             left_eye=left_eye,
             right_eye=right_eye,
@@ -187,6 +195,8 @@ class KeypointDetector:
             right_eye_vis=right_eye_vis,
             beak_vis=beak_vis,
             both_eyes_hidden=both_eyes_hidden,
+            all_keypoints_hidden=all_keypoints_hidden,
+            best_eye_visibility=best_eye_visibility,
             visible_eye=visible_eye,
             head_sharpness=head_sharpness
         )

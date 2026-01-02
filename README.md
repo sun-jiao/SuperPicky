@@ -1,80 +1,70 @@
 # SuperPicky - 慧眼选鸟 🦅
 
-[![Version](https://img.shields.io/badge/version-3.1.3-blue.svg)](https://github.com/jamesphotography/SuperPicky)
-[![Platform](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos)
+[![Version](https://img.shields.io/badge/version-3.8.0-blue.svg)](https://github.com/jamesphotography/SuperPicky)
+[![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 **智能鸟类照片筛选工具 - 让AI帮你挑选最美的鸟类照片**
 
-一款专门为鸟类摄影师设计的智能照片筛选软件，使用AI技术自动识别、评分和筛选鸟类照片，大幅提升后期整理效率。
+拍片一时爽，选片照样爽！一款专门为鸟类摄影师设计的智能照片筛选软件，使用多模型AI技术自动识别、评分和筛选鸟类照片，大幅提升后期整理效率。
 
 ---
 
-## 🌟 主要特性
+## 🌟 核心功能
 
-### 🤖 智能识别
-- **AI鸟类检测**: 基于YOLOv11模型，精准识别照片中的鸟类
-- **高置信度**: 支持自定义检测阈值，确保识别准确性
-- **多鸟处理**: 自动处理包含多只鸟的照片
+### 🤖 多模型协作
+- **YOLO11 检测**: 精准识别照片中的鸟类位置和分割掩码
+- **SuperEyes 鸟眼**: 检测鸟眼位置和可见度，计算头部区域锐度
+- **SuperFlier 飞鸟**: 识别飞行姿态，给予飞版照片额外加分
+- **TOPIQ 美学**: 评估整体画面美感、构图和光影
 
-### ⭐ 智能评分系统
-- **清晰度分析**: 自动评估照片清晰度
-- **构图评分**: 分析构图质量
-- **美学评估**: 基于NIMA模型的美学评分
-- **综合评级**: 结合多维度指标给出1-5星评级
+### ⭐ 智能评分系统 (0-3星)
+| 星级 | 条件 | 含义 |
+|------|------|------|
+| ⭐⭐⭐ | 锐度达标 + 美学达标 | 优选照片，值得后期处理 |
+| ⭐⭐ | 锐度达标 或 美学达标 | 良好照片，可考虑保留 |
+| ⭐ | 有鸟但都未达标 | 普通照片，通常可删除 |
+| 0 | 无鸟/质量太差 | 建议删除 |
 
-### 🏆 自动筛选
-- **智能标记**: 自动标记高质量照片 (Pick)
-- **淘汰处理**: 识别并标记低质量照片 (Reject)
-- **批量处理**: 支持大批量照片的快速处理
-- **EXIF写入**: 将评分信息写入照片EXIF元数据
+### 🏷️ 特殊标记
+- **Pick 精选**: 3星照片中锐度+美学双排名前25%的交集
+- **Flying 飞鸟**: AI检测到飞行姿态，额外加分并标记绿色
+- **Exposure 曝光** (可选): 检测过曝/欠曝问题，降一星处理
 
-### 📊 详细报告
-- **CSV报告**: 生成详细的照片分析报告
-- **多维度指标**: 包含清晰度、构图、美学等详细数据
-- **处理统计**: 提供处理进度和结果统计
-
-### ⚙️ 高级设置
-- **参数调节**: 支持调整识别阈值、评分权重等参数
-- **性能优化**: 可配置线程数、批处理大小等
-- **防休眠**: 处理过程中自动防止系统休眠
+### 📂 自动整理
+- **按星级分类**: 自动移动到 0星/1星/2星/3星 文件夹
+- **EXIF写入**: 评分、旗标、锐度/美学值写入RAW文件元数据
+- **Lightroom兼容**: 导入即可按评分排序和筛选
+- **可撤销**: 一键重置恢复原始状态
 
 ---
 
 ## 📋 系统要求
 
-- **操作系统**: macOS 10.15 (Catalina) 或更高版本
-- **芯片**: Apple Silicon (M1/M2/M3/M4) 或 Intel 芯片
-- **内存**: 建议 8GB 或更多
-- **硬盘空间**: 约 2GB 可用空间
-- **ExifTool**: 软件内置，无需额外安装
+- **macOS**: macOS 10.15+ · Apple Silicon (M1/M2/M3/M4) · 1.5GB空间
+- **Windows**: Windows 10+ · NVIDIA GPU (建议) · 2GB空间
 
 ---
 
-## 📥 安装
+## 📥 下载安装
 
-### 下载安装包
+### macOS
+1. 从 [Releases](https://github.com/jamesphotography/SuperPicky/releases/latest) 页面下载 `SuperPicky_vX.X.X.dmg`
+2. 双击 DMG 文件，将应用拖入 Applications
+3. 首次打开：右键点击应用选择"打开"
 
-1. 从 [Releases](https://github.com/jamesphotography/SuperPicky/releases) 页面下载最新的 `SuperPicky_v3.1.2.dmg`
-2. 双击 DMG 文件打开
-3. 将 `SuperPicky.app` 拖动到 `Applications` 文件夹
-4. 首次打开时，右键点击应用选择"打开"以绕过系统安全提示
+### Windows
+1. 从 [Google Drive](https://drive.google.com/file/d/1rn_VctgLMW8SOAAfm3I1tGX7W_RCcBgm/view?usp=sharing) 下载 Windows 版本
+2. 解压后运行 `SuperPicky.exe`
 
-### 从源码运行 (开发者)
+### 从源码运行
 
 ```bash
-# 克隆仓库
 git clone https://github.com/jamesphotography/SuperPicky.git
 cd SuperPicky
-
-# 创建虚拟环境
 python3 -m venv .venv
-source .venv/bin/activate
-
-# 安装依赖
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-
-# 运行应用
 python main.py
 ```
 
@@ -82,171 +72,57 @@ python main.py
 
 ## 🚀 快速开始
 
-### 基本使用流程
-
-1. **启动软件**: 双击 `SuperPicky.app`
-2. **选择文件夹**: 点击"选择文件夹"按钮，选择包含鸟类照片的文件夹
-3. **配置参数** (可选): 点击"高级设置"调整识别和评分参数
-4. **开始处理**: 点击"开始处理"按钮
-5. **查看结果**: 处理完成后，在文件夹中查看评分结果和CSV报告
-
-### 参数说明
-
-#### 基本设置
-- **检测阈值**: 鸟类识别的置信度阈值 (默认: 0.25)
-- **选中阈值**: 标记为Pick的评分阈值 (默认: 80)
-- **淘汰阈值**: 标记为Reject的评分阈值 (默认: 60)
-
-#### 高级设置
-- **YOLO置信度**: YOLO模型检测置信度 (默认: 0.25)
-- **IOU阈值**: 重叠检测框过滤阈值 (默认: 0.45)
-- **清晰度权重**: 清晰度在总分中的权重 (默认: 50%)
-- **美学权重**: 美学评分的权重 (默认: 50%)
-- **线程数**: 并行处理的线程数 (默认: 4)
+1. **选择文件夹**: 拖入或浏览选择包含鸟类照片的文件夹
+2. **调整阈值** (可选): 锐度阈值 (200-600)、美学阈值 (4.0-7.0)
+3. **开关功能** (可选): 飞鸟检测、曝光检测
+4. **开始处理**: 点击按钮等待AI处理完成
+5. **查看结果**: 照片自动分类，导入Lightroom即可使用
 
 ---
 
-## 📊 输出说明
+## 📝 更新日志
 
-### EXIF元数据
-处理后的照片会包含以下EXIF信息:
-- **Rating**: 1-5星评级
-- **XMP:Pick**: 1 (选中) / 0 (未选中) / -1 (淘汰)
-- **IPTC:City**: 综合评分 (0-100)
+### v3.8.0 (2026-01-02)
+- ✨ **新增曝光检测**: 检测鸟区域过曝/欠曝，可选功能默认关闭
+  - 过曝判定：亮度 ≥235 的像素超过 10%
+  - 欠曝判定：亮度 ≤15 的像素超过 10%
+  - 有曝光问题的照片评分降一星
+- 📊 新增曝光问题统计和日志标签 【曝光】
+- 🎚️ 曝光阈值可在高级设置中调整 (5%-20%)
 
-### CSV报告
-生成的 `bird_report.csv` 包含:
-- 文件名和路径
-- 检测置信度
-- 清晰度分数
-- 美学分数
-- 综合评分
-- 评级和Pick状态
+### v3.7.0 (2026-01-01)
+- ✨ 重构评分逻辑，使用 TOPIQ 替代 NIMA
+- 🦅 飞鸟检测加成：锐度+100，美学+0.5
+- 👁️ 眼睛可见度封顶逻辑优化
+- 🔧 UI 优化和 Bug 修复
 
----
-
-## 🏗️ 项目结构
-
-```
-SuperPicky/
-├── main.py                          # 主程序入口
-├── ai_model.py                      # AI模型加载和鸟类检测
-├── exiftool_manager.py              # EXIF元数据管理
-├── advanced_config.py               # 高级配置管理
-├── advanced_settings_dialog.py      # 高级设置对话框
-├── utils.py                         # 工具函数
-├── core/                            # 核心模块
-│   ├── bird_detector.py            # 鸟类检测核心逻辑
-│   ├── config_manager.py           # 配置管理
-│   └── file_manager.py             # 文件管理
-├── services/                        # 服务层
-│   ├── image_processing_service.py # 图像处理服务
-│   └── algorithm_comparison_service.py # 算法比较服务
-├── img/                            # 图像资源
-├── models/                         # AI模型文件
-│   ├── yolo11n.pt                 # YOLO鸟类检测模型
-│   └── nima_model.pth             # NIMA美学评估模型
-├── exiftool/                       # ExifTool工具
-├── SuperPicky.spec                 # PyInstaller打包配置
-├── build_and_notarize.sh          # 构建和公证脚本
-└── USER_MANUAL_CN.md              # 中文用户手册
-```
+### v3.6.0 (2025-12-30)
+- ✨ 飞鸟照片绿色标签
+- 📊 飞鸟统计计数
+- 🔄 纯JPEG文件支持
 
 ---
 
-## 🔧 开发
+## 👨‍💻 开发团队
 
-### 构建应用
-
-```bash
-# 使用PyInstaller构建
-pyinstaller SuperPicky.spec --clean --noconfirm
-
-# 构建并公证 (需要Apple开发者账号)
-./build_and_notarize.sh
-```
-
-### 技术栈
-
-- **GUI框架**: Tkinter + ttkthemes
-- **AI模型**:
-  - YOLOv11 (鸟类检测) - [Ultralytics](https://github.com/ultralytics/ultralytics)
-  - NIMA (美学评估)
-- **图像处理**: OpenCV, PIL
-- **深度学习**: PyTorch
-- **EXIF处理**: ExifTool
-- **打包工具**: PyInstaller
-
----
-
-## 📝 开发日志
-
-### v3.1.3 (2025-10-20)
-- 🐛 修复 PyIQA 打包问题，解决应用在其他 Mac 上无法启动的问题
-- 📦 在 SuperPicky.spec 中添加 PyIQA 完整目录结构
-- 📝 更新所有文档版本号到 V3.1.3
-
-### v3.1.2 (2025-10-19)
-- ✨ 添加About窗口，显示版本和版权信息
-- ⚡ 优化EXIF写入逻辑，提升处理效率
-- 🔧 添加防休眠功能，处理大批量照片时保持系统活跃
-- 🐛 修复多个Bug和边界情况
-
-### v3.1.0 (2025-10-18)
-- ✨ 移除预览功能，专注核心处理
-- ⚡ 优化评分算法和性能
-- 🔧 改进高级设置界面
-
-### v3.0.0 (2025-10-15)
-- 🎉 完整重构，全新架构
-- ✨ 引入NIMA美学评估模型
-- 🚀 大幅提升处理速度和准确性
-
----
-
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request！
-
-### 开发指南
-
-1. Fork本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 提交Pull Request
-
----
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
----
-
-## 👨‍💻 作者
-
-**James Zhang**
-- GitHub: [@jamesphotography](https://github.com/jamesphotography)
-- Email: james@jamesphotography.com.au
+| 角色 | 成员 | 贡献 |
+|------|------|------|
+| 开发者 | [James Yu (詹姆斯·于震)](https://github.com/jamesphotography) | 核心开发 |
+| 模型训练 | [Jordan Yu (于若君)](https://github.com/jordan-yrj) | SuperEyes · SuperFlier |
+| Windows版 | [小平](https://github.com/thp2024) | Windows移植 |
 
 ---
 
 ## 🙏 致谢
 
-- [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) - 提供强大的目标检测模型
-- [ExifTool](https://exiftool.org/) - Phil Harvey的优秀EXIF处理工具
-- 所有为开源项目做出贡献的开发者
+- [YOLO11](https://github.com/ultralytics/ultralytics) - Ultralytics 目标检测模型
+- [TOPIQ](https://github.com/chaofengc/IQA-PyTorch) - Chaofeng Chen 等人的图像质量评估模型
+- [ExifTool](https://exiftool.org/) - Phil Harvey 的 EXIF 处理工具
 
 ---
 
-## 📞 技术支持
+## 📄 许可证
 
-如遇到问题或有建议，请:
-1. 查看 [用户手册](USER_MANUAL_CN.md)
-2. 提交 [Issue](https://github.com/jamesphotography/SuperPicky/issues)
-3. 发送邮件至 james@jamesphotography.com.au
-
----
+MIT License - 详见 [LICENSE](LICENSE) 文件
 
 **让SuperPicky成为你鸟类摄影的得力助手！** 🦅📸

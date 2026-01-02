@@ -25,7 +25,7 @@ class AboutDialog(QDialog):
 
     def _setup_ui(self):
         """设置 UI"""
-        self.setWindowTitle("About")
+        self.setWindowTitle(self.i18n.t("about.window_title") if self.i18n else "About")
         self.setFixedSize(560, 520)
         self.setModal(True)
 
@@ -95,11 +95,11 @@ class AboutDialog(QDialog):
         """)
         brand_layout.addWidget(title)
 
-        subtitle = QLabel("AI Photo Selector")
+        subtitle = QLabel(self.i18n.t("about.subtitle") if self.i18n else "AI Photo Selector")
         subtitle.setStyleSheet(f"color: {COLORS['text_tertiary']}; font-size: 13px;")
         brand_layout.addWidget(subtitle)
 
-        version = QLabel("v3.7.0")
+        version = QLabel("v3.8.0")
         version.setStyleSheet(f"""
             color: {COLORS['accent']};
             font-size: 12px;
@@ -139,7 +139,7 @@ class AboutDialog(QDialog):
         footer_layout = QHBoxLayout()
         footer_layout.addStretch()
 
-        close_btn = QPushButton("Close")
+        close_btn = QPushButton(self.i18n.t("buttons.close") if self.i18n else "Close")
         close_btn.setMinimumWidth(100)
         close_btn.clicked.connect(self.accept)
         footer_layout.addWidget(close_btn)
@@ -149,6 +149,8 @@ class AboutDialog(QDialog):
 
     def _get_content(self) -> str:
         """获取关于内容"""
+        if self.i18n:
+            return self.i18n.t("about.content")
         return """Developer
 James Yu (詹姆斯·于震)
 Australian-Chinese Professional Photographer

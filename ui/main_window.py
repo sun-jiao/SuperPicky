@@ -114,7 +114,8 @@ class WorkerThread(threading.Thread):
             nima_threshold=self.ui_settings[2],
             save_crop=self.ui_settings[3] if len(self.ui_settings) > 3 else False,
             normalization_mode=self.ui_settings[4] if len(self.ui_settings) > 4 else 'log_compression',
-            detect_flight=self.ui_settings[5] if len(self.ui_settings) > 5 else True
+            detect_flight=self.ui_settings[5] if len(self.ui_settings) > 5 else True,
+            detect_exposure=self.ui_settings[6] if len(self.ui_settings) > 6 else False  # V3.8: 默认关闭
         )
 
         def log_callback(msg, level="info"):
@@ -306,7 +307,7 @@ class SuperPickyMainWindow(QMainWindow):
         header_layout.addStretch()
 
         # 右侧: 版本号
-        version_label = QLabel("v3.7.0")
+        version_label = QLabel("v3.8.0")
         version_label.setStyleSheet(VERSION_STYLE)
         header_layout.addWidget(version_label)
 
@@ -374,6 +375,21 @@ class SuperPickyMainWindow(QMainWindow):
         flight_layout.addWidget(self.flight_check)
 
         header_layout.addLayout(flight_layout)
+        
+        # V3.8: 曝光检测开关
+        exposure_layout = QHBoxLayout()
+        exposure_layout.setSpacing(10)
+        
+        exposure_label = QLabel(self.i18n.t("labels.exposure_detection"))
+        exposure_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 12px;")
+        exposure_layout.addWidget(exposure_label)
+        
+        self.exposure_check = QCheckBox()
+        self.exposure_check.setChecked(False)  # 默认关闭
+        exposure_layout.addWidget(self.exposure_check)
+        
+        header_layout.addLayout(exposure_layout)
+        
         params_layout.addLayout(header_layout)
 
         # 隐藏变量
@@ -417,11 +433,11 @@ class SuperPickyMainWindow(QMainWindow):
 
         self.nima_slider = QSlider(Qt.Horizontal)
         self.nima_slider.setRange(40, 70)  # 新范围 4.0-7.0
-        self.nima_slider.setValue(55)  # 新默认值 5.5
+        self.nima_slider.setValue(52)  # 默认值 5.2
         self.nima_slider.valueChanged.connect(self._on_nima_changed)
         nima_layout.addWidget(self.nima_slider)
 
-        self.nima_value = QLabel("5.5")  # 新默认值
+        self.nima_value = QLabel("5.2")  # 默认值
         self.nima_value.setStyleSheet(VALUE_STYLE)
         self.nima_value.setFixedWidth(50)
         self.nima_value.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
@@ -672,7 +688,8 @@ class SuperPickyMainWindow(QMainWindow):
             self.nima_slider.value() / 10.0,
             False,
             self.norm_mode,
-            self.flight_check.isChecked()
+            self.flight_check.isChecked(),
+            self.exposure_check.isChecked()  # V3.8: 曝光检测开关
         ]
 
         # 创建信号

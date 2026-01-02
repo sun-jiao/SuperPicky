@@ -36,7 +36,7 @@
     "nima": "Aesthetic Threshold:",
     "nima_range": "Aesthetic Threshold (5.0-6.0):",
     "normalization": "Sharpness Normalization Method:",
-    "processing": "Processing Progress",
+    "processing": "Processing",
     "log": "Run Log:",
     "app_title": "SuperPicky - Faster Photo Selection",
     "select_photo_dir": "Select Photo Directory",
@@ -58,8 +58,8 @@
     "yes": "Yes",
     "no": "No",
     "error": "Error",
-    "processing": "Processing",
-    "resetting": "Resetting"
+    "resetting": "Resetting",
+    "exposure_detection": "Exposure Check"
   },
   "dialogs": {
     "file_organization_title": "File Organization",
@@ -270,7 +270,9 @@
     "save_success_title": "Settings Saved",
     "save_success_msg": "Settings saved successfully.\nLanguage changes require restart.",
     "save_error_title": "Error",
-    "save_error_msg": "Failed to save settings."
+    "save_error_msg": "Failed to save settings.",
+    "exposure_threshold": "Exposure Threshold",
+    "exposure_desc": "Photos with overexposed/underexposed ratio above this threshold will be downgraded by 1 star"
   },
   "advanced_settings": {
     "title": "Advanced Settings",
@@ -406,5 +408,10 @@
     "error_title": "Error",
     "reset_error": "Error during reset: {error}",
     "reset_failed_msg": "Reset failed: {error}"
+  },
+  "about": {
+    "window_title": "About",
+    "subtitle": "AI Photo Selector",
+    "content": "Developer\nJames Yu (詹姆斯·于震)\nAustralian-Chinese Professional Photographer\nAuthor of \"James' Landscape Photography Notes\" Trilogy\n\nContact\njames@jamesphotography.com.au\njamesphotography.com.au\nYouTube: @JamesZhenYu\n\nModel Training\nBird Eye Detection: Jordan Yu\nBird Flight Pose: Jordan Yu\n\nOpen Source Models\nYOLO11 - Bird Detection (AGPL-3.0)\nTOPIQ - Aesthetic Scoring\n  by Chaofeng Chen et al. (IEEE TIP 2024)\n  github.com/chaofengc/IQA-PyTorch\n  License: CC BY-NC-SA 4.0\n\nFree Tools by James\n• SuperPicky - AI Bird Photo Selector\n• BirdID - AI Species Recognition (Lightroom)\n• BirdFind - eBird Search (Web)\n• StarRemover - AI Milky Way Processing (Photoshop)\n• PhotoMemory - Bird Collection (iOS)\n• TravelBook - AI Travel Journal (iOS)\n\n© 2024-2025 James Yu"
   }
 }

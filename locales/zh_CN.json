@@ -36,7 +36,7 @@
     "nima": "摄影美学阈值:",
     "nima_range": "美学阈值 (5.0-6.0)：",
     "normalization": "锐度归一化方法：",
-    "processing": "处理进度",
+    "processing": "处理中",
     "log": "运行日志：",
     "app_title": "📷 拍片一时爽，💻 选片照样爽",
     "select_photo_dir": "选择照片目录",
@@ -58,8 +58,8 @@
     "yes": "是",
     "no": "否",
     "error": "错误",
-    "processing": "处理中",
-    "resetting": "重置中"
+    "resetting": "重置中",
+    "exposure_detection": "曝光检测"
   },
   "dialogs": {
     "file_organization_title": "文件整理",
@@ -299,7 +299,9 @@
     "save_success_title": "设置已保存",
     "save_success_msg": "设置保存成功。\n语言更改需要重启应用后生效。",
     "save_error_title": "错误",
-    "save_error_msg": "保存设置失败。"
+    "save_error_msg": "保存设置失败。",
+    "exposure_threshold": "曝光阈值",
+    "exposure_desc": "鸟区域过曝/欠曝像素占比超过此阈值将降级一星"
   },
   "advanced_settings": {
     "title": "高级设置",
@@ -434,5 +436,10 @@
     "error_title": "错误",
     "reset_error": "重置过程中发生错误: {error}",
     "reset_failed_msg": "重置失败: {error}"
+  },
+  "about": {
+    "window_title": "关于",
+    "subtitle": "AI 智能选片助手",
+    "content": "开发者\n詹姆斯·于震 (James Yu)\n澳大利亚华裔职业摄影师\n《詹姆斯的风光摄影笔记》三部曲作者\n\n联系方式\njames@jamesphotography.com.au\njamesphotography.com.au\nYouTube: @JamesZhenYu\n\n模型训练\n鸟眼检测：Jordan Yu\n飞行姿态：Jordan Yu\n\n开源模型\nYOLO11 - 鸟类检测 (AGPL-3.0)\nTOPIQ - 美学评分\n  作者: Chaofeng Chen 等 (IEEE TIP 2024)\n  github.com/chaofengc/IQA-PyTorch\n  许可证: CC BY-NC-SA 4.0\n\n詹姆斯免费工具集\n• 慧眼选鸟 - AI 鸟类照片筛选\n• 慧眼辨鸟 - AI 鸟种识别 (Lightroom)\n• 慧眼找鸟 - eBird 搜索 (网页)\n• 慧眼去星 - AI 银河去星 (Photoshop)\n• 慧眼观鸟 - 鸟种收藏 (iOS)\n• 镜书 - AI 旅行日记 (iOS)\n\n© 2024-2025 詹姆斯·于震"
   }
 }

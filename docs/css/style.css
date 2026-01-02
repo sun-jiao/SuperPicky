@@ -582,6 +582,11 @@ header {
     color: var(--bg-void);
 }
 
+.flag-badge.exposure {
+    background: #f59e0b;
+    color: var(--bg-void);
+}
+
 .flag-info strong {
     display: block;
     font-size: 14px;

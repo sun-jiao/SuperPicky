@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 SuperPicky - 高级设置对话框
-PySide6 版本 - 极简艺术风格
+PySide6 版本 - 极简艺术风格（单页面布局）
+V3.8: 合并两个 Tab 为单页面布局，添加曝光阈值设置
 """
 
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QSlider, QPushButton, QGroupBox, QComboBox,
-    QTabWidget, QWidget, QMessageBox, QFrame
+    QWidget, QMessageBox, QFrame, QScrollArea
 )
 from PySide6.QtCore import Qt, Slot
 from PySide6.QtGui import QFont
@@ -19,7 +20,7 @@ from ui.custom_dialogs import StyledMessageBox
 
 
 class AdvancedSettingsDialog(QDialog):
-    """高级设置对话框 - 极简艺术风格"""
+    """高级设置对话框 - 极简艺术风格（单页面布局）"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -34,8 +35,8 @@ class AdvancedSettingsDialog(QDialog):
     def _setup_ui(self):
         """设置 UI"""
         self.setWindowTitle(self.i18n.t("settings.window_title"))
-        self.setMinimumSize(520, 560)
-        self.resize(540, 600)
+        self.setMinimumSize(520, 620)
+        self.resize(540, 680)
         self.setModal(True)
 
         # 应用样式
@@ -91,24 +92,6 @@ class AdvancedSettingsDialog(QDialog):
                 background: {COLORS['text_primary']};
                 border-radius: 8px;
             }}
-            QTabWidget::pane {{
-                background-color: {COLORS['bg_elevated']};
-                border: 1px solid {COLORS['border_subtle']};
-                border-radius: 10px;
-                padding: 16px;
-            }}
-            QTabBar::tab {{
-                background-color: transparent;
-                color: {COLORS['text_tertiary']};
-                padding: 10px 20px;
-                margin-right: 4px;
-                border-radius: 6px;
-                font-size: 13px;
-            }}
-            QTabBar::tab:selected {{
-                background-color: {COLORS['bg_card']};
-                color: {COLORS['text_primary']};
-            }}
             QComboBox {{
                 background-color: {COLORS['bg_input']};
                 border: 1px solid {COLORS['border']};
@@ -153,39 +136,62 @@ class AdvancedSettingsDialog(QDialog):
         layout.addWidget(title)
         layout.addSpacing(24)
 
-        # 选项卡
-        tab_widget = QTabWidget()
-        layout.addWidget(tab_widget)
+        # 滚动区域
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setStyleSheet("background: transparent;")
+        
+        scroll_content = QWidget()
+        scroll_content.setStyleSheet("background: transparent;")
+        scroll_layout = QVBoxLayout(scroll_content)
+        scroll_layout.setContentsMargins(0, 0, 0, 0)
+        scroll_layout.setSpacing(0)
 
-        # Tab 1: 评分阈值
-        rating_tab = QWidget()
-        rating_tab.setStyleSheet("background: transparent;")
-        rating_layout = QVBoxLayout(rating_tab)
-        rating_layout.setContentsMargins(0, 0, 0, 0)
-        self._create_rating_tab(rating_layout)
-        tab_widget.addTab(rating_tab, self.i18n.t("settings.tab_thresholds"))
+        # 上半区域：0星阈值
+        self._create_threshold_section(scroll_layout)
+        
+        scroll_layout.addSpacing(24)
+        
+        # 分隔线
+        divider = QFrame()
+        divider.setFixedHeight(1)
+        divider.setStyleSheet(f"background-color: {COLORS['border_subtle']};")
+        scroll_layout.addWidget(divider)
+        
+        scroll_layout.addSpacing(24)
 
-        # Tab 2: 输出设置
-        output_tab = QWidget()
-        output_tab.setStyleSheet("background: transparent;")
-        output_layout = QVBoxLayout(output_tab)
-        output_layout.setContentsMargins(0, 0, 0, 0)
-        self._create_output_tab(output_layout)
-        tab_widget.addTab(output_tab, self.i18n.t("settings.tab_output"))
+        # 下半区域：输出设置
+        self._create_output_section(scroll_layout)
+
+        scroll_layout.addStretch()
+        scroll.setWidget(scroll_content)
+        layout.addWidget(scroll, 1)
 
         layout.addSpacing(24)
 
         # 底部按钮
         self._create_buttons(layout)
 
-    def _create_rating_tab(self, layout):
-        """创建评分阈值选项卡"""
+    def _create_threshold_section(self, layout):
+        """创建 0 星阈值区域"""
+        # 区域标题
+        section_title = QLabel(self.i18n.t("settings.tab_thresholds").upper())
+        section_title.setStyleSheet(f"""
+            color: {COLORS['text_tertiary']};
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        """)
+        layout.addWidget(section_title)
+        layout.addSpacing(8)
+
         # 说明
         desc = QLabel(self.i18n.t("settings.thresholds_desc"))
         desc.setStyleSheet(f"color: {COLORS['text_tertiary']}; font-size: 12px;")
         desc.setWordWrap(True)
         layout.addWidget(desc)
-        layout.addSpacing(20)
+        layout.addSpacing(16)
 
         # AI 置信度阈值
         self.vars["min_confidence"] = self._create_slider_setting(
@@ -196,7 +202,7 @@ class AdvancedSettingsDialog(QDialog):
             scale=100
         )
 
-        layout.addSpacing(16)
+        layout.addSpacing(12)
 
         # 锐度最低阈值
         self.vars["min_sharpness"] = self._create_slider_setting(
@@ -206,7 +212,7 @@ class AdvancedSettingsDialog(QDialog):
             step=10
         )
 
-        layout.addSpacing(16)
+        layout.addSpacing(12)
 
         # 美学最低阈值
         self.vars["min_nima"] = self._create_slider_setting(
@@ -217,16 +223,25 @@ class AdvancedSettingsDialog(QDialog):
             scale=10
         )
 
-        layout.addStretch()
+    def _create_output_section(self, layout):
+        """创建输出设置区域"""
+        # 区域标题
+        section_title = QLabel(self.i18n.t("settings.tab_output").upper())
+        section_title.setStyleSheet(f"""
+            color: {COLORS['text_tertiary']};
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        """)
+        layout.addWidget(section_title)
+        layout.addSpacing(8)
 
-    def _create_output_tab(self, layout):
-        """创建输出设置选项卡"""
         # 说明
         desc = QLabel(self.i18n.t("settings.output_desc"))
         desc.setStyleSheet(f"color: {COLORS['text_tertiary']}; font-size: 12px;")
         desc.setWordWrap(True)
         layout.addWidget(desc)
-        layout.addSpacing(20)
+        layout.addSpacing(16)
 
         # 精选旗标百分比
         self.vars["picked_top_percentage"] = self._create_slider_setting(
@@ -237,7 +252,18 @@ class AdvancedSettingsDialog(QDialog):
             format_func=lambda v: f"{v}%"
         )
 
-        layout.addSpacing(24)
+        layout.addSpacing(12)
+
+        # V3.8: 曝光阈值
+        self.vars["exposure_threshold"] = self._create_slider_setting(
+            layout,
+            self.i18n.t("settings.exposure_threshold"),
+            min_val=5, max_val=20, default=10,
+            step=5,
+            format_func=lambda v: f"{v}%"
+        )
+
+        layout.addSpacing(20)
 
         # 语言设置
         lang_section = QLabel(self.i18n.t("settings.language_section").upper())
@@ -292,8 +318,6 @@ class AdvancedSettingsDialog(QDialog):
         note = QLabel(self.i18n.t("settings.restart_note"))
         note.setStyleSheet(f"color: {COLORS['warning']}; font-size: 11px;")
         layout.addWidget(note)
-
-        layout.addStretch()
 
     def _create_slider_setting(self, layout, label_text,
                                min_val, max_val, default, step=1,
@@ -366,6 +390,8 @@ class AdvancedSettingsDialog(QDialog):
         self.vars["min_sharpness"].setValue(int(self.config.min_sharpness))
         self.vars["min_nima"].setValue(int(self.config.min_nima * 10))
         self.vars["picked_top_percentage"].setValue(int(self.config.picked_top_percentage))
+        # V3.8: 加载曝光阈值
+        self.vars["exposure_threshold"].setValue(int(self.config.exposure_threshold * 100))
 
     @Slot()
     def _reset_to_default(self):
@@ -394,11 +420,14 @@ class AdvancedSettingsDialog(QDialog):
         min_sharpness = self.vars["min_sharpness"].value()
         min_nima = self.vars["min_nima"].value() / 10.0
         picked_percentage = self.vars["picked_top_percentage"].value()
+        # V3.8: 获取曝光阈值
+        exposure_threshold = self.vars["exposure_threshold"].value() / 100.0
 
         self.config.set_min_confidence(min_confidence)
         self.config.set_min_sharpness(min_sharpness)
         self.config.set_min_nima(min_nima)
         self.config.set_picked_top_percentage(picked_percentage)
+        self.config.set_exposure_threshold(exposure_threshold)
         self.config.set_save_csv(True)
 
         selected_name = self.lang_combo.currentText()

@@ -30,6 +30,7 @@ from advanced_config import get_advanced_config
 from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 from core.flight_detector import FlightDetector, get_flight_detector, FlightResult
+from core.exposure_detector import ExposureDetector, get_exposure_detector, ExposureResult
 
 from constants import RATING_FOLDER_NAMES, RAW_EXTENSIONS, JPG_EXTENSIONS
 
@@ -39,10 +40,12 @@ class ProcessingSettings:
     """处理参数配置"""
     ai_confidence: int = 50
     sharpness_threshold: int = 400   # 头部区域锐度达标阈值 (200-600)
-    nima_threshold: float = 5.5  # TOPIQ 美学达标阈值 (4.0-7.0)
+    nima_threshold: float = 5.2  # TOPIQ 美学达标阈值 (4.0-7.0)
     save_crop: bool = False
     normalization_mode: str = 'log_compression'  # 默认使用log_compression，与GUI一致
     detect_flight: bool = True  # V3.4: 飞版检测开关
+    detect_exposure: bool = False  # V3.8: 曝光检测开关（默认关闭）
+    exposure_threshold: float = 0.10  # V3.8: 曝光阈值 (0.05-0.20)
 
 
 @dataclass
@@ -103,6 +106,7 @@ class PhotoProcessor:
         self._log(f"  🎨 NIMA阈值: {settings.nima_threshold}")
         self._log(f"  🔧 归一化模式: {settings.normalization_mode}")
         self._log(f"  🦅 飞鸟检测: {'开启' if settings.detect_flight else '关闭'}")
+        self._log(f"  📸 曝光检测: {'开启' if settings.detect_exposure else '关闭'}")
         self._log(f"  ⚙️  高级配置 - min_sharpness: {self.config.min_sharpness}")
         self._log(f"  ⚙️  高级配置 - min_nima: {self.config.min_nima}\n")
         
@@ -116,6 +120,7 @@ class PhotoProcessor:
             'star_0': 0,  # 普通照片（问题）
             'no_bird': 0,
             'flying': 0,  # V3.6: 飞鸟照片计数
+            'exposure_issue': 0,  # V3.8: 曝光问题计数
             'start_time': 0,
             'end_time': 0,
             'total_time': 0,
@@ -350,7 +355,9 @@ class PhotoProcessor:
             detected, _, confidence, sharpness, _, bird_bbox, img_dims, bird_mask = result
             
             # Phase 2: 关键点检测（在裁剪区域上执行，更准确）
-            both_eyes_hidden = False
+            all_keypoints_hidden = False
+            both_eyes_hidden = False  # 保留用于日志/调试
+            best_eye_visibility = 0.0  # V3.8: 眼睛最高置信度，用于封顶逻辑
             head_sharpness = 0.0
             has_visible_eye = False
             has_visible_beak = False
@@ -413,9 +420,11 @@ class PhotoProcessor:
                                 seg_mask=bird_crop_mask  # 传入分割掩码
                             )
                             if kp_result is not None:
-                                both_eyes_hidden = kp_result.both_eyes_hidden
+                                both_eyes_hidden = kp_result.both_eyes_hidden  # 保留兼容
+                                all_keypoints_hidden = kp_result.all_keypoints_hidden  # 新属性
+                                best_eye_visibility = kp_result.best_eye_visibility  # V3.8
                                 has_visible_eye = kp_result.visible_eye is not None
-                                has_visible_beak = kp_result.beak_vis >= 0.5
+                                has_visible_beak = kp_result.beak_vis >= 0.3  # V3.8: 降低到 0.3
                                 left_eye_vis = kp_result.left_eye_vis
                                 right_eye_vis = kp_result.right_eye_vis
                                 beak_vis = kp_result.beak_vis
@@ -426,10 +435,10 @@ class PhotoProcessor:
                     # self._log(traceback.format_exc(), "error")
                     pass
             
-            # Phase 3: 根据眼睛可见性决定是否计算NIMA
-            # V3.2优化: 复用已裁剪的鸟区域，避免重复读取原图
-            nima = None
-            if detected and not both_eyes_hidden:
+            # Phase 3: 根据关键点可见性决定是否计算TOPIQ
+            # V3.8: 改用 all_keypoints_hidden，只要有一个关键点可见就计算
+            topiq = None
+            if detected and not all_keypoints_hidden:
                 # 双眼可见，需要计算NIMA以进行星级判定
                 try:
                     from iqa_scorer import get_iqa_scorer
@@ -438,22 +447,16 @@ class PhotoProcessor:
                     step_start = time_module.time()
                     scorer = get_iqa_scorer(device='mps')
                     
-                    # V3.7: 使用全图而非裁剪图进行美学评分
+                    # V3.7: 使用全图而非裁剪图进行TOPIQ美学评分
                     # 全图评分 + 头部锐度阈值 是更好的组合：
                     # - 全图评分评估整体画面构图和美感
                     # - 头部锐度阈值确保鸟本身足够清晰
-                    nima = scorer.calculate_nima(filepath)
+                    topiq = scorer.calculate_nima(filepath)
                     
-                    nima_time = (time_module.time() - step_start) * 1000
-                    # V3.3: 简化日志，移除 NIMA 详情
-                    # if nima is not None:
-                    #     self._log(f\"🎨 NIMA 美学评分: {nima:.2f} / 10 (全图)\")
-                    #     self._log(f\"  ⏱️  [补充] NIMA评分: {nima_time:.1f}ms\")
+                    topiq_time = (time_module.time() - step_start) * 1000
                 except Exception as e:
-                    pass  # V3.3: 简化日志，静默 NIMA 计算失败
-            # V3.3: 移除跳过 NIMA 日志
-            # elif detected and both_eyes_hidden:
-            #     self._log(f"⚡ NIMA 已跳过（双眼不可见）")
+                    pass  # V3.3: 简化日志，静默 TOPIQ 计算失败
+            # V3.8: 移除跳过日志，改用 all_keypoints_hidden 后跳过的情况会少很多
             
             # Phase 4: V3.4 飞版检测（在鸟的裁剪区域上执行）
             is_flying = False
@@ -468,23 +471,41 @@ class PhotoProcessor:
                 except Exception as e:
                     self._log(f"  ⚠️ 飞版检测异常: {e}", "warning")
             
+            # Phase 5: V3.8 曝光检测（在鸟的裁剪区域上执行）
+            is_overexposed = False
+            is_underexposed = False
+            if self.settings.detect_exposure and detected and bird_crop_bgr is not None and bird_crop_bgr.size > 0:
+                try:
+                    exposure_detector = get_exposure_detector()
+                    exposure_result = exposure_detector.detect(
+                        bird_crop_bgr, 
+                        threshold=self.settings.exposure_threshold
+                    )
+                    is_overexposed = exposure_result.is_overexposed
+                    is_underexposed = exposure_result.is_underexposed
+                except Exception as e:
+                    pass  # 曝光检测失败不影响处理
+            
             # V3.8: 飞版加成（仅当 confidence >= 0.5 且 is_flying 时）
             # 锐度+100，美学+0.5，加成后的值用于评分
             rating_sharpness = head_sharpness
-            rating_nima = nima
+            rating_topiq = topiq
             if is_flying and confidence >= 0.5:
                 rating_sharpness = head_sharpness + 100
-                if nima is not None:
-                    rating_nima = nima + 0.5
-                # self._log(f"  🦅 飞版加成: 锐度 {head_sharpness:.0f} → {rating_sharpness:.0f}, 美学 {nima:.2f} → {rating_nima:.2f}")
+                if topiq is not None:
+                    rating_topiq = topiq + 0.5
+                # self._log(f"  🦅 飞版加成: 锐度 {head_sharpness:.0f} → {rating_sharpness:.0f}, 美学 {topiq:.2f} → {rating_topiq:.2f}")
             
             # 使用 RatingEngine 计算评分（使用加成后的值）
             rating_result = self.rating_engine.calculate(
                 detected=detected,
                 confidence=confidence,
                 sharpness=rating_sharpness,  # 使用加成后的锐度
-                nima=rating_nima,  # 使用加成后的美学
-                both_eyes_hidden=both_eyes_hidden
+                topiq=rating_topiq,  # V3.8: 参数名改为 topiq
+                all_keypoints_hidden=all_keypoints_hidden,  # V3.8: 使用新属性
+                best_eye_visibility=best_eye_visibility,  # V3.8: 眼睛可见度封顶
+                is_overexposed=is_overexposed,  # V3.8: 曝光检测
+                is_underexposed=is_underexposed  # V3.8: 曝光检测
             )
             rating_value = rating_result.rating
             pick = rating_result.pick
@@ -492,10 +513,11 @@ class PhotoProcessor:
             
             # 计算真正总耗时并输出简化日志
             photo_time_ms = (time.time() - photo_start_time) * 1000
-            self._log_photo_result_simple(i, total_files, filename, rating_value, reason, photo_time_ms, is_flying)
+            has_exposure_issue = is_overexposed or is_underexposed
+            self._log_photo_result_simple(i, total_files, filename, rating_value, reason, photo_time_ms, is_flying, has_exposure_issue)
             
             # 记录统计
-            self._update_stats(rating_value, is_flying)
+            self._update_stats(rating_value, is_flying, has_exposure_issue)
             
             # V3.4: 确定要处理的目标文件（RAW 优先，没有则用 JPEG）
             target_file_path = None
@@ -514,7 +536,7 @@ class PhotoProcessor:
                         'rating': rating_value if rating_value >= 0 else 0,
                         'pick': pick,
                         'sharpness': head_sharpness,
-                        'nima_score': nima,
+                        'nima_score': topiq,  # V3.8: 实际是 TOPIQ 分数
                         'label': 'Green' if is_flying else None  # V3.4: 飞鸟标绿色
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)
@@ -534,17 +556,17 @@ class PhotoProcessor:
                     left_eye_vis,
                     right_eye_vis,
                     beak_vis,
-                    rating_nima,  # 使用加成后的美学
+                    rating_topiq,  # V3.8: 改为 rating_topiq
                     rating_value,
                     is_flying,
                     flight_confidence
                 )
                 
                 # 收集3星照片（V3.8: 使用加成后的值）
-                if rating_value == 3 and rating_nima is not None:
+                if rating_value == 3 and rating_topiq is not None:
                     self.star_3_photos.append({
                         'file': target_file_path,
-                        'nima': rating_nima,  # 加成后的美学
+                        'nima': rating_topiq,  # V3.8: 实际是 TOPIQ，保留字段名兼容
                         'sharpness': rating_sharpness  # 加成后的锐度
                     })
                 
@@ -554,11 +576,11 @@ class PhotoProcessor:
                 # 记录2星原因（用于分目录）（V3.8: 使用加成后的值）
                 if rating_value == 2:
                     sharpness_ok = rating_sharpness >= self.settings.sharpness_threshold
-                    nima_ok = rating_nima is not None and rating_nima >= self.settings.nima_threshold
-                    if sharpness_ok and not nima_ok:
+                    topiq_ok = rating_topiq is not None and rating_topiq >= self.settings.nima_threshold
+                    if sharpness_ok and not topiq_ok:
                         self.star2_reasons[file_prefix] = 'sharpness'
-                    elif nima_ok and not sharpness_ok:
-                        self.star2_reasons[file_prefix] = 'nima'
+                    elif topiq_ok and not sharpness_ok:
+                        self.star2_reasons[file_prefix] = 'nima'  # 保留原字段名兼容
                     else:
                         self.star2_reasons[file_prefix] = 'both'
         
@@ -601,7 +623,8 @@ class PhotoProcessor:
         rating: int,
         reason: str,
         time_ms: float,
-        is_flying: bool = False  # V3.4: 飞鸟标识
+        is_flying: bool = False,  # V3.4: 飞鸟标识
+        has_exposure_issue: bool = False  # V3.8: 曝光问题标识
     ):
         """记录照片处理结果（简化版，单行输出）"""
         # 星级标识
@@ -610,6 +633,9 @@ class PhotoProcessor:
         
         # V3.4: 飞鸟标识
         flight_tag = "【飞鸟】" if is_flying else ""
+        
+        # V3.8: 曝光问题标识
+        exposure_tag = "【曝光】" if has_exposure_issue else ""
         
         # 简化原因显示
         reason_short = reason if len(reason) < 20 else reason[:17] + "..."
@@ -621,9 +647,9 @@ class PhotoProcessor:
             time_text = f"{time_ms:.0f}ms"
         
         # 输出简化格式
-        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) {flight_tag}| {time_text}")
+        self._log(f"[{index:03d}/{total}] {filename} | {star_text} ({reason_short}) {flight_tag}{exposure_tag}| {time_text}")
     
-    def _update_stats(self, rating: int, is_flying: bool = False):
+    def _update_stats(self, rating: int, is_flying: bool = False, has_exposure_issue: bool = False):
         """更新统计数据"""
         self.stats['total'] += 1
         if rating == 3:
@@ -640,6 +666,10 @@ class PhotoProcessor:
         # V3.6: 统计飞鸟照片
         if is_flying:
             self.stats['flying'] += 1
+        
+        # V3.8: 统计曝光问题照片
+        if has_exposure_issue:
+            self.stats['exposure_issue'] += 1
     
     def _update_csv_keypoint_data(
         self, 
