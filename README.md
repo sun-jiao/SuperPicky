@@ -41,8 +41,8 @@
 
 ## 📋 系统要求
 
-- **macOS**: macOS 10.15+ · Apple Silicon (M1/M2/M3/M4) · 1.5GB空间
-- **Windows**: Windows 10+ · NVIDIA GPU (建议) · 2GB空间
+- **macOS**: macOS 10.15+ · Apple Silicon (M1/M2/M3/M4) · 1GB空间
+- **Windows**: Windows 10+ · NVIDIA GPU (建议) · 1GB空间
 
 ---
 
