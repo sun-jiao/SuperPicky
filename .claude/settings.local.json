@@ -161,7 +161,15 @@
       "Bash(security add-generic-password:*)",
       "Bash(security find-generic-password:*)",
       "Bash(./build_release.sh:*)",
-      "Bash(dist/SuperPicky.app/Contents/Resources/exiftool_bundle/exiftool -ver)"
+      "Bash(dist/SuperPicky.app/Contents/Resources/exiftool_bundle/exiftool -ver)",
+      "Bash(xcrun notarytool:*)",
+      "Bash(xcrun notarytool history:*)",
+      "Bash(gh release create v3.8.0 dist/SuperPicky_v3.8.0.dmg --title \"SuperPicky v3.8.0\" --notes \"$\\(cat <<''EOF''\n## 🎉 SuperPicky v3.8.0\n\n### ✨ 新功能\n- **曝光检测**: 新增智能曝光分析功能，自动识别过曝/欠曝照片\n\n### 🔧 优化\n- 统一阈值默认值: 美学达标 5.0, 0星美学 3.5\n- 修复日志清空问题\n\n### 📦 安装\n下载 `SuperPicky_v3.8.0.dmg`，双击打开后将应用拖入 Applications 文件夹即可。\n\n---\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")",
+      "Bash(brew list:*)",
+      "Bash(brew install:*)",
+      "Bash(/opt/homebrew/bin/gh auth status)",
+      "Bash(/opt/homebrew/bin/gh release create:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

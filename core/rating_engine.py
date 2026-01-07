@@ -100,6 +100,7 @@ class RatingEngine:
         best_eye_visibility: float = 1.0,  # V3.8: 眼睛最高置信度
         is_overexposed: bool = False,      # V3.8: 是否过曝
         is_underexposed: bool = False,     # V3.8: 是否欠曝
+        focus_weight: float = 1.0,         # V3.9: 对焦权重 (1.5=对焦在鸟上, 0.8=对焦不在鸟上)
     ) -> RatingResult:
         """
         计算评分
@@ -113,6 +114,10 @@ class RatingEngine:
             best_eye_visibility: 双眼中较高的置信度，用于封顶逻辑
             is_overexposed: 是否过曝（V3.8）
             is_underexposed: 是否欠曝（V3.8）
+            focus_weight: 对焦权重（V3.9）
+                - 1.5: 对焦点在鸟身上，锐度阈值降低 10%
+                - 1.0: 无对焦数据，不影响评分
+                - 0.8: 对焦不在鸟身上，最多给 2 星
             
         Returns:
             RatingResult 包含评分、旗标和原因
@@ -169,8 +174,23 @@ class RatingEngine:
         elif is_underexposed:
             exposure_suffix = "，欠曝"
         
+        # V3.9: 对焦权重处理 - 直接乘以锐度值
+        # 权重: 1.2(头部) / 1.0(SEG) / 0.8(BBox) / 0.6(外部)
+        adjusted_sharpness = sharpness * focus_weight
+        
+        # 设置对焦状态后缀
+        focus_suffix = ""
+        if focus_weight >= 1.2:
+            focus_suffix = "，对焦头部"
+        elif focus_weight >= 1.0:
+            pass  # 对焦在鸟身上，正常，不显示后缀
+        elif focus_weight >= 0.8:
+            focus_suffix = "，对焦偏移"
+        else:  # 0.6
+            focus_suffix = "，对焦错误"
+        
         # 第五步：3 星判定（锐度 >= 阈值 AND TOPIQ >= 阈值）
-        sharpness_ok = sharpness >= self.sharpness_threshold
+        sharpness_ok = adjusted_sharpness >= self.sharpness_threshold
         topiq_ok = topiq is not None and topiq >= self.nima_threshold
         
         if sharpness_ok and topiq_ok:
@@ -182,7 +202,7 @@ class RatingEngine:
                 return RatingResult(
                     rating=rating,
                     pick=0,
-                    reason=f"良好照片（双达标但眼睛可见度中等{exposure_suffix}）"
+                    reason=f"良好照片（双达标但眼睛可见度中等{exposure_suffix}{focus_suffix}）"
                 )
             rating = 3
             if has_exposure_issue:
@@ -190,7 +210,7 @@ class RatingEngine:
             return RatingResult(
                 rating=rating,
                 pick=0,  # 精选旗标由 PhotoProcessor 后续计算
-                reason=f"{'优选' if rating == 3 else '良好'}照片（锐度+TOPIQ双达标{exposure_suffix}）"
+                reason=f"{'优选' if rating == 3 else '良好'}照片（锐度+TOPIQ双达标{exposure_suffix}{focus_suffix}）"
             )
         
         # 第六步：2 星判定（锐度达标 OR TOPIQ达标）
@@ -204,13 +224,13 @@ class RatingEngine:
                     return RatingResult(
                         rating=rating,
                         pick=0,
-                        reason=f"普通照片（锐度达标但眼睛可见度中等{exposure_suffix}）"
+                        reason=f"普通照片（锐度达标但眼睛可见度中等{exposure_suffix}{focus_suffix}）"
                     )
                 else:
                     return RatingResult(
                         rating=rating,
                         pick=0,
-                        reason=f"普通照片（TOPIQ达标但眼睛可见度中等{exposure_suffix}）"
+                        reason=f"普通照片（TOPIQ达标但眼睛可见度中等{exposure_suffix}{focus_suffix}）"
                     )
             # 正常情况
             rating = 2
@@ -220,13 +240,13 @@ class RatingEngine:
                 return RatingResult(
                     rating=rating,
                     pick=0,
-                    reason=f"{'良好' if rating == 2 else '普通'}照片（锐度达标{exposure_suffix}）"
+                    reason=f"{'良好' if rating == 2 else '普通'}照片（锐度达标{exposure_suffix}{focus_suffix}）"
                 )
             else:
                 return RatingResult(
                     rating=rating,
                     pick=0,
-                    reason=f"{'良好' if rating == 2 else '普通'}照片（TOPIQ达标{exposure_suffix}）"
+                    reason=f"{'良好' if rating == 2 else '普通'}照片（TOPIQ达标{exposure_suffix}{focus_suffix}）"
                 )
         
         # 第七步：1 = 普通（通过最低标准但未达标）
@@ -236,7 +256,7 @@ class RatingEngine:
         return RatingResult(
             rating=rating,
             pick=0,
-            reason=f"普通照片（锐度和美学均未达标{exposure_suffix}）"
+            reason=f"普通照片（锐度和美学均未达标{exposure_suffix}{focus_suffix}）"
         )
     
     def update_thresholds(

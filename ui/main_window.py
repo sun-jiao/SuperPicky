@@ -75,6 +75,15 @@ class WorkerThread(threading.Thread):
     def _start_caffeinate(self):
         """启动防休眠"""
         try:
+            # V3.8.1: 先清理残留的 caffeinate 进程，避免累积
+            try:
+                subprocess.run(['killall', 'caffeinate'], 
+                              stdout=subprocess.DEVNULL, 
+                              stderr=subprocess.DEVNULL,
+                              timeout=2)
+            except Exception:
+                pass  # 如果没有残留进程，忽略错误
+            
             self.caffeinate_process = subprocess.Popen(
                 ['caffeinate', '-d', '-i'],
                 stdout=subprocess.DEVNULL,
@@ -1081,6 +1090,7 @@ class SuperPickyMainWindow(QMainWindow):
 
             if reply == StyledMessageBox.No:  # 用户点击"是"退出
                 self.worker._stop_event.set()
+                self.worker._stop_caffeinate()  # V3.8.1: 确保终止 caffeinate 进程
                 event.accept()
             else:
                 event.ignore()

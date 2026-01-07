@@ -31,6 +31,7 @@ from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
 from core.flight_detector import FlightDetector, get_flight_detector, FlightResult
 from core.exposure_detector import ExposureDetector, get_exposure_detector, ExposureResult
+from core.focus_point_detector import get_focus_detector, verify_focus_in_bbox
 
 from constants import RATING_FOLDER_NAMES, RAW_EXTENSIONS, JPG_EXTENSIONS
 
@@ -365,10 +366,15 @@ class PhotoProcessor:
             right_eye_vis = 0.0
             beak_vis = 0.0
             
+            # V3.9: 头部区域信息（用于对焦验证）
+            head_center_orig = None
+            head_radius_val = None
+            
             # V3.2优化: 只读取原图一次，在关键点检测和NIMA计算中复用
             orig_img = None  # 原图缓存
             bird_crop_bgr = None  # 裁剪区域缓存（BGR）
             bird_crop_mask = None # 裁剪区域掩码缓存
+            bird_mask_orig = None  # V3.9: 原图尺寸的分割掩码（用于对焦验证）
             
             if use_keypoints and detected and bird_bbox is not None and img_dims is not None:
                 try:
@@ -429,6 +435,29 @@ class PhotoProcessor:
                                 right_eye_vis = kp_result.right_eye_vis
                                 beak_vis = kp_result.beak_vis
                                 head_sharpness = kp_result.head_sharpness
+                                
+                                # V3.9: 计算头部区域中心和半径（用于对焦验证）
+                                ch, cw = bird_crop_bgr.shape[:2]
+                                # 选择更可见的眼睛作为头部中心
+                                if left_eye_vis >= right_eye_vis and left_eye_vis >= 0.3:
+                                    eye_px = (int(kp_result.left_eye[0] * cw), int(kp_result.left_eye[1] * ch))
+                                elif right_eye_vis >= 0.3:
+                                    eye_px = (int(kp_result.right_eye[0] * cw), int(kp_result.right_eye[1] * ch))
+                                else:
+                                    eye_px = None
+                                
+                                if eye_px is not None:
+                                    # 转换到原图坐标
+                                    head_center_orig = (eye_px[0] + x_orig, eye_px[1] + y_orig)
+                                    # 计算半径
+                                    beak_px = (int(kp_result.beak[0] * cw), int(kp_result.beak[1] * ch))
+                                    if beak_vis >= 0.3:
+                                        import math
+                                        dist = math.sqrt((eye_px[0] - beak_px[0])**2 + (eye_px[1] - beak_px[1])**2)
+                                        head_radius_val = int(dist * 1.2)
+                                    else:
+                                        head_radius_val = int(max(cw, ch) * 0.15)
+                                    head_radius_val = max(20, min(head_radius_val, min(cw, ch) // 2))
                 except Exception as e:
                     self._log(f"  ⚠️ 关键点检测异常: {e}", "warning")
                     # import traceback
@@ -486,6 +515,32 @@ class PhotoProcessor:
                 except Exception as e:
                     pass  # 曝光检测失败不影响处理
             
+            # Phase 6: V3.9 对焦点验证（仅限 NEF/RAW 文件）
+            # 4 层检测: 头部(1.2) > SEG(1.0) > BBox(0.8) > 外部(0.6)
+            focus_weight = 1.0  # 默认无影响
+            if detected and bird_bbox is not None and img_dims is not None:
+                if file_prefix in raw_dict:
+                    raw_ext = raw_dict[file_prefix]
+                    raw_path = os.path.join(self.dir_path, file_prefix + raw_ext)
+                    if raw_ext.lower() in ['.nef', '.nrw']:  # Nikon RAW 格式
+                        try:
+                            focus_detector = get_focus_detector()
+                            focus_result = focus_detector.detect(raw_path)
+                            if focus_result is not None:
+                                # V3.9: 传入 seg_mask 和头部区域信息
+                                focus_weight = verify_focus_in_bbox(
+                                    focus_result, 
+                                    bird_bbox, 
+                                    img_dims,
+                                    seg_mask=bird_mask_orig,  # 原图尺寸的分割掩码
+                                    head_center=head_center_orig,  # 头部圆心（原图坐标）
+                                    head_radius=head_radius_val,  # 头部半径
+                                )
+                                # DEBUG: 输出对焦验证结果
+                                # self._log(f"  📍 对焦点: ({focus_result.x:.2f}, {focus_result.y:.2f}), 权重: {focus_weight}")
+                        except Exception as e:
+                            pass  # 对焦检测失败不影响处理
+            
             # V3.8: 飞版加成（仅当 confidence >= 0.5 且 is_flying 时）
             # 锐度+100，美学+0.5，加成后的值用于评分
             rating_sharpness = head_sharpness
@@ -505,7 +560,8 @@ class PhotoProcessor:
                 all_keypoints_hidden=all_keypoints_hidden,  # V3.8: 使用新属性
                 best_eye_visibility=best_eye_visibility,  # V3.8: 眼睛可见度封顶
                 is_overexposed=is_overexposed,  # V3.8: 曝光检测
-                is_underexposed=is_underexposed  # V3.8: 曝光检测
+                is_underexposed=is_underexposed,  # V3.8: 曝光检测
+                focus_weight=focus_weight,  # V3.9: 对焦权重
             )
             rating_value = rating_result.rating
             pick = rating_result.pick
