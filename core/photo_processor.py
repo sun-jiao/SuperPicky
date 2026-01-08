@@ -556,11 +556,13 @@ class PhotoProcessor:
                                 focus_detector = get_focus_detector()
                                 focus_result = focus_detector.detect(raw_path)
                                 if focus_result is not None:
-                                    # 传入 seg_mask 和头部区域信息
+                                    # V3.9 修复：使用原图尺寸而非 resize 后的 img_dims
+                                    # head_center_orig 和 bird_mask_orig 都是原图坐标系
+                                    orig_dims = (w_orig, h_orig) if 'w_orig' in dir() and 'h_orig' in dir() else img_dims
                                     focus_weight = verify_focus_in_bbox(
                                         focus_result, 
                                         bird_bbox, 
-                                        img_dims,
+                                        orig_dims,  # 使用原图尺寸！
                                         seg_mask=bird_mask_orig,
                                         head_center=head_center_orig,
                                         head_radius=head_radius_val,
