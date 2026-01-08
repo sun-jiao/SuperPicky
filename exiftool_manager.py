@@ -255,6 +255,10 @@ class ExifToolManager:
                 # V3.1.2: 只在处理多个文件时显示完成消息
                 if len(files_metadata) > 1:
                     print(f"✅ 批量处理完成: {stats['success']} 成功, {stats['failed']} 失败")
+                
+                # V3.9.2: 为 RAF/ORF 文件创建 XMP 侧车文件
+                # Lightroom 无法读取嵌入在这些格式中的 XMP，需要侧车文件
+                self._create_xmp_sidecars_for_raf(files_metadata)
             else:
                 print(f"❌ 批量处理失败: {result.stderr}")
                 stats['failed'] = len(files_metadata)
@@ -264,6 +268,40 @@ class ExifToolManager:
             stats['failed'] = len(files_metadata)
 
         return stats
+    
+    def _create_xmp_sidecars_for_raf(self, files_metadata: List[Dict[str, any]]):
+        """
+        V3.9.2: 为 RAF/ORF 等需要侧车文件的格式创建 XMP 文件
+        
+        Lightroom 可以读取嵌入在大多数 RAW 格式中的 XMP，
+        但 Fujifilm RAF 需要单独的 .xmp 侧车文件
+        """
+        needs_sidecar_extensions = {'.raf', '.orf'}  # Fujifilm, Olympus
+        
+        for item in files_metadata:
+            file_path = item.get('file', '')
+            if not file_path:
+                continue
+            
+            ext = os.path.splitext(file_path)[1].lower()
+            if ext not in needs_sidecar_extensions:
+                continue
+            
+            # 构建 XMP 侧车文件路径
+            xmp_path = os.path.splitext(file_path)[0] + '.xmp'
+            
+            try:
+                # 使用 exiftool 从 RAW 文件提取 XMP 到侧车文件
+                cmd = [
+                    self.exiftool_path,
+                    '-o', xmp_path,
+                    '-TagsFromFile', file_path,
+                    '-XMP:all<XMP:all'
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                # 不需要打印成功消息，避免刷屏
+            except Exception:
+                pass  # 侧车文件创建失败不影响主流程
 
     def read_metadata(self, file_path: str) -> Optional[Dict]:
         """
