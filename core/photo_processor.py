@@ -516,8 +516,9 @@ class PhotoProcessor:
                     pass  # 曝光检测失败不影响处理
             
             # Phase 6: V3.9 对焦点验证（6 大相机品牌全支持）
-            # 4 层检测: 头部(1.2) > SEG(1.0) > BBox(0.8) > 外部(0.6)
+            # 4 层检测: 头部(1.05) > SEG(1.0) > BBox(0.7) > 外部(0.5)
             focus_weight = 1.0  # 默认无影响
+            focus_x, focus_y = None, None  # V3.9: 对焦点归一化坐标
             if detected and bird_bbox is not None and img_dims is not None:
                 if file_prefix in raw_dict:
                     raw_ext = raw_dict[file_prefix]
@@ -537,6 +538,8 @@ class PhotoProcessor:
                                     head_center=head_center_orig,  # 头部圆心（原图坐标）
                                     head_radius=head_radius_val,  # 头部半径
                                 )
+                                # 保存对焦点坐标
+                                focus_x, focus_y = focus_result.x, focus_result.y
                                 # DEBUG: 输出对焦验证结果
                                 # self._log(f"  📍 对焦点: ({focus_result.x:.2f}, {focus_result.y:.2f}), 权重: {focus_weight}")
                         except Exception as e:
@@ -571,7 +574,7 @@ class PhotoProcessor:
             # V3.9: 根据 focus_weight 计算对焦状态文本
             focus_status = None
             if focus_weight > 1.0:
-                focus_status = "头部"
+                focus_status = "精准"
             elif focus_weight >= 1.0:
                 focus_status = "鸟身"
             elif focus_weight >= 0.7:
@@ -615,7 +618,7 @@ class PhotoProcessor:
             
             # V3.4: 以下操作对 RAW 和纯 JPEG 都执行
             if target_file_path and os.path.exists(target_file_path):
-                # 更新 CSV 中的关键点数据（V3.9: 添加对焦状态）
+                # 更新 CSV 中的关键点数据（V3.9: 添加对焦状态和坐标）
                 self._update_csv_keypoint_data(
                     file_prefix, 
                     rating_sharpness,  # 使用加成后的锐度
@@ -628,7 +631,9 @@ class PhotoProcessor:
                     rating_value,
                     is_flying,
                     flight_confidence,
-                    focus_status  # V3.9: 对焦状态
+                    focus_status,  # V3.9: 对焦状态
+                    focus_x,  # V3.9: 对焦点X坐标
+                    focus_y   # V3.9: 对焦点Y坐标
                 )
                 
                 # 收集3星照片（V3.8: 使用加成后的值）
@@ -759,9 +764,11 @@ class PhotoProcessor:
         rating: int,
         is_flying: bool = False,
         flight_confidence: float = 0.0,
-        focus_status: str = None  # V3.9: 对焦状态
+        focus_status: str = None,  # V3.9: 对焦状态
+        focus_x: float = None,  # V3.9: 对焦点X坐标
+        focus_y: float = None   # V3.9: 对焦点Y坐标
     ):
-        """更新CSV中的关键点数据和评分（V3.9: 添加对焦状态字段）"""
+        """更新CSV中的关键点数据和评分（V3.9: 添加对焦状态和坐标）"""
         import csv
         
         csv_path = os.path.join(self.dir_path, ".superpicky", "report.csv")
@@ -775,11 +782,16 @@ class PhotoProcessor:
                 reader = csv.DictReader(f)
                 fieldnames = list(reader.fieldnames) if reader.fieldnames else []
                 
-                # V3.9: 如果没有 focus_status 字段则添加
+                # V3.9: 如果没有对焦相关字段则添加
                 if 'focus_status' not in fieldnames:
-                    # 在 rating 后面添加
                     rating_idx = fieldnames.index('rating') if 'rating' in fieldnames else len(fieldnames)
                     fieldnames.insert(rating_idx + 1, 'focus_status')
+                if 'focus_x' not in fieldnames:
+                    focus_status_idx = fieldnames.index('focus_status') if 'focus_status' in fieldnames else len(fieldnames)
+                    fieldnames.insert(focus_status_idx + 1, 'focus_x')
+                if 'focus_y' not in fieldnames:
+                    focus_x_idx = fieldnames.index('focus_x') if 'focus_x' in fieldnames else len(fieldnames)
+                    fieldnames.insert(focus_x_idx + 1, 'focus_y')
                 
                 for row in reader:
                     if row.get('filename') == filename:
@@ -793,8 +805,10 @@ class PhotoProcessor:
                         row['is_flying'] = "yes" if is_flying else "no"
                         row['flight_conf'] = f"{flight_confidence:.2f}"
                         row['rating'] = str(rating)
-                        # V3.9: 对焦状态字段
+                        # V3.9: 对焦状态和坐标字段
                         row['focus_status'] = focus_status if focus_status else "-"
+                        row['focus_x'] = f"{focus_x:.3f}" if focus_x is not None else "-"
+                        row['focus_y'] = f"{focus_y:.3f}" if focus_y is not None else "-"
                     rows.append(row)
             
             # 写回CSV
