@@ -717,8 +717,8 @@ class PhotoProcessor:
         if focus_status and focus_status != "鸟身":
             focus_tag = f"【{focus_status}】"
         
-        # 简化原因显示
-        reason_short = reason if len(reason) < 20 else reason[:17] + "..."
+        # 简化原因显示（V3.9: 增加到35字符避免截断）
+        reason_short = reason if len(reason) < 35 else reason[:32] + "..."
         
         # 时间格式化
         if time_ms >= 1000:
