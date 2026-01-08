@@ -15,8 +15,8 @@ from PySide6.QtWidgets import (
     QTextEdit, QGroupBox, QCheckBox, QMenuBar, QMenu,
     QFileDialog, QMessageBox, QSizePolicy, QFrame, QSpacerItem
 )
-from PySide6.QtCore import Qt, Signal, QObject, Slot, QTimer, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QFont, QPixmap, QIcon, QAction, QTextCursor, QColor
+from PySide6.QtCore import Qt, Signal, QObject, Slot, QTimer, QPropertyAnimation, QEasingCurve, QMimeData
+from PySide6.QtGui import QFont, QPixmap, QIcon, QAction, QTextCursor, QColor, QDragEnterEvent, QDropEvent
 
 from i18n import get_i18n
 from advanced_config import get_advanced_config
@@ -25,6 +25,39 @@ from ui.styles import (
     COLORS, FONTS, LOG_COLORS, PROGRESS_INFO_STYLE, PROGRESS_PERCENT_STYLE
 )
 from ui.custom_dialogs import StyledMessageBox
+
+
+# V3.9: 支持拖放的目录输入框
+class DropLineEdit(QLineEdit):
+    """支持拖放目录的 QLineEdit"""
+    pathDropped = Signal(str)  # 拖放目录后发射此信号
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAcceptDrops(True)
+    
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        """验证拖入的内容"""
+        if event.mimeData().hasUrls():
+            urls = event.mimeData().urls()
+            if urls and urls[0].isLocalFile():
+                path = urls[0].toLocalFile()
+                if os.path.isdir(path):
+                    event.acceptProposedAction()
+                    return
+        event.ignore()
+    
+    def dropEvent(self, event: QDropEvent):
+        """处理拖放"""
+        urls = event.mimeData().urls()
+        if urls:
+            path = urls[0].toLocalFile()
+            if os.path.isdir(path):
+                self.setText(path)
+                self.pathDropped.emit(path)
+                event.acceptProposedAction()
+                return
+        event.ignore()
 
 
 class WorkerSignals(QObject):
@@ -334,10 +367,12 @@ class SuperPickyMainWindow(QMainWindow):
         dir_layout = QHBoxLayout()
         dir_layout.setSpacing(8)
 
-        self.dir_input = QLineEdit()
+        # V3.9: 使用支持拖放的 DropLineEdit
+        self.dir_input = DropLineEdit()
         self.dir_input.setPlaceholderText(self.i18n.t("labels.dir_placeholder"))
         self.dir_input.returnPressed.connect(self._on_path_entered)
         self.dir_input.editingFinished.connect(self._on_path_entered)  # V3.9: 失焦时也验证
+        self.dir_input.pathDropped.connect(self._on_path_dropped)  # V3.9: 拖放目录
         dir_layout.addWidget(self.dir_input, 1)
 
         browse_btn = QPushButton(self.i18n.t("labels.browse"))
@@ -598,6 +633,12 @@ class SuperPickyMainWindow(QMainWindow):
             QFileDialog.ShowDirsOnly
         )
         if directory:
+            self._handle_directory_selection(directory)
+    
+    @Slot(str)
+    def _on_path_dropped(self, directory: str):
+        """V3.9: 处理拖放的目录"""
+        if directory and os.path.isdir(directory):
             self._handle_directory_selection(directory)
 
     def _handle_directory_selection(self, directory):
