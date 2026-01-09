@@ -52,11 +52,12 @@ def cmd_burst(args):
     print(f"\n📁 目标目录: {args.directory}")
     print(f"⚙️  最小连拍张数: {args.min_count}")
     print(f"⚙️  时间阈值: {args.threshold}ms")
+    print(f"⚙️  pHash验证: {'启用' if args.phash else '禁用'}")
     print(f"⚙️  执行模式: {'实际处理' if args.execute else '仅预览'}")
     print()
     
     # 创建检测器
-    detector = BurstDetector()
+    detector = BurstDetector(use_phash=args.phash)
     detector.MIN_BURST_COUNT = args.min_count
     detector.TIME_THRESHOLD_MS = args.threshold
     
@@ -531,10 +532,13 @@ Examples:
     p_burst.add_argument('directory', help='照片目录路径')
     p_burst.add_argument('-m', '--min-count', type=int, default=3,
                          help='最小连拍张数 (默认: 3)')
-    p_burst.add_argument('-t', '--threshold', type=int, default=150,
-                         help='时间阈值(ms) (默认: 150)')
+    p_burst.add_argument('-t', '--threshold', type=int, default=250,
+                         help='时间阈值(ms) (默认: 250)')
+    p_burst.add_argument('--no-phash', action='store_false', dest='phash',
+                         help='禁用 pHash 验证（默认启用）')
     p_burst.add_argument('--execute', action='store_true',
                          help='实际执行处理（默认仅预览）')
+    p_burst.set_defaults(phash=True)
     
     # 解析参数
     args = parser.parse_args()

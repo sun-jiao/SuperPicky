@@ -55,18 +55,24 @@ class BurstDetector:
     """连拍检测器"""
     
     # 检测参数
-    TIME_THRESHOLD_MS = 150  # 同一连拍组的最大时间差（毫秒）
+    TIME_THRESHOLD_MS = 250  # V4.0: 放宽到 250ms，用 pHash 过滤误判
     MIN_BURST_COUNT = 3      # 最少连拍张数
     MIN_RATING = 2           # 只处理 >= 2 星的照片
     
-    def __init__(self, exiftool_path: str = None):
+    # pHash 参数
+    PHASH_THRESHOLD = 12     # 汉明距离阈值（<=12 视为相似）
+    USE_PHASH = True         # 是否启用 pHash 验证
+    
+    def __init__(self, exiftool_path: str = None, use_phash: bool = True):
         """
         初始化连拍检测器
         
         Args:
             exiftool_path: ExifTool 路径
+            use_phash: 是否启用 pHash 验证
         """
         self.exiftool_path = exiftool_path or self._find_exiftool()
+        self.USE_PHASH = use_phash
     
     def _find_exiftool(self) -> str:
         """查找 ExifTool 路径"""
@@ -191,7 +197,7 @@ class BurstDetector:
         # 2. 按精确时间排序
         candidates.sort(key=lambda p: p.precise_time)
         
-        # 3. 分组检测
+        # 3. 分组检测（基于时间戳）
         groups = []
         current_group = [candidates[0]]
         
@@ -225,7 +231,87 @@ class BurstDetector:
             )
             groups.append(group)
         
+        # 4. V4.0: pHash 验证（过滤误判）
+        if self.USE_PHASH and groups:
+            groups = self.verify_groups_with_phash(groups)
+        
         return groups
+    
+    def verify_groups_with_phash(self, groups: List[BurstGroup]) -> List[BurstGroup]:
+        """
+        使用 pHash 验证连拍组，过滤掉内容差异大的照片
+        
+        Args:
+            groups: 初步检测的连拍组
+            
+        Returns:
+            验证后的连拍组
+        """
+        try:
+            from imagehash import phash
+            from PIL import Image
+        except ImportError:
+            print("⚠️ imagehash 未安装，跳过 pHash 验证")
+            return groups
+        
+        verified_groups = []
+        
+        for group in groups:
+            if group.count < 2:
+                verified_groups.append(group)
+                continue
+            
+            # 计算组内所有照片的 pHash
+            hashes = []
+            for photo in group.photos:
+                try:
+                    # 使用预览图（如果存在）或原图
+                    img_path = photo.filepath
+                    # 尝试找 JPEG 预览（更快）
+                    jpg_path = os.path.splitext(photo.filepath)[0] + '.jpg'
+                    if os.path.exists(jpg_path):
+                        img_path = jpg_path
+                    
+                    img = Image.open(img_path)
+                    h = phash(img)
+                    hashes.append((photo, h))
+                except Exception as e:
+                    # 无法计算 pHash，保留该照片
+                    hashes.append((photo, None))
+            
+            # 验证相邻照片的相似度
+            verified_photos = [hashes[0][0]]  # 保留第一张
+            
+            for i in range(1, len(hashes)):
+                curr_photo, curr_hash = hashes[i]
+                prev_photo, prev_hash = hashes[i - 1]
+                
+                if curr_hash is None or prev_hash is None:
+                    # 无法比较，保留
+                    verified_photos.append(curr_photo)
+                else:
+                    distance = curr_hash - prev_hash
+                    if distance <= self.PHASH_THRESHOLD:
+                        # 相似，保留在组内
+                        verified_photos.append(curr_photo)
+                    else:
+                        # 不相似，可能是飞鸟或重构图
+                        # 开始新组（如果剩余足够）
+                        if len(verified_photos) >= self.MIN_BURST_COUNT:
+                            verified_groups.append(BurstGroup(
+                                group_id=len(verified_groups) + 1,
+                                photos=verified_photos.copy()
+                            ))
+                        verified_photos = [curr_photo]
+            
+            # 保存最后的验证组
+            if len(verified_photos) >= self.MIN_BURST_COUNT:
+                verified_groups.append(BurstGroup(
+                    group_id=len(verified_groups) + 1,
+                    photos=verified_photos
+                ))
+        
+        return verified_groups
     
     def select_best_in_groups(self, groups: List[BurstGroup]) -> List[BurstGroup]:
         """
