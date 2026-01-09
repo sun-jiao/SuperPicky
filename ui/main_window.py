@@ -491,7 +491,7 @@ class SuperPickyMainWindow(QMainWindow):
         exposure_layout.addWidget(exposure_label)
         
         self.exposure_check = QCheckBox()
-        self.exposure_check.setChecked(False)  # 默认关闭
+        self.exposure_check.setChecked(True)  # V4.1: 默认开启（曝光检测实用）
         exposure_layout.addWidget(self.exposure_check)
         
         header_layout.addLayout(exposure_layout)
