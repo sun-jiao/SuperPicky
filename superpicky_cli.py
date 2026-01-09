@@ -308,6 +308,47 @@ def cmd_restar(args):
     print(f"\n🔄 重新评星: {args.directory}")
     print(f"⚙️  新锐度阈值: {args.sharpness}")
     print(f"⚙️  新美学阈值: {args.nima_threshold}")
+    print(f"⚙️  连拍检测: {'是' if args.burst else '否'}")
+    
+    # V4.0: 先清理 burst 子目录（将文件移回评分目录）
+    print("\n📂 步骤0: 清理连拍子目录...")
+    rating_dirs = ['3星_优选', '2星_良好', '1星_普通', '0星_放弃']
+    burst_stats = {'dirs_removed': 0, 'files_restored': 0}
+    
+    for rating_dir in rating_dirs:
+        rating_path = os.path.join(args.directory, rating_dir)
+        if not os.path.exists(rating_path):
+            continue
+        
+        for entry in os.listdir(rating_path):
+            if entry.startswith('burst_'):
+                burst_path = os.path.join(rating_path, entry)
+                if os.path.isdir(burst_path):
+                    for filename in os.listdir(burst_path):
+                        src = os.path.join(burst_path, filename)
+                        dst = os.path.join(rating_path, filename)
+                        if os.path.isfile(src):
+                            try:
+                                if os.path.exists(dst):
+                                    os.remove(dst)
+                                shutil.move(src, dst)
+                                burst_stats['files_restored'] += 1
+                            except Exception as e:
+                                print(f"    ⚠️ 移动失败: {filename}: {e}")
+                    
+                    try:
+                        if not os.listdir(burst_path):
+                            os.rmdir(burst_path)
+                        else:
+                            shutil.rmtree(burst_path)
+                        burst_stats['dirs_removed'] += 1
+                    except Exception as e:
+                        print(f"    ⚠️ 删除目录失败: {entry}: {e}")
+    
+    if burst_stats['dirs_removed'] > 0:
+        print(f"  ✅ 已清理 {burst_stats['dirs_removed']} 个连拍目录，恢复 {burst_stats['files_restored']} 个文件")
+    else:
+        print("  ℹ️  无连拍子目录需要清理")
     
     # 检查 report.csv 是否存在（可能在根目录或 .superpicky 子目录）
     report_path = os.path.join(args.directory, 'report.csv')
@@ -374,6 +415,9 @@ def cmd_restar(args):
     
     if len(changed_photos) == 0:
         print("\n✅ 无需更新任何照片")
+        # 即使评分无变化，如果开启了连拍检测，仍然运行
+        if args.burst and args.organize:
+            _run_burst_detection_restar(args.directory)
         return 0
     
     if not args.yes:
@@ -444,9 +488,59 @@ def cmd_restar(args):
         
         if moved_count > 0:
             print(f"  ✅ 已移动 {moved_count} 个文件")
+        
+        # V4.0: 重新运行连拍检测
+        if args.burst:
+            _run_burst_detection_restar(args.directory)
     
     print("\n✅ 重新评星完成!")
     return 0
+
+
+def _run_burst_detection_restar(directory: str):
+    """Restar 后运行连拍检测"""
+    from core.burst_detector import BurstDetector
+    from exiftool_manager import get_exiftool_manager
+    
+    print("\n📷 正在执行连拍检测...")
+    detector = BurstDetector(use_phash=True)
+    
+    rating_dirs = ['3星_优选', '2星_良好']
+    total_groups = 0
+    total_moved = 0
+    
+    exiftool_mgr = get_exiftool_manager()
+    
+    for rating_dir in rating_dirs:
+        subdir = os.path.join(directory, rating_dir)
+        if not os.path.exists(subdir):
+            continue
+        
+        extensions = {'.nef', '.rw2', '.arw', '.cr2', '.cr3', '.orf', '.dng'}
+        filepaths = []
+        for entry in os.scandir(subdir):
+            if entry.is_file():
+                ext = os.path.splitext(entry.name)[1].lower()
+                if ext in extensions:
+                    filepaths.append(entry.path)
+        
+        if not filepaths:
+            continue
+        
+        photos = detector.read_timestamps(filepaths)
+        csv_path = os.path.join(directory, '.superpicky', 'report.csv')
+        photos = detector.enrich_from_csv(photos, csv_path)
+        groups = detector.detect_groups(photos)
+        groups = detector.select_best_in_groups(groups)
+        
+        burst_stats = detector.process_burst_groups(groups, subdir, exiftool_mgr)
+        total_groups += burst_stats['groups_processed']
+        total_moved += burst_stats['photos_moved']
+    
+    if total_groups > 0:
+        print(f"  ✅ 连拍检测完成: {total_groups} 组, 移动 {total_moved} 张照片")
+    else:
+        print("  ℹ️  未检测到连拍组")
 
 
 def cmd_info(args):
@@ -568,11 +662,15 @@ Examples:
                          help='TOPIQ 美学评分阈值 (默认: 5.0, 范围: 4.0-7.0)')
     p_restar.add_argument('-c', '--confidence', type=int, default=50,
                          help='AI置信度阈值 (默认: 50)')
+    p_restar.add_argument('--burst', action='store_true', default=True,
+                         help='连拍检测 (默认: 开启)')
+    p_restar.add_argument('--no-burst', action='store_false', dest='burst',
+                         help='禁用连拍检测')
     p_restar.add_argument('--no-organize', action='store_false', dest='organize',
                          help='不重新分配文件目录')
     p_restar.add_argument('-y', '--yes', action='store_true',
                          help='跳过确认提示')
-    p_restar.set_defaults(organize=True)
+    p_restar.set_defaults(organize=True, burst=True)
     
     # ===== info 命令 =====
     p_info = subparsers.add_parser('info', help='查看目录信息')
