@@ -39,7 +39,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 def print_banner():
     """打印 CLI 横幅"""
     print("\n" + "━" * 60)
-    print("  🐦 SuperPicky CLI v3.8.0 - 慧眼选鸟 (命令行版)")
+    print("  🐦 SuperPicky CLI v3.9.0 - 慧眼选鸟 (命令行版)")
     print("━" * 60)
 
 

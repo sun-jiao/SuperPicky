@@ -396,7 +396,7 @@ class SuperPickyMainWindow(QMainWindow):
         header_layout.addStretch()
 
         # 右侧: 版本号
-        version_label = QLabel("v3.8.0")
+        version_label = QLabel("v3.9.0")
         version_label.setStyleSheet(VERSION_STYLE)
         header_layout.addWidget(version_label)
 

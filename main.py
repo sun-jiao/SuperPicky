@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 SuperPicky - PySide6 版本入口点
-Version: 3.7.0 - TOPIQ Aesthetic Model
+Version: 3.9.0 - Burst Detection
 """
 
 import sys

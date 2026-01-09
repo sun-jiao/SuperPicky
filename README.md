@@ -1,6 +1,6 @@
 # SuperPicky - 慧眼选鸟 🦅
 
-[![Version](https://img.shields.io/badge/version-3.8.0-blue.svg)](https://github.com/jamesphotography/SuperPicky)
+[![Version](https://img.shields.io/badge/version-3.9.0-blue.svg)](https://github.com/jamesphotography/SuperPicky)
 [![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -49,9 +49,9 @@
 ## 📥 下载安装
 
 ### macOS
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/%E6%85%A7%E7%9C%BC%E9%80%89%E9%B8%9F/SuperPicky_v3.8.0.dmg) | [Google Drive](https://drive.google.com/file/d/1rn_VctgLMW8SOAAfm3I1tGX7W_RCcBgm/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1ezKPFsviTYfU_jFbmfAhxw?pwd=kdbx) 提取码: kdbx
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/%E6%85%A7%E7%9C%BC%E9%80%89%E9%B8%9F/SuperPicky_v3.9.0.dmg) | [Google Drive](https://drive.google.com/file/d/1rn_VctgLMW8SOAAfm3I1tGX7W_RCcBgm/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1ezKPFsviTYfU_jFbmfAhxw?pwd=kdbx) 提取码: kdbx
 
-1. 下载 `SuperPicky_v3.8.0.dmg`
+1. 下载 `SuperPicky_v3.9.0.dmg`
 2. 双击 DMG 文件，将应用拖入 Applications
 3. 首次打开：右键点击应用选择"打开"
 
@@ -85,6 +85,14 @@ python main.py
 ---
 
 ## 📝 更新日志
+
+### v3.9.0 (2026-01-09)
+- 📷 **新增连拍检测**: 自动识别连拍组，选出最佳照片
+  - 支持 pHash 相似度验证，提高准确率
+  - 最佳照片标记紫色标签，其仙移入 burst_XXX 子目录
+- 📦 CLI 新增 `burst` 命令，支持独立连拍检测
+- 🔄 `reset` 和 `restar` 命令自动处理 burst 子目录
+- 🎮 GUI 新增「连拍」开关（默认开启）
 
 ### v3.8.0 (2026-01-02)
 - ✨ **新增曝光检测**: 检测鸟区域过曝/欠曝，可选功能默认关闭
