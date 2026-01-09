@@ -709,8 +709,8 @@ class PhotoProcessor:
                         'file': target_file_path,
                         'rating': rating_value if rating_value >= 0 else 0,
                         'pick': pick,
-                        'sharpness': head_sharpness,
-                        'nima_score': topiq,  # V3.8: 实际是 TOPIQ 分数
+                        'sharpness': adj_sharpness if 'adj_sharpness' in dir() else head_sharpness,  # V4.0: 使用调整后的值
+                        'nima_score': adj_topiq if 'adj_topiq' in dir() else topiq,  # V4.0: 使用调整后的值
                         'label': label,
                         'focus_status': focus_status,  # V3.9: 对焦状态写入 Country 字段
                         'caption': caption,  # V4.0: 详细评分说明
