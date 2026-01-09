@@ -305,11 +305,45 @@ class FileManager:
                     print(f"警告: 无法处理文件 {filename}: {e}")
                     
             elif os.path.isdir(child_path):
-                # 递归处理子目录
-                new_parent = os.path.join(parent_dir, filename)
-                if not os.path.exists(new_parent):
-                    os.makedirs(new_parent)
-                self._move_files_back_to_parent_force(child_path, new_parent)
+                # V4.0: 处理 burst_XXX 子目录 - 将文件移回当前目录（评分目录），不保留子目录结构
+                if filename.startswith('burst_'):
+                    print(f"处理连拍子目录: {filename}")
+                    # 将 burst_XXX 中的文件移回当前评分目录（child_dir）
+                    self._flatten_burst_subdir(child_path, child_dir)
+                    # 删除空的 burst_XXX 目录
+                    try:
+                        if os.path.exists(child_path) and not os.listdir(child_path):
+                            os.rmdir(child_path)
+                            print(f"  已删除空连拍目录: {filename}")
+                        elif os.path.exists(child_path):
+                            shutil.rmtree(child_path)
+                            print(f"  已强制删除连拍目录: {filename}")
+                    except Exception as e:
+                        print(f"  警告: 删除连拍目录失败: {e}")
+                else:
+                    # 其他子目录：递归处理（保留原逻辑）
+                    new_parent = os.path.join(parent_dir, filename)
+                    if not os.path.exists(new_parent):
+                        os.makedirs(new_parent)
+                    self._move_files_back_to_parent_force(child_path, new_parent)
+    
+    def _flatten_burst_subdir(self, burst_dir: str, target_dir: str) -> None:
+        """将 burst_XXX 子目录中的文件移回目标目录（评分目录）"""
+        if not os.path.exists(burst_dir):
+            return
+        
+        for filename in os.listdir(burst_dir):
+            src_path = os.path.join(burst_dir, filename)
+            dst_path = os.path.join(target_dir, filename)
+            
+            if os.path.isfile(src_path):
+                try:
+                    if os.path.exists(dst_path):
+                        os.remove(dst_path)
+                    shutil.move(src_path, dst_path)
+                    print(f"  已从连拍目录恢复: {filename}")
+                except Exception as e:
+                    print(f"  警告: 无法恢复文件 {filename}: {e}")
     
     def _move_files_back_to_parent(self, child_dir: str, parent_dir: str) -> None:
         """将子目录中的文件移回父目录（保持向后兼容）"""

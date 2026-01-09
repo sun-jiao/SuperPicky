@@ -173,6 +173,7 @@ def cmd_reset(args):
     from find_bird_util import reset
     from exiftool_manager import get_exiftool_manager
     from i18n import get_i18n
+    import shutil
     
     print_banner()
     print(f"\n🔄 重置目录: {args.directory}")
@@ -182,6 +183,49 @@ def cmd_reset(args):
         if confirm.lower() not in ['y', 'yes']:
             print("❌ 已取消")
             return 1
+    
+    # V4.0: 先处理 burst_XXX 子目录（将文件移回评分目录）
+    print("\n📂 步骤0: 清理连拍子目录...")
+    rating_dirs = ['3星_优选', '2星_良好', '1星_普通', '0星_放弃']
+    burst_stats = {'dirs_removed': 0, 'files_restored': 0}
+    
+    for rating_dir in rating_dirs:
+        rating_path = os.path.join(args.directory, rating_dir)
+        if not os.path.exists(rating_path):
+            continue
+        
+        # 查找 burst_XXX 子目录
+        for entry in os.listdir(rating_path):
+            if entry.startswith('burst_'):
+                burst_path = os.path.join(rating_path, entry)
+                if os.path.isdir(burst_path):
+                    # 将文件移回评分目录
+                    for filename in os.listdir(burst_path):
+                        src = os.path.join(burst_path, filename)
+                        dst = os.path.join(rating_path, filename)
+                        if os.path.isfile(src):
+                            try:
+                                if os.path.exists(dst):
+                                    os.remove(dst)
+                                shutil.move(src, dst)
+                                burst_stats['files_restored'] += 1
+                            except Exception as e:
+                                print(f"    ⚠️ 移动失败: {filename}: {e}")
+                    
+                    # 删除空的 burst 目录
+                    try:
+                        if not os.listdir(burst_path):
+                            os.rmdir(burst_path)
+                        else:
+                            shutil.rmtree(burst_path)
+                        burst_stats['dirs_removed'] += 1
+                    except Exception as e:
+                        print(f"    ⚠️ 删除目录失败: {entry}: {e}")
+    
+    if burst_stats['dirs_removed'] > 0:
+        print(f"  ✅ 已清理 {burst_stats['dirs_removed']} 个连拍目录，恢复 {burst_stats['files_restored']} 个文件")
+    else:
+        print("  ℹ️  无连拍子目录需要清理")
     
     print("\n📂 步骤1: 恢复文件到主目录...")
     exiftool_mgr = get_exiftool_manager()
