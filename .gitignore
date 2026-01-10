@@ -66,3 +66,9 @@ DEBUG_VERSION_README.md
 # 旧的打包脚本（保留本地备份，不同步）
 package_notarize.sh
 package_unsigned.sh
+
+
+# AI 工具配置（不上传）
+.agent/
+.claude/
+
