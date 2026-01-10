@@ -139,8 +139,8 @@ class AdvancedConfig:
         self.config["min_confidence"] = max(0.3, min(0.7, float(value)))
 
     def set_min_sharpness(self, value):
-        """设置锐度最低阈值 (200-500) - 头部区域锐度"""
-        self.config["min_sharpness"] = max(200, min(500, int(value)))
+        """设置锐度最低阈值 (100-500) - 头部区域锐度"""
+        self.config["min_sharpness"] = max(100, min(500, int(value)))
 
     def set_min_nima(self, value):
         """设置美学最低阈值 (3.0-5.0)"""
