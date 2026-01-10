@@ -197,7 +197,7 @@ class RatingEngine:
         if focus_sharpness_weight > 1.0:
             focus_suffix = "，对焦头部"
         elif focus_sharpness_weight >= 1.0:
-            pass  # 对焦在鸟身上，正常，不显示后缀
+            pass  # 合焦在鸟身上，正常，不显示后缀
         elif focus_sharpness_weight >= 0.7:
             focus_suffix = "，对焦偏移"
         else:  # 0.5

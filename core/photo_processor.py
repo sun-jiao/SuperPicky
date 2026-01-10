@@ -648,7 +648,7 @@ class PhotoProcessor:
                     focus_status = "精准"
                     focus_status_en = "BEST"
                 elif focus_sharpness_weight >= 1.0:
-                    focus_status = "鸟身"
+                    focus_status = "合焦"
                     focus_status_en = "GOOD"
                 elif focus_sharpness_weight >= 0.7:
                     focus_status = "偏移"
@@ -872,7 +872,7 @@ class PhotoProcessor:
         
         # V3.9: 对焦状态标识
         focus_tag = ""
-        if focus_status and focus_status != "鸟身":
+        if focus_status and focus_status != "合焦":
             focus_tag = f"【{focus_status}】"
         
         # 简化原因显示（V3.9: 增加到35字符避免截断）
