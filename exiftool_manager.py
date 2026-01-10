@@ -52,6 +52,14 @@ class ExifToolManager:
                 return abs_path
         else:
             # 开发环境路径
+            # V3.9.3: 优先使用系统 exiftool（解决 ARM64/Intel 不兼容问题）
+            import shutil
+            system_exiftool = shutil.which('exiftool')
+            if system_exiftool:
+                print(f"🔍 使用系统 ExifTool: {system_exiftool}")
+                return system_exiftool
+            
+            # 回退到项目目录下的 exiftool
             project_root = os.path.dirname(os.path.abspath(__file__))
             return os.path.join(project_root, 'exiftool')
 

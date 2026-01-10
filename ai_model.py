@@ -192,6 +192,10 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
     # V3.2: 移除 NIMA 计算（现在由 photo_processor 在裁剪区域上计算）
     # nima_score 设为 None，photo_processor 会重新计算
     nima_score = None
+    
+    # V3.9.3: 提前声明默认值，避免 continue 后变量未定义
+    sharpness = 0.0
+    x, y, w, h = 0, 0, 0, 0
 
     # 只处理面积最大的那只鸟
     for idx, (detection, conf, class_id) in enumerate(zip(detections, confidences, class_ids)):

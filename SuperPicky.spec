@@ -73,6 +73,9 @@ a = Analysis(
         'timm',
         'timm.models',
         'timm.models.resnet',
+        # V3.9.3: 图像处理依赖
+        'imageio',
+        'rawpy',
     ],
     hookspath=[],
     hooksconfig={},
