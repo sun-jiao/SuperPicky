@@ -192,12 +192,12 @@ class RatingEngine:
             if adjusted_topiq is not None:
                 adjusted_topiq = adjusted_topiq * 1.1
         
-        # 设置对焦状态后缀（精焦/合焦/失焦/脱焦）
+        # 设置对焦状态后缀（精焦/合焦/失焦/脱焦 - 全部显示）
         focus_suffix = ""
         if focus_sharpness_weight > 1.0:
             focus_suffix = "，精焦"
         elif focus_sharpness_weight >= 1.0:
-            pass  # 合焦在鸟身上，正常，不显示后缀
+            focus_suffix = "，合焦"
         elif focus_sharpness_weight >= 0.7:
             focus_suffix = "，失焦"
         else:  # 0.5

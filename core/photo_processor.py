@@ -870,9 +870,9 @@ class PhotoProcessor:
         # V3.8: 曝光问题标识（已在reason中显示"欠曝/过曝"，故不再单独显示标签）
         # exposure_tag = "【曝光】" if has_exposure_issue else ""
         
-        # V3.9: 对焦状态标识
+        # V3.9: 对焦状态标识（显示全部四个状态：精焦/合焦/失焦/脱焦）
         focus_tag = ""
-        if focus_status and focus_status != "合焦":
+        if focus_status:
             focus_tag = f"【{focus_status}】"
         
         # 简化原因显示（V3.9: 增加到35字符避免截断）
