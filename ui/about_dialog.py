@@ -99,7 +99,7 @@ class AboutDialog(QDialog):
         subtitle.setStyleSheet(f"color: {COLORS['text_tertiary']}; font-size: 13px;")
         brand_layout.addWidget(subtitle)
 
-        version = QLabel("v3.9.0")
+        version = QLabel("v3.9.3")
         version.setStyleSheet(f"""
             color: {COLORS['accent']};
             font-size: 12px;
