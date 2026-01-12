@@ -18,6 +18,8 @@ import subprocess
 import json
 import numpy as np
 import atexit
+import sys
+import os
 
 
 # ============ Exiftool 常驻进程管理 ============
@@ -902,9 +904,25 @@ def verify_focus_in_bbox(
 _focus_detector: Optional[FocusPointDetector] = None
 
 
+def _get_exiftool_path() -> str:
+    """获取 exiftool 路径（支持 PyInstaller 打包）"""
+    if hasattr(sys, '_MEIPASS'):
+        # PyInstaller 打包后
+        path = os.path.join(sys._MEIPASS, 'exiftool_bundle', 'exiftool')
+        print(f"🔍 FocusPointDetector: 使用打包 exiftool: {path}")
+        return path
+    else:
+        # 开发环境：优先系统 exiftool，回退到项目目录
+        import shutil
+        system_exiftool = shutil.which('exiftool')
+        if system_exiftool:
+            return system_exiftool
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'exiftool')
+
+
 def get_focus_detector() -> FocusPointDetector:
     """获取对焦点检测器单例"""
     global _focus_detector
     if _focus_detector is None:
-        _focus_detector = FocusPointDetector()
+        _focus_detector = FocusPointDetector(exiftool_path=_get_exiftool_path())
     return _focus_detector
