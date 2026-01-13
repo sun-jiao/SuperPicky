@@ -67,8 +67,37 @@
             <!-- Software Interface Preview -->
             <div class="hero-preview">
                 <div class="hero-preview-frame">
-                    <img src="img/V3_9_3/Software-landingpage.png" alt="SuperPicky Interface">
+                    <img src="img/V_3_9_4/软件启动界面.png" alt="SuperPicky Interface">
                     <div class="hero-preview-glow"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Getting Started Banner -->
+    <section class="faq-help-section" id="help">
+        <div class="container">
+            <div class="faq-help-card">
+                <div class="faq-help-icon">📖</div>
+                <div class="faq-help-content">
+                    <h3>
+                        <span class="lang-cn">新手入门</span>
+                        <span class="lang-en">Getting Started</span>
+                    </h3>
+                    <p>
+                        <span class="lang-cn">第一次使用？查看详细的图文教程，从入门到精通</span>
+                        <span class="lang-en">First time user? Check our detailed step-by-step tutorial</span>
+                    </p>
+                </div>
+                <div class="faq-help-buttons">
+                    <a href="tutorial.html" class="btn btn-primary">
+                        <span class="lang-cn">使用教程</span>
+                        <span class="lang-en">Tutorial</span>
+                    </a>
+                    <a href="faq.html" class="btn btn-ghost">
+                        <span class="lang-cn">常见问题</span>
+                        <span class="lang-en">FAQ</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -78,7 +107,7 @@
     <section class="showcase">
         <div class="container">
             <div class="showcase-frame">
-                <img src="img/comparison.jpg" alt="AI Detection">
+                <img src="img/V_3_9_4/hero对比图.png" alt="AI Detection">
                 <div class="showcase-glow"></div>
             </div>
         </div>
@@ -237,501 +266,6 @@
         </div>
     </section>
 
-    <!-- Scoring Logic Section -->
-    <section class="logic-section" id="logic">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-label">
-                    <span class="lang-cn">评分逻辑</span>
-                    <span class="lang-en">How It Works</span>
-                </span>
-            </div>
-
-            <!-- Key Factors -->
-            <div class="logic-block">
-                <h3 class="logic-title">
-                    <span class="logic-icon">🔍</span>
-                    <span class="lang-cn">六大评估维度</span>
-                    <span class="lang-en">Six Evaluation Dimensions</span>
-                </h3>
-                <div class="logic-grid">
-                    <div class="logic-card">
-                        <div class="logic-card-header">
-                            <span class="lang-cn">AI 置信度</span>
-                            <span class="lang-en">AI Confidence</span>
-                        </div>
-                        <p>
-                            <span class="lang-cn">模型对「这是一只鸟」的把握程度。置信度太低会直接放弃该照片。</span>
-                            <span class="lang-en">How certain the model is that "this is a bird". Low confidence leads
-                                to rejection.</span>
-                        </p>
-                    </div>
-                    <div class="logic-card">
-                        <div class="logic-card-header">
-                            <span class="lang-cn">眼睛可见度</span>
-                            <span class="lang-en">Eye Visibility</span>
-                        </div>
-                        <p>
-                            <span class="lang-cn">鸟的眼睛是否清晰可见。眼睛不可见或模糊会限制最高评分。</span>
-                            <span class="lang-en">Whether the bird's eye is clearly visible. Invisible eyes cap the
-                                rating.</span>
-                        </p>
-                    </div>
-                    <div class="logic-card">
-                        <div class="logic-card-header">
-                            <span class="lang-cn">头部锐度</span>
-                            <span class="lang-en">Head Sharpness</span>
-                        </div>
-                        <p>
-                            <span class="lang-cn">鸟头部区域的清晰程度。锐度达标是获得高分的基础条件。</span>
-                            <span class="lang-en">Clarity of the bird's head region. Meeting sharpness threshold is
-                                fundamental.</span>
-                        </p>
-                    </div>
-                    <div class="logic-card">
-                        <div class="logic-card-header">
-                            <span class="lang-cn">美学评分</span>
-                            <span class="lang-en">Aesthetic Score</span>
-                        </div>
-                        <p>
-                            <span class="lang-cn">TOPIQ 模型评估画面的整体美感，包括构图、光影、背景等。</span>
-                            <span class="lang-en">TOPIQ model evaluates composition, lighting, background, and overall
-                                appeal.</span>
-                        </p>
-                    </div>
-                    <div class="logic-card">
-                        <div class="logic-card-header">
-                            <span class="lang-cn">对焦点验证</span>
-                            <span class="lang-en">Focus Point</span>
-                        </div>
-                        <p>
-                            <span class="lang-cn">读取 RAW 文件中的对焦点位置，验证是否对焦在鸟头。精焦加成，失焦减分。</span>
-                            <span class="lang-en">Reads focus point from RAW files to verify if focused on bird's head.
-                                Best focus gets bonus, bad focus reduces rating.</span>
-                        </p>
-                    </div>
-                    <div class="logic-card">
-                        <div class="logic-card-header">
-                            <span class="lang-cn">连拍分组</span>
-                            <span class="lang-en">Burst Grouping</span>
-                        </div>
-                        <p>
-                            <span class="lang-cn">通过时间戳和图像相似度自动识别连拍序列，整理到子目录方便对比选择。</span>
-                            <span class="lang-en">Auto-detects burst sequences via timestamps and image similarity,
-                                organized into subdirectories for comparison.</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Star Rating Logic -->
-            <div class="logic-block">
-                <h3 class="logic-title">
-                    <span class="logic-icon">⭐</span>
-                    <span class="lang-cn">星级评定规则</span>
-                    <span class="lang-en">Star Rating Rules</span>
-                </h3>
-                <div class="logic-table">
-                    <div class="logic-table-row header">
-                        <div class="logic-table-cell star-cell">
-                            <span class="lang-cn">星级</span>
-                            <span class="lang-en">Stars</span>
-                        </div>
-                        <div class="logic-table-cell condition-cell">
-                            <span class="lang-cn">条件</span>
-                            <span class="lang-en">Condition</span>
-                        </div>
-                        <div class="logic-table-cell meaning-cell">
-                            <span class="lang-cn">含义</span>
-                            <span class="lang-en">Meaning</span>
-                        </div>
-                    </div>
-                    <div class="logic-table-row">
-                        <div class="logic-table-cell star-cell">
-                            <span class="star-display gold">★★★</span>
-                        </div>
-                        <div class="logic-table-cell condition-cell">
-                            <span class="lang-cn">锐度达标 + 美学达标</span>
-                            <span class="lang-en">Sharpness ✓ + Aesthetics ✓</span>
-                        </div>
-                        <div class="logic-table-cell meaning-cell">
-                            <span class="lang-cn">清晰且好看，值得后期处理</span>
-                            <span class="lang-en">Sharp and beautiful, worth editing</span>
-                        </div>
-                    </div>
-                    <div class="logic-table-row">
-                        <div class="logic-table-cell star-cell">
-                            <span class="star-display dim">★★</span>
-                        </div>
-                        <div class="logic-table-cell condition-cell">
-                            <span class="lang-cn">锐度达标 或 美学达标</span>
-                            <span class="lang-en">Sharpness ✓ or Aesthetics ✓</span>
-                        </div>
-                        <div class="logic-table-cell meaning-cell">
-                            <span class="lang-cn">某方面不错，可考虑保留</span>
-                            <span class="lang-en">Good in one aspect, consider keeping</span>
-                        </div>
-                    </div>
-                    <div class="logic-table-row">
-                        <div class="logic-table-cell star-cell">
-                            <span class="star-display dim">★</span>
-                        </div>
-                        <div class="logic-table-cell condition-cell">
-                            <span class="lang-cn">有鸟但都未达标</span>
-                            <span class="lang-en">Bird detected but neither passed</span>
-                        </div>
-                        <div class="logic-table-cell meaning-cell">
-                            <span class="lang-cn">质量一般，通常可删除</span>
-                            <span class="lang-en">Average quality, usually deletable</span>
-                        </div>
-                    </div>
-                    <div class="logic-table-row">
-                        <div class="logic-table-cell star-cell">
-                            <span class="star-display muted">0</span>
-                        </div>
-                        <div class="logic-table-cell condition-cell">
-                            <span class="lang-cn">无鸟 / 置信度太低 / 质量极差</span>
-                            <span class="lang-en">No bird / Low confidence / Very poor</span>
-                        </div>
-                        <div class="logic-table-cell meaning-cell">
-                            <span class="lang-cn">建议删除</span>
-                            <span class="lang-en">Recommend deleting</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Special Flags -->
-            <div class="logic-block">
-                <h3 class="logic-title">
-                    <span class="logic-icon">🏷️</span>
-                    <span class="lang-cn">特殊标记</span>
-                    <span class="lang-en">Special Flags</span>
-                </h3>
-                <div class="logic-flags">
-                    <div class="logic-flag">
-                        <span class="flag-badge pick">Pick</span>
-                        <div class="flag-info">
-                            <strong>
-                                <span class="lang-cn">精选旗标</span>
-                                <span class="lang-en">Pick Flag</span>
-                            </strong>
-                            <p>
-                                <span class="lang-cn">从所有 3 星照片中，选出锐度和美学都排名前 25% 的交集。双维度都出色才能获得精选。</span>
-                                <span class="lang-en">Among 3-star photos, selects top 25% in BOTH sharpness AND
-                                    aesthetics. Must excel in both dimensions.</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="logic-flag">
-                        <span class="flag-badge fly">
-                            <span class="lang-cn">飞鸟</span>
-                            <span class="lang-en">Flying</span>
-                        </span>
-                        <div class="flag-info">
-                            <strong>
-                                <span class="lang-cn">飞版加成</span>
-                                <span class="lang-en">Flying Bonus</span>
-                            </strong>
-                            <p>
-                                <span class="lang-cn">AI 检测到飞行姿态时会给予锐度和美学加分，补偿飞版拍摄的难度。飞行照片用绿色标签标记。</span>
-                                <span class="lang-en">When AI detects flying pose, bonus points are added to compensate
-                                    for capture difficulty. Marked with green label.</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="logic-flag">
-                        <span class="flag-badge focus">
-                            <span class="lang-cn">对焦</span>
-                            <span class="lang-en">Focus</span>
-                        </span>
-                        <div class="flag-info">
-                            <strong>
-                                <span class="lang-cn">对焦判定</span>
-                                <span class="lang-en">Focus Detection</span>
-                            </strong>
-                            <p>
-                                <span class="lang-cn">读取 RAW
-                                    文件中的对焦点位置，判断是否对焦在鸟头区域。精焦(BEST)给予锐度加成，失焦(BAD/WORST)则降低评分。红色标签标记精焦照片。</span>
-                                <span class="lang-en">Reads focus point from RAW files, determines if focused on bird's
-                                    head. BEST focus gets sharpness bonus, BAD/WORST reduces rating. Red label marks
-                                    best-focused photos.</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="logic-flag">
-                        <span class="flag-badge burst">
-                            <span class="lang-cn">连拍</span>
-                            <span class="lang-en">Burst</span>
-                        </span>
-                        <div class="flag-info">
-                            <strong>
-                                <span class="lang-cn">连拍分组</span>
-                                <span class="lang-en">Burst Grouping</span>
-                            </strong>
-                            <p>
-                                <span class="lang-cn">通过时间戳和图像相似度（pHash）自动识别连拍序列，将同一组连拍照片整理到 burst_xxx
-                                    子目录，方便对比选择最佳帧。</span>
-                                <span class="lang-en">Auto-detects burst sequences via timestamps and image similarity
-                                    (pHash), organizes them into burst_xxx subdirectories for easy comparison and best
-                                    frame selection.</span>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="logic-flag">
-                        <span class="flag-badge exposure">
-                            <span class="lang-cn">曝光</span>
-                            <span class="lang-en">Exposure</span>
-                        </span>
-                        <div class="flag-info">
-                            <strong>
-                                <span class="lang-cn">曝光检测（可选）</span>
-                                <span class="lang-en">Exposure Check (Optional)</span>
-                            </strong>
-                            <p>
-                                <span class="lang-cn">检测鸟区域是否过曝或欠曝。当亮度 ≥235 或 ≤15 的像素超过 10%
-                                    时判定为曝光问题，评分降一星。默认关闭，可在界面开启。</span>
-                                <span class="lang-en">Detects overexposure or underexposure in bird region. When pixels
-                                    with brightness ≥235 or ≤15 exceed 10%, rating is reduced by one star. Off by
-                                    default.</span>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Eye Visibility Impact -->
-            <div class="logic-block">
-                <h3 class="logic-title">
-                    <span class="logic-icon">👁️</span>
-                    <span class="lang-cn">眼睛可见度的影响</span>
-                    <span class="lang-en">Impact of Eye Visibility</span>
-                </h3>
-                <div class="logic-note">
-                    <p>
-                        <span class="lang-cn">眼睛是鸟类摄影的灵魂。如果眼睛不可见或非常模糊，即使其他指标达标，评分也会被限制：</span>
-                        <span class="lang-en">The eye is the soul of bird photography. If the eye is invisible or very
-                            blurry, the rating is capped:</span>
-                    </p>
-                    <ul>
-                        <li>
-                            <span class="lang-cn">眼睛完全不可见 → 最高 1 星</span>
-                            <span class="lang-en">Eye completely invisible → Max 1 star</span>
-                        </li>
-                        <li>
-                            <span class="lang-cn">眼睛略微可见但模糊 → 最高 2 星</span>
-                            <span class="lang-en">Eye slightly visible but blurry → Max 2 stars</span>
-                        </li>
-                        <li>
-                            <span class="lang-cn">眼睛清晰可见 → 不受限制</span>
-                            <span class="lang-en">Eye clearly visible → No cap</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-            <!-- Re-rating Tips -->
-            <div class="logic-block">
-                <h3 class="logic-title">
-                    <span class="logic-icon">💡</span>
-                    <span class="lang-cn">二次评星建议</span>
-                    <span class="lang-en">Re-rating Tips</span>
-                </h3>
-                <div class="logic-tips">
-                    <div class="tip-item">
-                        <span class="tip-from muted">0 星</span>
-                        <span class="tip-arrow">→</span>
-                        <span class="tip-action">
-                            <span class="lang-cn">检查是否真的没鸟，或者鸟太小/太模糊</span>
-                            <span class="lang-en">Check if there's really no bird, or bird is too small/blurry</span>
-                        </span>
-                    </div>
-                    <div class="tip-item">
-                        <span class="tip-from dim">1 星</span>
-                        <span class="tip-arrow">→</span>
-                        <span class="tip-action">
-                            <span class="lang-cn">如果眼睛清晰且你喜欢，可手动提升</span>
-                            <span class="lang-en">If eye is clear and you like it, consider upgrading</span>
-                        </span>
-                    </div>
-                    <div class="tip-item">
-                        <span class="tip-from dim2">2 星</span>
-                        <span class="tip-arrow">→</span>
-                        <span class="tip-action">
-                            <span class="lang-cn">缺的是锐度还是美学？后期能补吗？</span>
-                            <span class="lang-en">Missing sharpness or aesthetics? Can post-processing help?</span>
-                        </span>
-                    </div>
-                    <div class="tip-item">
-                        <span class="tip-from gold">3 星</span>
-                        <span class="tip-arrow">→</span>
-                        <span class="tip-action">
-                            <span class="lang-cn">已经很好，没有 Pick 可能只是竞争太激烈</span>
-                            <span class="lang-en">Already great, no Pick just means strong competition</span>
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- Guide Section -->
-    <section class="guide-section" id="guide">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-label">
-                    <span class="lang-cn">软件界面</span>
-                    <span class="lang-en">Interface</span>
-                </span>
-            </div>
-            <!-- 推荐尺寸: 800×600px (4:3 横向) -->
-            <div class="guide-gallery">
-                <div class="guide-item">
-                    <img src="img/V3_9_3/设置界面.png" alt="参数设置" data-needs-resize data-current="1080x1416 竖向"
-                        data-target="800x600 横向">
-                    <div class="guide-item-info">
-                        <div class="guide-step">01</div>
-                        <h4>
-                            <span class="lang-cn">参数设置</span>
-                            <span class="lang-en">Parameters</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">锐度阈值、美学评分、可选飞行姿态和曝光检测</span>
-                            <span class="lang-en">Sharpness, Aesthetics threshold, optional flight & exposure</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="guide-item">
-                    <img src="img/V3_9_3/开始处理过程.png" alt="处理过程">
-                    <div class="guide-item-info">
-                        <div class="guide-step">02</div>
-                        <h4>
-                            <span class="lang-cn">AI 处理</span>
-                            <span class="lang-en">AI Processing</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">多模型协作分析，实时显示处理进度和评分详情</span>
-                            <span class="lang-en">Multi-model analysis with real-time progress and rating details</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="guide-item">
-                    <img src="img/V3_9_3/选鸟结果.png" alt="选片结果">
-                    <div class="guide-item-info">
-                        <div class="guide-step">03</div>
-                        <h4>
-                            <span class="lang-cn">选片结果</span>
-                            <span class="lang-en">Results</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">按星级自动整理，连拍分组，显示详细统计信息</span>
-                            <span class="lang-en">Auto-organized by rating, burst grouping, detailed statistics</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="guide-item">
-                    <img src="img/V3_9_3/分星和连拍目录.png" alt="文件整理" data-needs-resize data-current="612x992 竖向"
-                        data-target="800x600 横向">
-                    <div class="guide-item-info">
-                        <div class="guide-step">04</div>
-                        <h4>
-                            <span class="lang-cn">文件整理</span>
-                            <span class="lang-en">File Organization</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">按星级分文件夹，连拍照片自动分组到 burst 子目录</span>
-                            <span class="lang-en">Star-rated folders, burst photos grouped in subdirectories</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Lightroom Workflow Section -->
-    <section class="lightroom-section" id="lightroom">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-label">
-                    <span class="lang-cn">Lightroom 工作流</span>
-                    <span class="lang-en">Lightroom Workflow</span>
-                </span>
-            </div>
-            <div class="lightroom-intro">
-                <p>
-                    <span class="lang-cn">慧眼选鸟的评分结果可以无缝导入 Lightroom Classic，让你的后期流程更加高效。</span>
-                    <span class="lang-en">SuperPicky ratings integrate seamlessly with Lightroom Classic for an
-                        efficient editing workflow.</span>
-                </p>
-            </div>
-            <!-- 推荐尺寸: 800×500px (16:10 横向) -->
-            <div class="lightroom-gallery">
-                <div class="lightroom-item">
-                    <img src="img/V3_9_3/按照原始文件夹导入到 lightroom.png" alt="导入到 Lightroom">
-                    <div class="lightroom-item-info">
-                        <div class="lightroom-step">01</div>
-                        <h4>
-                            <span class="lang-cn">导入照片</span>
-                            <span class="lang-en">Import Photos</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">按原始文件夹结构导入到 Lightroom，保留星级目录组织</span>
-                            <span class="lang-en">Import with original folder structure, preserving star-rated
-                                organization</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="lightroom-item">
-                    <img src="img/V3_9_3/元数据窗口-详情信息.png" alt="元数据详情" data-needs-resize data-current="732x906 竖向"
-                        data-target="800x500 横向">
-                    <div class="lightroom-item-info">
-                        <div class="lightroom-step">02</div>
-                        <h4>
-                            <span class="lang-cn">查看元数据</span>
-                            <span class="lang-en">View Metadata</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">题注字段包含完整的 AI 分析结果：锐度、美学、对焦状态等</span>
-                            <span class="lang-en">Caption field contains full AI analysis: sharpness, aesthetics, focus
-                                status</span>
-                        </p>
-                    </div>
-                </div>
-                <div class="lightroom-item">
-                    <img src="img/V3_9_3/按照城市或者省份排序.png" alt="按质量排序" data-needs-resize data-current="282x1068 竖向窄条"
-                        data-target="800x500 横向">
-                    <div class="lightroom-item-info">
-                        <div class="lightroom-step">03</div>
-                        <h4>
-                            <span class="lang-cn">按质量排序</span>
-                            <span class="lang-en">Sort by Quality</span>
-                        </h4>
-                        <p>
-                            <span class="lang-cn">城市字段 = 锐度值，省份字段 = 美学评分，可直接排序筛选</span>
-                            <span class="lang-en">City = Sharpness, State = Aesthetics score, sortable and
-                                filterable</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="lightroom-tip">
-                <div class="tip-icon">💡</div>
-                <div class="tip-content">
-                    <strong>
-                        <span class="lang-cn">元数据读取提示</span>
-                        <span class="lang-en">Metadata Reading Tip</span>
-                    </strong>
-                    <p>
-                        <span class="lang-cn">如果照片已在 Lightroom 中，选中所有照片后执行「元数据 → 从文件读取元数据」来同步评分和旗标。</span>
-                        <span class="lang-en">If photos are already in Lightroom, select all and use "Metadata → Read
-                            Metadata from Files" to sync ratings and flags.</span>
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- Download Section -->
     <section class="download-section" id="download">
         <div class="container">
@@ -766,6 +300,28 @@
                             target="_blank">
                             <span class="lang-cn">百度网盘</span>
                             <span class="lang-en">Baidu Pan</span>
+                        </a>
+                    </div>
+                </div>
+                <!-- macOS Intel -->
+                <div class="download-card">
+                    <div class="download-info">
+                        <div class="download-icon">
+                            <img src="img/icon.png" alt="SuperPicky">
+                        </div>
+                        <div class="download-meta">
+                            <h3>SuperPicky <span class="platform-badge">macOS</span></h3>
+                            <p class="download-version">v3.9.4 · Intel x64 (2020年前 Mac)</p>
+                        </div>
+                    </div>
+                    <div class="download-links">
+                        <a href="https://github.com/jamesphotography/SuperPicky/releases/download/v3.9.4/SuperPicky_v3.9.4_x64.dmg"
+                            class="btn btn-primary" target="_blank">
+                            GitHub
+                        </a>
+                        <a href="https://drive.google.com/file/d/1ljvJU5f8wV9DNtQ3HxoXqlv-UyQc7vta/view?usp=sharing"
+                            class="btn btn-secondary" target="_blank">
+                            Google Drive
                         </a>
                     </div>
                 </div>
@@ -927,6 +483,14 @@
                     </div>
                 </div>
                 <div class="footer-links">
+                    <a href="tutorial.html">
+                        <span class="lang-cn">使用教程</span>
+                        <span class="lang-en">Tutorial</span>
+                    </a>
+                    <a href="faq.html">
+                        <span class="lang-cn">常见问题</span>
+                        <span class="lang-en">FAQ</span>
+                    </a>
                     <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a>
                     <a href="https://www.youtube.com/@JamesZhenYu">YouTube</a>
                     <a href="mailto:james@jamesphotography.com.au">
@@ -969,6 +533,118 @@
                 }
             });
         });
+
+        // Lightbox functionality
+        (function () {
+            // Create lightbox elements
+            const lightbox = document.createElement('div');
+            lightbox.id = 'lightbox';
+            lightbox.innerHTML = `
+                <div class="lightbox-overlay"></div>
+                <div class="lightbox-content">
+                    <img src="" alt="">
+                    <button class="lightbox-close">&times;</button>
+                </div>
+            `;
+            document.body.appendChild(lightbox);
+
+            // Add styles
+            const style = document.createElement('style');
+            style.textContent = `
+                #lightbox {
+                    display: none;
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    z-index: 10000;
+                }
+                #lightbox.active {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                .lightbox-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.9);
+                    cursor: pointer;
+                }
+                .lightbox-content {
+                    position: relative;
+                    max-width: 95vw;
+                    max-height: 95vh;
+                    z-index: 1;
+                }
+                .lightbox-content img {
+                    max-width: 95vw;
+                    max-height: 95vh;
+                    object-fit: contain;
+                    border-radius: 8px;
+                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                }
+                .lightbox-close {
+                    position: absolute;
+                    top: -40px;
+                    right: 0;
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 32px;
+                    cursor: pointer;
+                    opacity: 0.7;
+                    transition: opacity 0.2s;
+                }
+                .lightbox-close:hover {
+                    opacity: 1;
+                }
+                /* Make images clickable */
+                .showcase-frame img,
+                .hero-preview-frame img,
+                .step-image img {
+                    cursor: zoom-in;
+                    transition: transform 0.2s;
+                }
+                .showcase-frame img:hover,
+                .hero-preview-frame img:hover,
+                .step-image img:hover {
+                    transform: scale(1.02);
+                }
+            `;
+            document.head.appendChild(style);
+
+            const lightboxImg = lightbox.querySelector('img');
+            const overlay = lightbox.querySelector('.lightbox-overlay');
+            const closeBtn = lightbox.querySelector('.lightbox-close');
+
+            // Open lightbox on image click
+            document.addEventListener('click', (e) => {
+                if (e.target.tagName === 'IMG' &&
+                    (e.target.closest('.showcase-frame') ||
+                        e.target.closest('.hero-preview-frame') ||
+                        e.target.closest('.step-image'))) {
+                    lightboxImg.src = e.target.src;
+                    lightbox.classList.add('active');
+                    document.body.style.overflow = 'hidden';
+                }
+            });
+
+            // Close lightbox
+            function closeLightbox() {
+                lightbox.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            overlay.addEventListener('click', closeLightbox);
+            closeBtn.addEventListener('click', closeLightbox);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeLightbox();
+            });
+        })();
     </script>
 </body>
 

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-lang="cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ - 常见问题 | SuperPicky 慧眼选鸟</title>
+    <meta name="description" content="SuperPicky 慧眼选鸟常见问题解答 - Lightroom 元数据同步、颜色标签设置等">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" href="img/icon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Subtle grain overlay -->
+    <div class="grain"></div>
+
+    <!-- Header -->
+    <header>
+        <div class="header-inner">
+            <a href="index.html" class="logo">
+                <img src="img/icon.png" alt="SuperPicky">
+                <span>SuperPicky</span>
+            </a>
+            <div class="lang-switch">
+                <button class="lang-btn active" onclick="setLang('cn')">中</button>
+                <button class="lang-btn" onclick="setLang('en')">EN</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-label">
+                    <span class="lang-cn">常见问题</span>
+                    <span class="lang-en">FAQ</span>
+                </span>
+            </div>
+
+            <div class="faq-list">
+                <!-- FAQ 1: Metadata not showing -->
+                <div class="faq-item">
+                    <div class="faq-number">01</div>
+                    <div class="faq-content">
+                        <h3>
+                            <span class="lang-cn">为什么 Lightroom 里看不到评分和旗标？</span>
+                            <span class="lang-en">Why don't I see ratings and flags in Lightroom?</span>
+                        </h3>
+                        <div class="faq-answer">
+                            <p>
+                                <span class="lang-cn">SuperPicky 将评分写入照片的 EXIF/XMP 元数据中。如果照片已经导入 Lightroom，需要手动同步元数据：</span>
+                                <span class="lang-en">SuperPicky writes ratings to photo EXIF/XMP metadata. If photos are already imported in Lightroom, you need to manually sync metadata:</span>
+                            </p>
+                            <div class="faq-steps">
+                                <div class="step">
+                                    <span class="step-num">1</span>
+                                    <span class="lang-cn">在 Lightroom 中选中需要同步的照片（或按 Cmd/Ctrl+A 全选）</span>
+                                    <span class="lang-en">Select photos to sync in Lightroom (or press Cmd/Ctrl+A to select all)</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-num">2</span>
+                                    <span class="lang-cn">菜单选择「元数据」→「从文件读取元数据」</span>
+                                    <span class="lang-en">Go to menu "Metadata" → "Read Metadata from Files"</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-num">3</span>
+                                    <span class="lang-cn">确认对话框，Lightroom 将从文件读取最新的评分、旗标和标签信息</span>
+                                    <span class="lang-en">Confirm the dialog, Lightroom will read the latest ratings, flags and labels from files</span>
+                                </div>
+                            </div>
+                            <div class="faq-tip">
+                                <span class="tip-icon">💡</span>
+                                <span class="lang-cn">建议：在 Lightroom 偏好设置中开启「自动将更改写入 XMP」，这样元数据会自动双向同步。</span>
+                                <span class="lang-en">Tip: Enable "Automatically write changes into XMP" in Lightroom Preferences for automatic two-way sync.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 2: Color Label not showing -->
+                <div class="faq-item">
+                    <div class="faq-number">02</div>
+                    <div class="faq-content">
+                        <h3>
+                            <span class="lang-cn">为什么飞鸟的绿色标签 / 精焦的红色标签不显示？</span>
+                            <span class="lang-en">Why aren't the green (flying) / red (best focus) labels showing?</span>
+                        </h3>
+                        <div class="faq-answer">
+                            <p>
+                                <span class="lang-cn">SuperPicky 使用英文颜色名称（如 "Green"、"Red"）写入标签。如果您的 Lightroom 使用不同的颜色标签集设置，标签可能无法正确显示。</span>
+                                <span class="lang-en">SuperPicky uses English color names (e.g., "Green", "Red") for labels. If your Lightroom uses a different color label set, labels may not display correctly.</span>
+                            </p>
+                            <div class="faq-steps">
+                                <div class="step">
+                                    <span class="step-num">1</span>
+                                    <span class="lang-cn">打开 Lightroom，选择菜单「元数据」→「颜色标签集」</span>
+                                    <span class="lang-en">Open Lightroom, go to menu "Metadata" → "Color Label Set"</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-num">2</span>
+                                    <span class="lang-cn">选择「Lightroom 默认」或「Bridge 默认」</span>
+                                    <span class="lang-en">Select "Lightroom Default" or "Bridge Default"</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-num">3</span>
+                                    <span class="lang-cn">如果使用中文版 Lightroom，可能需要选择「编辑...」，将绿色标签的文本改为 "Green"，红色改为 "Red"</span>
+                                    <span class="lang-en">If using localized Lightroom, you may need to select "Edit..." and change the green label text to "Green", red to "Red"</span>
+                                </div>
+                            </div>
+                            <div class="faq-color-labels">
+                                <div class="color-label-row">
+                                    <span class="color-dot green"></span>
+                                    <span class="color-name">Green</span>
+                                    <span class="color-meaning">
+                                        <span class="lang-cn">= 飞鸟照片</span>
+                                        <span class="lang-en">= Flying bird photo</span>
+                                    </span>
+                                </div>
+                                <div class="color-label-row">
+                                    <span class="color-dot red"></span>
+                                    <span class="color-name">Red</span>
+                                    <span class="color-meaning">
+                                        <span class="lang-cn">= 精焦照片（对焦点在鸟头上）</span>
+                                        <span class="lang-en">= Best focus photo (focus point on bird head)</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 3: Pick flag not showing -->
+                <div class="faq-item">
+                    <div class="faq-number">03</div>
+                    <div class="faq-content">
+                        <h3>
+                            <span class="lang-cn">为什么看不到精选旗标（Pick Flag）？</span>
+                            <span class="lang-en">Why don't I see the Pick Flag?</span>
+                        </h3>
+                        <div class="faq-answer">
+                            <p>
+                                <span class="lang-cn">精选旗标写入 XMP:Pick 字段。与评分一样，需要从文件读取元数据才能在 Lightroom 中显示：</span>
+                                <span class="lang-en">Pick flags are written to the XMP:Pick field. Like ratings, you need to read metadata from files to display them in Lightroom:</span>
+                            </p>
+                            <div class="faq-steps">
+                                <div class="step">
+                                    <span class="step-num">1</span>
+                                    <span class="lang-cn">选中照片 →「元数据」→「从文件读取元数据」</span>
+                                    <span class="lang-en">Select photos → "Metadata" → "Read Metadata from Files"</span>
+                                </div>
+                            </div>
+                            <div class="faq-tip">
+                                <span class="tip-icon">📌</span>
+                                <span class="lang-cn">精选旗标仅授予 3 星照片中锐度和美学都排名前 25% 的交集，是最优秀的照片。</span>
+                                <span class="lang-en">Pick flags are only given to 3-star photos that rank in the top 25% for BOTH sharpness and aesthetics - these are the best of the best.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 4: Reject flag not showing -->
+                <div class="faq-item">
+                    <div class="faq-number">04</div>
+                    <div class="faq-content">
+                        <h3>
+                            <span class="lang-cn">为什么看不到排除旗标（Reject Flag）？</span>
+                            <span class="lang-en">Why don't I see the Reject Flag?</span>
+                        </h3>
+                        <div class="faq-answer">
+                            <p>
+                                <span class="lang-cn">0 星照片会被标记为排除旗标（XMP:Pick = -1）。同样需要从文件读取元数据：</span>
+                                <span class="lang-en">0-star photos are marked with a reject flag (XMP:Pick = -1). You also need to read metadata from files:</span>
+                            </p>
+                            <div class="faq-steps">
+                                <div class="step">
+                                    <span class="step-num">1</span>
+                                    <span class="lang-cn">选中照片 →「元数据」→「从文件读取元数据」</span>
+                                    <span class="lang-en">Select photos → "Metadata" → "Read Metadata from Files"</span>
+                                </div>
+                            </div>
+                            <div class="faq-tip">
+                                <span class="tip-icon">🗑️</span>
+                                <span class="lang-cn">在 Lightroom 中，您可以按 Cmd/Ctrl+Delete 删除所有带排除旗标的照片，快速清理 0 星废片。</span>
+                                <span class="lang-en">In Lightroom, you can press Cmd/Ctrl+Delete to delete all rejected photos, quickly cleaning up 0-star rejects.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 5: Sorting by sharpness/aesthetics -->
+                <div class="faq-item">
+                    <div class="faq-number">05</div>
+                    <div class="faq-content">
+                        <h3>
+                            <span class="lang-cn">如何在 Lightroom 中按锐度或美学评分排序？</span>
+                            <span class="lang-en">How to sort by sharpness or aesthetics in Lightroom?</span>
+                        </h3>
+                        <div class="faq-answer">
+                            <p>
+                                <span class="lang-cn">SuperPicky 将锐度和美学评分写入 XMP 的地理位置字段，可以在 Lightroom 中直接排序：</span>
+                                <span class="lang-en">SuperPicky writes sharpness and aesthetics scores to XMP location fields, which can be sorted directly in Lightroom:</span>
+                            </p>
+                            <div class="faq-field-map">
+                                <div class="field-row">
+                                    <span class="field-name">XMP:City</span>
+                                    <span class="field-arrow">→</span>
+                                    <span class="field-meaning">
+                                        <span class="lang-cn">锐度值（000.00 - 999.99）</span>
+                                        <span class="lang-en">Sharpness (000.00 - 999.99)</span>
+                                    </span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-name">XMP:State</span>
+                                    <span class="field-arrow">→</span>
+                                    <span class="field-meaning">
+                                        <span class="lang-cn">美学评分（00.00 - 10.00）</span>
+                                        <span class="lang-en">Aesthetics (00.00 - 10.00)</span>
+                                    </span>
+                                </div>
+                                <div class="field-row">
+                                    <span class="field-name">XMP:Country</span>
+                                    <span class="field-arrow">→</span>
+                                    <span class="field-meaning">
+                                        <span class="lang-cn">对焦状态（精焦/合焦/偏移/失焦）</span>
+                                        <span class="lang-en">Focus status (BEST/GOOD/BAD/WORST)</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="faq-tip">
+                                <span class="tip-icon">💡</span>
+                                <span class="lang-cn">在 Lightroom 图库模块中，点击「视图」→「排序」→「城市」可按锐度排序，选择「州/省」可按美学排序。</span>
+                                <span class="lang-en">In Lightroom Library module, click "View" → "Sort" → "City" to sort by sharpness, or "State" to sort by aesthetics.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FAQ 6: Reset selection -->
+                <div class="faq-item">
+                    <div class="faq-number">06</div>
+                    <div class="faq-content">
+                        <h3>
+                            <span class="lang-cn">如何重置选片结果？</span>
+                            <span class="lang-en">How to reset selection results?</span>
+                        </h3>
+                        <div class="faq-answer">
+                            <p>
+                                <span class="lang-cn">SuperPicky 提供完整的重置功能，可以恢复文件位置和清除元数据：</span>
+                                <span class="lang-en">SuperPicky provides a complete reset function to restore file locations and clear metadata:</span>
+                            </p>
+                            <div class="faq-steps">
+                                <div class="step">
+                                    <span class="step-num">1</span>
+                                    <span class="lang-cn">打开 SuperPicky，选择之前处理过的目录</span>
+                                    <span class="lang-en">Open SuperPicky, select the previously processed directory</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-num">2</span>
+                                    <span class="lang-cn">点击「重置」按钮</span>
+                                    <span class="lang-en">Click the "Reset" button</span>
+                                </div>
+                                <div class="step">
+                                    <span class="step-num">3</span>
+                                    <span class="lang-cn">所有照片将移回原始目录，评分、旗标、标签等元数据将被清除</span>
+                                    <span class="lang-en">All photos will be moved back to the original directory, ratings, flags, labels and other metadata will be cleared</span>
+                                </div>
+                            </div>
+                            <div class="faq-tip">
+                                <span class="tip-icon">⚠️</span>
+                                <span class="lang-cn">重置后需要在 Lightroom 中重新「从文件读取元数据」才能看到清除后的状态。</span>
+                                <span class="lang-en">After reset, you need to "Read Metadata from Files" in Lightroom again to see the cleared state.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Back to Home -->
+            <div class="faq-back">
+                <a href="index.html" class="btn btn-ghost">
+                    <span class="lang-cn">← 返回首页</span>
+                    <span class="lang-en">← Back to Home</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-inner">
+                <div class="footer-brand">
+                    <img src="img/icon.png" alt="SuperPicky">
+                    <div class="footer-brand-text">
+                        <span>SuperPicky</span>
+                        <span class="footer-author">by James Yu (詹姆斯·于震)</span>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="https://github.com/jamesphotography/SuperPicky">GitHub</a>
+                    <a href="https://www.youtube.com/@JamesZhenYu">YouTube</a>
+                    <a href="mailto:james@jamesphotography.com.au">
+                        <span class="lang-cn">联系</span>
+                        <span class="lang-en">Contact</span>
+                    </a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="credits">
+                    <span class="lang-cn">模型致谢：YOLO11 (Ultralytics) · TOPIQ (Chaofeng Chen et al.)</span>
+                    <span class="lang-en">Credits: YOLO11 (Ultralytics) · TOPIQ (Chaofeng Chen et al.)</span>
+                </p>
+                <p class="copyright">© 2024-2025 James Yu · jamesphotography.com.au</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Language Toggle Script -->
+    <script>
+        function setLang(lang) {
+            document.documentElement.setAttribute('data-lang', lang);
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            localStorage.setItem('lang', lang);
+        }
+
+        // Load saved language
+        const savedLang = localStorage.getItem('lang') || 'cn';
+        document.documentElement.setAttribute('data-lang', savedLang);
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                const isCN = btn.textContent.includes('中');
+                if ((savedLang === 'cn' && isCN) || (savedLang === 'en' && !isCN)) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
