@@ -278,6 +278,9 @@ class SuperPickyMainWindow(QMainWindow):
         self.reset_complete_signal.connect(self._on_reset_complete)
         self.reset_error_signal.connect(self._on_reset_error)
 
+        # V3.9.5: 启动时检查更新（延迟2秒，避免阻塞UI）
+        QTimer.singleShot(2000, self._check_for_updates)
+
     def _get_app_icon(self):
         """获取应用图标"""
         icon_path = os.path.join(os.path.dirname(__file__), "..", "img", "icon.png")
@@ -315,6 +318,21 @@ class SuperPickyMainWindow(QMainWindow):
     def _setup_menu(self):
         """设置菜单栏"""
         menubar = self.menuBar()
+
+        # 工具菜单
+        tools_menu = menubar.addMenu("工具")
+
+        # 鸟类识别 GUI
+        birdid_gui_action = QAction("鸟类识别...", self)
+        birdid_gui_action.triggered.connect(self._open_birdid_gui)
+        tools_menu.addAction(birdid_gui_action)
+
+        # 启动识鸟 API 服务
+        self.birdid_server_action = QAction("启动识鸟 API 服务", self)
+        self.birdid_server_action.triggered.connect(self._toggle_birdid_server)
+        tools_menu.addAction(self.birdid_server_action)
+
+        tools_menu.addSeparator()
 
         # 设置菜单
         settings_menu = menubar.addMenu(self.i18n.t("menu.settings"))
@@ -409,12 +427,12 @@ class SuperPickyMainWindow(QMainWindow):
         header_layout.addStretch()
 
         # 右侧: 版本号 + commit hash
-        version_text = "V3.9.4"
+        version_text = "V3.9.5"
         try:
             # V3.9.3: 优先从构建信息读取（发布版本）
             from core.build_info import COMMIT_HASH
             if COMMIT_HASH:
-                version_text = f"V3.9.4\n{COMMIT_HASH}"
+                version_text = f"V3.9.5\n{COMMIT_HASH}"
             else:
                 # 回退到 git 命令（开发环境）
                 import subprocess
@@ -425,7 +443,7 @@ class SuperPickyMainWindow(QMainWindow):
                 )
                 if result.returncode == 0:
                     commit_hash = result.stdout.strip()
-                    version_text = f"V3.9.4\n{commit_hash}"
+                    version_text = f"V3.9.5\n{commit_hash}"
         except:
             pass  # 使用默认版本号
         version_label = QLabel(version_text)
@@ -1154,6 +1172,47 @@ class SuperPickyMainWindow(QMainWindow):
         dialog = AboutDialog(self, self.i18n)
         dialog.exec()
 
+    @Slot()
+    def _open_birdid_gui(self):
+        """打开鸟类识别 GUI"""
+        try:
+            from birdid_gui import BirdIDWindow
+            self.birdid_window = BirdIDWindow()
+            self.birdid_window.show()
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "错误", f"无法打开鸟类识别界面:\n{e}")
+
+    @Slot()
+    def _toggle_birdid_server(self):
+        """启动/停止识鸟 API 服务"""
+        import subprocess
+        import sys as system_module
+
+        if not hasattr(self, '_birdid_server_process') or self._birdid_server_process is None:
+            # 启动服务
+            try:
+                script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'birdid_server.py')
+                self._birdid_server_process = subprocess.Popen(
+                    [system_module.executable, script_path],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE
+                )
+                self.birdid_server_action.setText("停止识鸟 API 服务")
+                self._log("识鸟 API 服务已启动 (端口 5156)", "success")
+            except Exception as e:
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.critical(self, "错误", f"无法启动识鸟 API 服务:\n{e}")
+        else:
+            # 停止服务
+            try:
+                self._birdid_server_process.terminate()
+                self._birdid_server_process = None
+                self.birdid_server_action.setText("启动识鸟 API 服务")
+                self._log("识鸟 API 服务已停止", "info")
+            except Exception as e:
+                self._log(f"停止服务时出错: {e}", "error")
+
     # ========== 辅助方法 ==========
 
     def _log(self, message, tag=None):
@@ -1332,3 +1391,50 @@ class SuperPickyMainWindow(QMainWindow):
                 event.ignore()
         else:
             event.accept()
+
+    # ========== V3.9.5: 更新检测功能 ==========
+
+    def _check_for_updates(self):
+        """后台检查更新（不阻塞UI）"""
+        try:
+            from update_checker import check_update_async, CURRENT_VERSION
+            check_update_async(self._on_update_check_complete, CURRENT_VERSION)
+        except ImportError as e:
+            print(f"⚠️ 更新检测模块加载失败: {e}")
+
+    @Slot(bool, object)
+    def _on_update_check_complete(self, has_update: bool, update_info):
+        """更新检测完成的回调（在主线程中调用）"""
+        if not has_update or update_info is None:
+            return
+        
+        # 使用 QTimer 确保在主线程中显示对话框
+        QTimer.singleShot(0, lambda: self._show_update_dialog(update_info))
+
+    def _show_update_dialog(self, update_info: dict):
+        """显示更新对话框"""
+        from update_checker import UpdateChecker
+        import webbrowser
+        
+        version = update_info.get('version', 'Unknown')
+        download_url = update_info.get('download_url') or update_info.get('release_url', '')
+        platform_name = UpdateChecker.get_platform_name()
+        
+        # 构建消息
+        message = f"{self.i18n.t('update.new_version_available', version=version)}\n\n"
+        message += f"{self.i18n.t('update.current_version', version='3.9.5')}\n"
+        message += f"{self.i18n.t('update.latest_version', version=version)}"
+        
+        # 显示确认对话框
+        reply = StyledMessageBox.question(
+            self,
+            self.i18n.t("update.title"),
+            message,
+            yes_text=self.i18n.t("update.download_now"),
+            no_text=self.i18n.t("update.remind_later")
+        )
+        
+        if reply == StyledMessageBox.Yes:
+            # 打开下载链接
+            if download_url:
+                webbrowser.open(download_url)

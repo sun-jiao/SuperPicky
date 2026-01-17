@@ -5,7 +5,7 @@
     "version": "3.9.3"
   },
   "app": {
-    "title": "慧眼选鸟 by 詹姆斯于震 V3.9.4",
+    "title": "慧眼选鸟 by 詹姆斯于震 V3.9.5",
     "window_title": "慧眼选鸟 by 詹姆斯于震",
     "brand_name": "慧眼选鸟"
   },
@@ -353,7 +353,7 @@
     "normalization": "锐度归一化方法，影响大小鸟之间的公平性"
   },
   "help": {
-    "welcome_title": "欢迎使用 SuperPicky V3.9.4 - 慧眼选鸟 | 比你更聪明的选片工具",
+    "welcome_title": "欢迎使用 SuperPicky V3.9.5 - 慧眼选鸟 | 比你更聪明的选片工具",
     "usage_steps_title": "使用步骤：",
     "step1": "点击'浏览'选择照片目录（支持RAW/JPG）",
     "step2": "调整三星与精选参数（可选，推荐默认值）",
@@ -449,6 +449,20 @@
     "error_title": "错误",
     "reset_error": "重置过程中发生错误: {error}",
     "reset_failed_msg": "重置失败: {error}"
+  },
+  "update": {
+    "title": "发现新版本",
+    "new_version_available": "新版本 {version} 已发布！",
+    "current_version": "当前版本: {version}",
+    "latest_version": "最新版本: {version}",
+    "download_now": "立即下载",
+    "download_for_platform": "下载 {platform} 版本",
+    "remind_later": "稍后提醒",
+    "skip_version": "跳过此版本",
+    "checking": "正在检查更新...",
+    "check_failed": "检查更新失败",
+    "up_to_date": "已是最新版本",
+    "release_notes": "更新说明"
   },
   "about": {
     "window_title": "关于",

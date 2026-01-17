@@ -323,7 +323,7 @@
     "normalization": "Sharpness normalization method, affects fairness between large and small birds"
   },
   "help": {
-    "welcome_title": "Welcome to SuperPicky V3.9.4 - AI-Powered Bird Photo Selector",
+    "welcome_title": "Welcome to SuperPicky V3.9.5 - AI-Powered Bird Photo Selector",
     "usage_steps_title": "Usage Steps:",
     "step1": "Click 'Browse' to select photo directory (supports RAW/JPG)",
     "step2": "Adjust 3-star and pick flag parameters (optional, defaults recommended)",
@@ -411,6 +411,20 @@
     "error_title": "Error",
     "reset_error": "Error during reset: {error}",
     "reset_failed_msg": "Reset failed: {error}"
+  },
+  "update": {
+    "title": "Update Available",
+    "new_version_available": "New version {version} is available!",
+    "current_version": "Current version: {version}",
+    "latest_version": "Latest version: {version}",
+    "download_now": "Download Now",
+    "download_for_platform": "Download for {platform}",
+    "remind_later": "Remind Me Later",
+    "skip_version": "Skip This Version",
+    "checking": "Checking for updates...",
+    "check_failed": "Failed to check for updates",
+    "up_to_date": "You're up to date",
+    "release_notes": "Release Notes"
   },
   "about": {
     "window_title": "About",

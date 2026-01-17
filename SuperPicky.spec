@@ -90,6 +90,10 @@ a = Analysis(
         'core.stats_formatter',
         'multiprocessing',
         'multiprocessing.spawn',
+        # V3.9.5: 更新检测模块
+        'update_checker',
+        'packaging',
+        'packaging.version',
     ],
     hookspath=[],
     hooksconfig={},
