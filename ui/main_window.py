@@ -23,7 +23,8 @@ from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSlider, QProgressBar,
     QTextEdit, QGroupBox, QCheckBox, QMenuBar, QMenu,
-    QFileDialog, QMessageBox, QSizePolicy, QFrame, QSpacerItem
+    QFileDialog, QMessageBox, QSizePolicy, QFrame, QSpacerItem,
+    QSystemTrayIcon, QApplication  # V4.0: 系统托盘图标
 )
 from PySide6.QtCore import Qt, Signal, QObject, Slot, QTimer, QPropertyAnimation, QEasingCurve, QMimeData
 from PySide6.QtGui import QFont, QPixmap, QIcon, QAction, QTextCursor, QColor, QDragEnterEvent, QDropEvent
@@ -389,6 +390,10 @@ class SuperPickyMainWindow(QMainWindow):
         # V4.2: 启动时预加载所有模型（延迟3秒，后台加载不阻塞UI）
         QTimer.singleShot(3000, self._preload_all_models)
         
+        # V4.0: 设置系统托盘图标（关闭窗口时最小化到托盘）
+        self._setup_system_tray()
+        self._really_quit = False  # 标记是否真正退出
+        
         # V4.2: 默认最大化窗口
         self.showMaximized()
 
@@ -589,6 +594,126 @@ class SuperPickyMainWindow(QMainWindow):
         if hasattr(self, 'birdid_dock_action'):
             self.birdid_dock_action.setChecked(visible)
             self.birdid_dock_action.setText("关闭识鸟面板" if visible else "打开识鸟面板")
+    
+    def _setup_system_tray(self):
+        """V4.0: 设置系统托盘图标"""
+        # 检查系统是否支持托盘图标
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            print("⚠️ 系统不支持托盘图标")
+            return
+        
+        # 创建托盘图标
+        self.tray_icon = QSystemTrayIcon(self)
+        
+        # 设置图标
+        icon_path = get_resource_path("img/icon.png")
+        if os.path.exists(icon_path):
+            self.tray_icon.setIcon(QIcon(icon_path))
+        else:
+            # 使用窗口图标作为备选
+            self.tray_icon.setIcon(self.windowIcon())
+        
+        # 创建托盘菜单
+        tray_menu = QMenu()
+        
+        # 显示/隐藏主窗口
+        show_action = QAction("显示主窗口", self)
+        show_action.triggered.connect(self._show_main_window)
+        tray_menu.addAction(show_action)
+        
+        tray_menu.addSeparator()
+        
+        # 服务器状态（只读显示）
+        self.tray_server_status = QAction("🟢 识鸟服务: 运行中", self)
+        self.tray_server_status.setEnabled(False)
+        tray_menu.addAction(self.tray_server_status)
+        
+        tray_menu.addSeparator()
+        
+        # 完全退出
+        quit_action = QAction("完全退出", self)
+        quit_action.triggered.connect(self._quit_app)
+        tray_menu.addAction(quit_action)
+        
+        self.tray_icon.setContextMenu(tray_menu)
+        
+        # 点击托盘图标显示窗口
+        self.tray_icon.activated.connect(self._on_tray_activated)
+        
+        # 设置提示文字
+        self.tray_icon.setToolTip("慧眼选鸟 - 识鸟服务运行中")
+        
+        # 显示托盘图标
+        self.tray_icon.show()
+        
+        print("✅ 系统托盘图标已启用")
+    
+    def _on_tray_activated(self, reason):
+        """托盘图标被点击"""
+        if reason == QSystemTrayIcon.ActivationReason.Trigger:
+            # 单击：显示/隐藏窗口
+            self._show_main_window()
+        elif reason == QSystemTrayIcon.ActivationReason.DoubleClick:
+            # 双击：显示窗口
+            self._show_main_window()
+    
+    def _show_main_window(self):
+        """显示主窗口"""
+        self.show()
+        self.raise_()
+        self.activateWindow()
+        # macOS 特殊处理：激活应用
+        if sys.platform == 'darwin':
+            try:
+                from AppKit import NSApp, NSApplication
+                NSApp.activateIgnoringOtherApps_(True)
+            except ImportError:
+                pass  # PyObjC 未安装，跳过
+    
+    def _quit_app(self):
+        """完全退出应用"""
+        self._really_quit = True
+        
+        # 停止识鸟服务器
+        if hasattr(self, '_birdid_server_process') and self._birdid_server_process:
+            try:
+                self._birdid_server_process.terminate()
+                self._birdid_server_process.wait(timeout=2)
+            except Exception:
+                pass
+        
+        # 隐藏托盘图标
+        if hasattr(self, 'tray_icon'):
+            self.tray_icon.hide()
+        
+        # 退出应用
+        QApplication.quit()
+    
+    def closeEvent(self, event):
+        """V4.0: 关闭窗口时最小化到托盘而非退出"""
+        if self._really_quit:
+            # 真正退出
+            event.accept()
+            return
+        
+        # 如果托盘图标可用，隐藏到托盘
+        if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
+            self.hide()
+            event.ignore()
+            
+            # 显示提示（只显示一次）
+            if not hasattr(self, '_tray_notified'):
+                self.tray_icon.showMessage(
+                    "慧眼选鸟",
+                    "应用已最小化到菜单栏，识鸟服务继续运行",
+                    QSystemTrayIcon.MessageIcon.Information,
+                    2000
+                )
+                self._tray_notified = True
+        else:
+            # 托盘不可用，正常退出
+            self._quit_app()
+            event.accept()
     
     def _on_birdid_check_changed(self, state):
         """识鸟开关状态变化 - 同步到 BirdID Dock 设置"""
