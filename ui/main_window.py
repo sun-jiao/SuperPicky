@@ -706,14 +706,13 @@ class SuperPickyMainWindow(QMainWindow):
         QApplication.quit()
     
     def closeEvent(self, event):
-        """V4.0: 正常关闭窗口时退出应用"""
-        # 停止识鸟服务器
-        if hasattr(self, '_birdid_server_process') and self._birdid_server_process:
-            try:
-                self._birdid_server_process.terminate()
-                self._birdid_server_process.wait(timeout=2)
-            except Exception:
-                pass
+        """V4.0: 正常关闭窗口时退出应用并停止服务器"""
+        # 使用服务器管理器停止服务器
+        try:
+            from server_manager import stop_server
+            stop_server()
+        except Exception as e:
+            print(f"⚠️ 停止服务器失败: {e}")
         
         # 隐藏托盘图标
         if hasattr(self, 'tray_icon') and self.tray_icon:
@@ -721,33 +720,42 @@ class SuperPickyMainWindow(QMainWindow):
         event.accept()
     
     def _minimize_to_tray(self):
-        """V4.0: 最小化到系统托盘（后台运行）"""
-        if not (hasattr(self, 'tray_icon') and self.tray_icon):
-            print("⚠️ 系统托盘不可用")
-            return
+        """V4.0: 进入后台模式（服务器继续运行，GUI 完全退出）"""
+        from server_manager import get_server_status, start_server_daemon
         
-        # 隐藏主窗口
-        self.hide()
+        # 1. 确保服务器以守护进程模式运行
+        status = get_server_status()
+        if not status['healthy']:
+            print("🚀 启动守护进程服务器...")
+            success, msg, pid = start_server_daemon()
+            if not success:
+                self._log(f"❌ 无法启动后台服务器: {msg}", "error")
+                return
+            print(f"✅ 服务器已启动 (PID: {pid})")
+        else:
+            print(f"✅ 服务器已在运行 (PID: {status['pid']})")
         
-        # macOS: 隐藏 Dock 图标（变成纯后台应用）
-        if sys.platform == 'darwin':
-            try:
-                from AppKit import NSApp, NSApplicationActivationPolicyAccessory
-                NSApp.setActivationPolicy_(NSApplicationActivationPolicyAccessory)
-                print("✅ 已隐藏 Dock 图标")
-            except ImportError:
-                print("⚠️ PyObjC 未安装，无法隐藏 Dock 图标")
-            except Exception as e:
-                print(f"⚠️ 隐藏 Dock 图标失败: {e}")
-        
-        # 显示通知
-        self.tray_icon.showMessage(
-            "慧眼选鸟",
-            "应用已进入后台模式\n识鸟服务继续运行\n点击菜单栏图标可恢复",
-            QSystemTrayIcon.MessageIcon.Information,
-            3000
+        # 2. 显示提示
+        QMessageBox.information(
+            self,
+            "后台模式",
+            "应用将进入后台模式\n\n"
+            "• 识鸟服务继续在后台运行\n"
+            "• Lightroom 插件可以正常使用\n"
+            "• 再次打开应用可恢复界面\n\n"
+            "提示：服务器内存占用约 250MB",
+            QMessageBox.Ok
         )
-        print("✅ 已进入后台模式")
+        
+        # 3. 完全退出 GUI（不停止服务器）
+        print("✅ GUI 即将退出，服务器继续运行")
+        
+        # 隐藏托盘图标
+        if hasattr(self, 'tray_icon') and self.tray_icon:
+            self.tray_icon.hide()
+        
+        # 退出应用（不调用 _quit_app，避免停止服务器）
+        QApplication.quit()
     
     def _on_birdid_check_changed(self, state):
         """识鸟开关状态变化 - 同步到 BirdID Dock 设置"""
@@ -1701,40 +1709,40 @@ class SuperPickyMainWindow(QMainWindow):
             self._log("识鸟 API 服务已停止", "info")
 
     def _auto_start_birdid_server(self):
-        """自动启动识鸟 API 服务器"""
-        import subprocess
-        import sys as system_module
-
+        """自动启动识鸟 API 服务器（使用服务器管理器）"""
         try:
-            script_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'birdid_server.py')
-            if not os.path.exists(script_path):
-                self._log("识鸟服务脚本不存在", "warning")
+            from server_manager import get_server_status, start_server_daemon
+            
+            # 检查是否已有服务器在运行
+            status = get_server_status()
+            if status['healthy']:
+                self._log("识鸟 API 服务已在运行 (复用现有服务)", "success")
+                self.birdid_server_action.setText("停止识鸟 API 服务")
                 return
-
-            # 让 API 服务器的日志输出到主控制台（方便调试）
-            self._birdid_server_process = subprocess.Popen(
-                [system_module.executable, script_path, '--no-preload'],
-                stdout=None,  # 继承父进程的 stdout（显示在控制台）
-                stderr=None,  # 继承父进程的 stderr
-                start_new_session=True  # 在新会话中启动，避免信号传递问题
-            )
-            self.birdid_server_action.setText("停止识鸟 API 服务")
-            self._log("识鸟 API 服务已自动启动 (端口 5156)", "success")
+            
+            # 启动服务器（守护进程模式）
+            success, msg, pid = start_server_daemon(log_callback=lambda m: print(m))
+            
+            if success:
+                self.birdid_server_action.setText("停止识鸟 API 服务")
+                self._log("识鸟 API 服务已自动启动 (端口 5156)", "success")
+            else:
+                self._log(f"识鸟服务启动失败: {msg}", "warning")
+                
         except Exception as e:
             self._log(f"自动启动识鸟服务失败: {e}", "warning")
 
     def _stop_birdid_server(self):
-        """停止识鸟 API 服务器"""
-        if hasattr(self, '_birdid_server_process') and self._birdid_server_process is not None:
-            try:
-                self._birdid_server_process.terminate()
-                self._birdid_server_process.wait(timeout=3)
-            except:
-                try:
-                    self._birdid_server_process.kill()
-                except:
-                    pass
-            self._birdid_server_process = None
+        """停止识鸟 API 服务器（使用服务器管理器）"""
+        try:
+            from server_manager import stop_server
+            success, msg = stop_server()
+            if success:
+                self._log("识鸟 API 服务已停止", "info")
+            else:
+                self._log(f"停止服务器失败: {msg}", "warning")
+        except Exception as e:
+            self._log(f"停止服务器异常: {e}", "error")
 
     # ========== 辅助方法 ==========
 
