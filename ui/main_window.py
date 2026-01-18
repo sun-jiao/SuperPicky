@@ -537,6 +537,13 @@ class SuperPickyMainWindow(QMainWindow):
         update_action.triggered.connect(self._check_for_updates)
         help_menu.addAction(update_action)
         
+        # V4.0: 后台运行（最小化到托盘）
+        minimize_tray_action = QAction("后台运行 (保持识鸟服务)", self)
+        minimize_tray_action.triggered.connect(self._minimize_to_tray)
+        help_menu.addAction(minimize_tray_action)
+        
+        help_menu.addSeparator()
+        
         # 关于
         about_action = QAction("关于慧眼选鸟", self)
         about_action.triggered.connect(self._show_about)
@@ -665,13 +672,8 @@ class SuperPickyMainWindow(QMainWindow):
         self.show()
         self.raise_()
         self.activateWindow()
-        # macOS 特殊处理：激活应用
-        if sys.platform == 'darwin':
-            try:
-                from AppKit import NSApp, NSApplication
-                NSApp.activateIgnoringOtherApps_(True)
-            except ImportError:
-                pass  # PyObjC 未安装，跳过
+        # 确保窗口获得焦点
+        self.setWindowState(self.windowState() & ~Qt.WindowMinimized | Qt.WindowActive)
     
     def _quit_app(self):
         """完全退出应用"""
@@ -693,30 +695,34 @@ class SuperPickyMainWindow(QMainWindow):
         QApplication.quit()
     
     def closeEvent(self, event):
-        """V4.0: 关闭窗口时最小化到托盘而非退出"""
-        if self._really_quit:
-            # 真正退出
-            event.accept()
-            return
+        """V4.0: 正常关闭窗口时退出应用"""
+        # 停止识鸟服务器
+        if hasattr(self, '_birdid_server_process') and self._birdid_server_process:
+            try:
+                self._birdid_server_process.terminate()
+                self._birdid_server_process.wait(timeout=2)
+            except Exception:
+                pass
         
-        # 如果托盘图标可用，隐藏到托盘
-        if hasattr(self, 'tray_icon') and self.tray_icon.isVisible():
+        # 隐藏托盘图标
+        if hasattr(self, 'tray_icon') and self.tray_icon:
+            self.tray_icon.hide()
+        
+        event.accept()
+    
+    def _minimize_to_tray(self):
+        """V4.0: 最小化到系统托盘（后台运行）"""
+        if hasattr(self, 'tray_icon') and self.tray_icon:
             self.hide()
-            event.ignore()
-            
-            # 显示提示（只显示一次）
-            if not hasattr(self, '_tray_notified'):
-                self.tray_icon.showMessage(
-                    "慧眼选鸟",
-                    "应用已最小化到菜单栏，识鸟服务继续运行",
-                    QSystemTrayIcon.MessageIcon.Information,
-                    2000
-                )
-                self._tray_notified = True
+            self.tray_icon.showMessage(
+                "慧眼选鸟",
+                "应用已最小化到菜单栏，识鸟服务继续运行\n点击托盘图标可恢复窗口",
+                QSystemTrayIcon.MessageIcon.Information,
+                3000
+            )
+            print("✅ 已最小化到系统托盘")
         else:
-            # 托盘不可用，正常退出
-            self._quit_app()
-            event.accept()
+            print("⚠️ 系统托盘不可用")
     
     def _on_birdid_check_changed(self, state):
         """识鸟开关状态变化 - 同步到 BirdID Dock 设置"""
