@@ -142,23 +142,50 @@ if [ -d "$LIB_DIR" ]; then
     chmod -R 755 "$LIB_DIR"
 fi
 
-# 4. 安装 Lightroom 插件
+# 4. 安装 Lightroom 插件到所有检测到的版本
 echo "正在安装 Lightroom 插件..."
-LR_PLUGIN_DIR="$HOME/Library/Application Support/Adobe/Lightroom/Modules"
 PLUGIN_SOURCE="$APP_PATH/Contents/MacOS/SuperBirdIDPlugin.lrplugin"
 
+# 定义所有可能的 Lightroom 插件目录
+LR_DIRS=(
+    "$HOME/Library/Application Support/Adobe/Lightroom/Modules"
+    "$HOME/Library/Application Support/Adobe/Lightroom Classic/Modules"
+    "$HOME/Library/Application Support/Adobe/Lightroom Classic CC/Modules"
+)
+
+INSTALLED_COUNT=0
+INSTALLED_PATHS=""
+
 if [ -d "$PLUGIN_SOURCE" ]; then
-    mkdir -p "$LR_PLUGIN_DIR"
+    for LR_DIR in "${LR_DIRS[@]}"; do
+        # 检查 Lightroom 目录是否存在（父目录存在说明用户安装了该版本）
+        LR_PARENT=$(dirname "$LR_DIR")
+        if [ -d "$LR_PARENT" ]; then
+            mkdir -p "$LR_DIR"
+            
+            # 删除旧版本
+            if [ -d "$LR_DIR/SuperBirdIDPlugin.lrplugin" ]; then
+                rm -rf "$LR_DIR/SuperBirdIDPlugin.lrplugin"
+            fi
+            
+            # 复制新版本
+            cp -R "$PLUGIN_SOURCE" "$LR_DIR/"
+            echo "  ✓ 已安装到: $LR_DIR"
+            INSTALLED_COUNT=$((INSTALLED_COUNT + 1))
+            INSTALLED_PATHS="$INSTALLED_PATHS\n  - $LR_DIR"
+        fi
+    done
     
-    # 删除旧版本
-    if [ -d "$LR_PLUGIN_DIR/SuperBirdIDPlugin.lrplugin" ]; then
-        rm -rf "$LR_PLUGIN_DIR/SuperBirdIDPlugin.lrplugin"
-        echo "  - 已删除旧版插件"
+    if [ $INSTALLED_COUNT -eq 0 ]; then
+        # 如果没有检测到任何 Lightroom，安装到默认目录
+        DEFAULT_DIR="$HOME/Library/Application Support/Adobe/Lightroom/Modules"
+        mkdir -p "$DEFAULT_DIR"
+        cp -R "$PLUGIN_SOURCE" "$DEFAULT_DIR/"
+        echo "  ✓ 已安装到默认目录: $DEFAULT_DIR"
+        INSTALLED_PATHS="  - $DEFAULT_DIR"
     fi
     
-    # 复制新版本
-    cp -R "$PLUGIN_SOURCE" "$LR_PLUGIN_DIR/"
-    echo "✓ Lightroom 插件已安装到: $LR_PLUGIN_DIR"
+    echo "✓ Lightroom 插件安装完成 (共 $INSTALLED_COUNT 个版本)"
 else
     echo "⚠ 未找到 Lightroom 插件源文件"
 fi
@@ -173,7 +200,7 @@ echo "✅ 慧眼选鸟 SuperPicky V4.0.0 安装完成！"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📍 应用位置: /Applications/慧眼选鸟.app"
-echo "📍 Lightroom 插件: $LR_PLUGIN_DIR"
+echo "📍 Lightroom 插件已安装到检测到的所有版本"
 echo ""
 
 exit 0
