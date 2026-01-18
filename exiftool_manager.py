@@ -637,6 +637,23 @@ class ExifToolManager:
                             stats['failed'] += 1
                             log(f"  ❌ 恢复失败: {filename} - {e}")
                 
+                # V4.0: 删除临时转换的 JPEG 文件
+                temp_jpegs = manifest.get('temp_jpegs', [])
+                if temp_jpegs:
+                    log(f"\n🗑️  清理 {len(temp_jpegs)} 个临时转换的 JPEG...")
+                    deleted_temp = 0
+                    for jpeg_filename in temp_jpegs:
+                        # 临时 JPEG 可能在根目录或子目录中
+                        jpeg_path = os.path.join(dir_path, jpeg_filename)
+                        if os.path.exists(jpeg_path):
+                            try:
+                                os.remove(jpeg_path)
+                                deleted_temp += 1
+                            except Exception as e:
+                                log(f"  ⚠️  删除失败: {jpeg_filename} - {e}")
+                    if deleted_temp > 0:
+                        log(f"  ✅ 已删除 {deleted_temp} 个临时 JPEG")
+                
                 # 删除 manifest 文件
                 try:
                     os.remove(manifest_path)

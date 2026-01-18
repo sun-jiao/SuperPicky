@@ -1334,7 +1334,7 @@ class PhotoProcessor:
             except Exception as e:
                 self._log(f"  ⚠️  移动失败: {file_info['filename']} - {e}", "warning")
         
-        # 生成manifest（V4.0: 增加鸟种分类信息）
+        # 生成manifest（V4.0: 增加鸟种分类信息和临时 JPEG 列表）
         manifest = {
             "version": "2.0",  # V4.0: 更新版本号
             "created": datetime.now().isoformat(),
@@ -1343,6 +1343,7 @@ class PhotoProcessor:
             "folder_structure": RATING_FOLDER_NAMES,
             "bird_species_dirs": True,  # V4.0: 标记使用了鸟种分目录
             "files": files_to_move,
+            "temp_jpegs": list(self.temp_converted_jpegs),  # V4.0: 记录临时转换的 JPEG，Reset 时需删除
             "stats": {"total_moved": moved_count}
         }
         
