@@ -10,7 +10,7 @@ local LrBinding = import 'LrBinding'
 local LrFunctionContext = import 'LrFunctionContext'
 
 -- 版本信息
-local VERSION = "v3.9.3"
+local VERSION = "v4.0.0"
 local PLUGIN_NAME = "慧眼选鸟"
 
 local myLogger = LrLogger( 'SuperBirdIDExportServiceProvider' )

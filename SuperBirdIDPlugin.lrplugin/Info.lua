@@ -23,5 +23,5 @@ return {
         },
     },
 
-    VERSION = { major=3, minor=9, revision=3, build=1, },
+    VERSION = { major=4, minor=0, revision=0, build=1, },
 }

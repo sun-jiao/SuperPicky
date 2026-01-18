@@ -1,6 +1,6 @@
 # SuperPicky - 慧眼选鸟 🦅
 
-[![Version](https://img.shields.io/badge/version-3.9.0-blue.svg)](https://github.com/jamesphotography/SuperPicky)
+[![Version](https://img.shields.io/badge/version-4.0.0-blue.svg)](https://github.com/jamesphotography/SuperPicky)
 [![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
