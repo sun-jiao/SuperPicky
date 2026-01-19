@@ -148,3 +148,20 @@ coll = COLLECT(
     upx_exclude=[],
     name='SuperPicky',
 )
+
+# macOS .app bundle
+app = BUNDLE(
+    coll,
+    name='SuperPicky.app',
+    icon=os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns') if os.path.exists(os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns')) else None,
+    bundle_identifier='com.jamesphotography.superpicky',
+    info_plist={
+        'CFBundleName': 'SuperPicky',
+        'CFBundleDisplayName': '慧眼选鸟',
+        'CFBundleVersion': '4.0.0',
+        'CFBundleShortVersionString': '4.0.0',
+        'NSHighResolutionCapable': True,
+        'NSAppleEventsUsageDescription': '慧眼选鸟需要发送 AppleEvents 与其他应用通信。',
+        'NSAppleScriptEnabled': False,
+    },
+)
