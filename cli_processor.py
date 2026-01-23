@@ -126,12 +126,12 @@ class CLIProcessor:
         return result.stats
     
     def _print_banner(self):
-        """打印CLI横幅"""
+        """Print CLI banner"""
         self._log("\n" + "="*60)
-        self._log("🐦 SuperPicky CLI - 慧眼选鸟 (命令行版)")
+        self._log("🐦 SuperPicky CLI - AI Bird Photo Selector")
         self._log("="*60 + "\n")
         
-        self._log("📁 阶段1: 文件扫描", "info")
+        self._log("📁 Phase 1: File Scanning", "info")
     
     def _print_summary(self, result: ProcessingResult):
         """打印完成摘要（使用共享格式化模块）"""

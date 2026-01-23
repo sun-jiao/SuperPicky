@@ -25,7 +25,7 @@ class ExifToolManager:
         if not self._verify_exiftool():
             raise RuntimeError(f"ExifTool不可用: {self.exiftool_path}")
 
-        print(f"✅ ExifTool已加载: {self.exiftool_path}")
+        print(f"✅ ExifTool loaded: {self.exiftool_path}")
 
     def _get_exiftool_path(self) -> str:
         """获取exiftool可执行文件路径"""
@@ -36,28 +36,28 @@ class ExifToolManager:
         if hasattr(sys, '_MEIPASS'):
             # PyInstaller打包后的路径
             base_path = sys._MEIPASS
-            print(f"🔍 PyInstaller环境检测到")
+            print(f"🔍 PyInstaller environment detected")
             print(f"   base_path (sys._MEIPASS): {base_path}")
 
             # 直接使用 exiftool_bundle/exiftool 路径（唯一打包位置）
             exiftool_path = os.path.join(base_path, 'exiftool_bundle', exe_name)
             abs_path = os.path.abspath(exiftool_path)
 
-            print(f"   正在检查 {exe_name}...")
-            print(f"   路径: {abs_path}")
-            print(f"   存在: {os.path.exists(abs_path)}")
+            print(f"   Checking {exe_name}...")
+            print(f"   Path: {abs_path}")
+            print(f"   Exists: {os.path.exists(abs_path)}")
             
             if os.path.exists(abs_path):
-                print(f"   ✅ 找到 {exe_name}")
+                print(f"   ✅ Found {exe_name}")
                 return abs_path
             else:
-                # 尝试不带后缀的路径（以防打包逻辑有变）
+                # Try path without extension (fallback)
                 fallback_path = os.path.join(base_path, 'exiftool_bundle', 'exiftool')
                 if os.path.exists(fallback_path):
-                    print(f"   ✅ 找到 exiftool (fallback)")
+                    print(f"   ✅ Found exiftool (fallback)")
                     return fallback_path
                 
-                print(f"   ⚠️  未找到可执行的 {exe_name}")
+                print(f"   ⚠️  {exe_name} not found")
                 return abs_path
         else:
             # 开发环境路径
@@ -65,7 +65,7 @@ class ExifToolManager:
             import shutil
             system_exiftool = shutil.which('exiftool')
             if system_exiftool:
-                print(f"🔍 使用系统 ExifTool: {system_exiftool}")
+                print(f"🔍 Using system ExifTool: {system_exiftool}")
                 return system_exiftool
             
             # 回退到项目目录下的 exiftool
@@ -81,9 +81,9 @@ class ExifToolManager:
 
     def _verify_exiftool(self) -> bool:
         """验证exiftool是否可用"""
-        print(f"\n🧪 验证 ExifTool 是否可执行...")
-        print(f"   路径: {self.exiftool_path}")
-        print(f"   测试命令: {self.exiftool_path} -ver")
+        print(f"\n🧪 Verifying ExifTool...")
+        print(f"   Path: {self.exiftool_path}")
+        print(f"   Test command: {self.exiftool_path} -ver")
 
         try:
             # V3.9.4: 在 Windows 上隐藏控制台窗口
@@ -96,23 +96,23 @@ class ExifToolManager:
                 timeout=5,
                 creationflags=creationflags
             )
-            print(f"   返回码: {result.returncode}")
+            print(f"   Return code: {result.returncode}")
             print(f"   stdout: {result.stdout.strip()}")
             if result.stderr:
                 print(f"   stderr: {result.stderr.strip()}")
 
             if result.returncode == 0:
-                print(f"   ✅ ExifTool 验证成功")
+                print(f"   ✅ ExifTool verified")
                 return True
             else:
-                print(f"   ❌ ExifTool 返回非零退出码")
+                print(f"   ❌ ExifTool returned non-zero exit code")
                 return False
 
         except subprocess.TimeoutExpired:
-            print(f"   ❌ ExifTool 执行超时（5秒）")
+            print(f"   ❌ ExifTool timeout (5s)")
             return False
         except Exception as e:
-            print(f"   ❌ ExifTool 验证异常: {type(e).__name__}: {e}")
+            print(f"   ❌ ExifTool error: {type(e).__name__}: {e}")
             return False
 
     def set_rating_and_pick(
@@ -138,7 +138,7 @@ class ExifToolManager:
             是否成功
         """
         if not os.path.exists(file_path):
-            print(f"❌ 文件不存在: {file_path}")
+            print(f"❌ File not found: {file_path}")
             return False
 
         # 构建exiftool命令
@@ -179,20 +179,20 @@ class ExifToolManager:
 
             if result.returncode == 0:
                 filename = os.path.basename(file_path)
-                pick_desc = {-1: "排除旗标", 0: "无旗标", 1: "精选旗标"}.get(pick, str(pick))
-                sharpness_info = f", 锐度={sharpness:06.2f}" if sharpness is not None else ""
+                pick_desc = {-1: "rejected", 0: "none", 1: "picked"}.get(pick, str(pick))
+                sharpness_info = f", Sharp={sharpness:06.2f}" if sharpness is not None else ""
                 nima_info = f", NIMA={nima_score:05.2f}" if nima_score is not None else ""
-                print(f"✅ EXIF已更新: {filename} (Rating={rating}, Pick={pick_desc}{sharpness_info}{nima_info})")
+                print(f"✅ EXIF updated: {filename} (Rating={rating}, Pick={pick_desc}{sharpness_info}{nima_info})")
                 return True
             else:
-                print(f"❌ ExifTool错误: {result.stderr}")
+                print(f"❌ ExifTool error: {result.stderr}")
                 return False
 
         except subprocess.TimeoutExpired:
-            print(f"❌ ExifTool超时: {file_path}")
+            print(f"❌ ExifTool timeout: {file_path}")
             return False
         except Exception as e:
-            print(f"❌ ExifTool异常: {e}")
+            print(f"❌ ExifTool error: {e}")
             return False
 
     def batch_set_metadata(
@@ -234,7 +234,7 @@ class ExifToolManager:
             caption = item.get('caption', None)  # V4.0: 详细评分说明
 
             if not os.path.exists(file_path):
-                print(f"⏭️  跳过不存在的文件: {file_path}")
+                print(f"⏭️  Skipping non-existent file: {file_path}")
                 stats['failed'] += 1
                 continue
 
@@ -287,7 +287,7 @@ class ExifToolManager:
         try:
             # V3.1.2: 只在处理多个文件时显示消息（单文件处理不显示，避免刷屏）
             if len(files_metadata) > 1:
-                print(f"📦 批量处理 {len(files_metadata)} 个文件...")
+                print(f"📦 Batch processing {len(files_metadata)} files...")
 
             # V3.9.4: 在 Windows 上隐藏控制台窗口
             creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
@@ -305,17 +305,17 @@ class ExifToolManager:
                 stats['success'] = len(files_metadata) - stats['failed']
                 # V3.1.2: 只在处理多个文件时显示完成消息
                 if len(files_metadata) > 1:
-                    print(f"✅ 批量处理完成: {stats['success']} 成功, {stats['failed']} 失败")
+                    print(f"✅ Batch complete: {stats['success']} success, {stats['failed']} failed")
                 
                 # V3.9.2: 为 RAF/ORF 文件创建 XMP 侧车文件
                 # Lightroom 无法读取嵌入在这些格式中的 XMP，需要侧车文件
                 self._create_xmp_sidecars_for_raf(files_metadata)
             else:
-                print(f"❌ 批量处理失败: {result.stderr}")
+                print(f"❌ Batch failed: {result.stderr}")
                 stats['failed'] = len(files_metadata)
 
         except Exception as e:
-            print(f"❌ 批量处理异常: {e}")
+            print(f"❌ Batch error: {e}")
             stats['failed'] = len(files_metadata)
 
         return stats
@@ -406,7 +406,7 @@ class ExifToolManager:
                 return None
 
         except Exception as e:
-            print(f"❌ 读取元数据失败: {e}")
+            print(f"❌ Read metadata failed: {e}")
             return None
 
     def reset_metadata(self, file_path: str) -> bool:
@@ -420,7 +420,7 @@ class ExifToolManager:
             是否成功
         """
         if not os.path.exists(file_path):
-            print(f"❌ 文件不存在: {file_path}")
+            print(f"❌ File not found: {file_path}")
             return False
 
         # 删除Rating、Pick、City、Country和Province-State字段
@@ -451,17 +451,17 @@ class ExifToolManager:
 
             if result.returncode == 0:
                 filename = os.path.basename(file_path)
-                print(f"✅ EXIF已重置: {filename}")
+                print(f"✅ EXIF reset: {filename}")
                 return True
             else:
-                print(f"❌ ExifTool错误: {result.stderr}")
+                print(f"❌ ExifTool error: {result.stderr}")
                 return False
 
         except subprocess.TimeoutExpired:
-            print(f"❌ ExifTool超时: {file_path}")
+            print(f"❌ ExifTool timeout: {file_path}")
             return False
         except Exception as e:
-            print(f"❌ ExifTool异常: {e}")
+            print(f"❌ ExifTool error: {e}")
             return False
 
     def batch_reset_metadata(self, file_paths: List[str], batch_size: int = 50, log_callback=None, i18n=None) -> Dict[str, int]:
@@ -490,8 +490,8 @@ class ExifToolManager:
         if i18n:
             log(i18n.t("logs.batch_reset_start", total=total))
         else:
-            log(f"📦 开始重置 {total} 个文件的EXIF元数据...")
-            log(f"   强制清除所有评分字段\n")
+            log(f"📦 Starting EXIF reset for {total} files...")
+            log(f"   Clearing all rating fields\n")
 
         # 分批处理（避免命令行参数过长）
         for batch_start in range(0, total, batch_size):
