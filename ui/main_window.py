@@ -391,7 +391,7 @@ class SuperPickyMainWindow(QMainWindow):
         self._birdid_server_process = None
         QTimer.singleShot(1000, self._auto_start_birdid_server)
 
-        # V4.0.0: 启动时检查更新（延迟2秒，避免阻塞UI，没有更新时不弹窗）
+        # V4.0.1: 启动时检查更新（延迟2秒，避免阻塞UI，没有更新时不弹窗）
         QTimer.singleShot(2000, lambda: self._check_for_updates(silent=True))
         
         # V4.2: 启动时预加载所有模型（延迟3秒，后台加载不阻塞UI）
@@ -833,12 +833,12 @@ class SuperPickyMainWindow(QMainWindow):
         header_layout.addStretch()
 
         # 右侧: 版本号 + commit hash
-        version_text = "V4.0.0"
+        version_text = "V4.0.1"
         try:
             # V3.9.3: 优先从构建信息读取（发布版本）
             from core.build_info import COMMIT_HASH
             if COMMIT_HASH:
-                version_text = f"V4.0.0\n{COMMIT_HASH}"
+                version_text = f"V4.0.1\n{COMMIT_HASH}"
             else:
                 # 回退到 git 命令（开发环境）
                 import subprocess
@@ -852,7 +852,7 @@ class SuperPickyMainWindow(QMainWindow):
                 )
                 if result.returncode == 0:
                     commit_hash = result.stdout.strip()
-                    version_text = f"V4.0.0\n{commit_hash}"
+                    version_text = f"V4.0.1\n{commit_hash}"
         except:
             pass  # 使用默认版本号
         version_label = QLabel(version_text)
@@ -2015,7 +2015,7 @@ class SuperPickyMainWindow(QMainWindow):
         thread = threading.Thread(target=preload_task, daemon=True)
         thread.start()
 
-    # ========== V4.0.0: 更新检测功能 ==========
+    # ========== V4.0.1: 更新检测功能 ==========
 
     def _check_for_updates(self, silent=False):
         """检查更新
@@ -2031,7 +2031,7 @@ class SuperPickyMainWindow(QMainWindow):
         def _do_check():
             try:
                 from update_checker import UpdateChecker
-                checker = UpdateChecker("4.0.0")  # 使用测试版本号
+                checker = UpdateChecker("4.0.1")  # 使用测试版本号
                 has_update, update_info = checker.check_for_updates()
                 print(f"[DEBUG] 更新检查完成: has_update={has_update}, silent={silent}")
                 

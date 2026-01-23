@@ -15,7 +15,7 @@ from packaging import version
 
 
 # 当前版本号（与 main_window.py 保持一致）
-CURRENT_VERSION = "4.0.0"
+CURRENT_VERSION = "4.0.1"
 
 # GitHub API 配置
 GITHUB_REPO = "jamesphotography/SuperPicky"

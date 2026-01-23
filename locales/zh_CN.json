@@ -2,10 +2,10 @@
   "_meta": {
     "language_name": "简体中文",
     "language_code": "zh_CN",
-    "version": "4.0.0"
+    "version": "4.0.1"
   },
   "app": {
-    "title": "慧眼选鸟 by 詹姆斯于震 V4.0.0",
+    "title": "慧眼选鸟 by 詹姆斯于震 V4.0.1",
     "window_title": "慧眼选鸟 by 詹姆斯于震",
     "brand_name": "慧眼选鸟"
   },
@@ -458,7 +458,7 @@
     "normalization": "锐度归一化方法，影响大小鸟之间的公平性"
   },
   "help": {
-    "welcome_title": "欢迎使用 SuperPicky V4.0.0 - 慧眼选鸟 | 比你更聪明的选片工具",
+    "welcome_title": "欢迎使用 SuperPicky V4.0.1 - 慧眼选鸟 | 比你更聪明的选片工具",
     "usage_steps_title": "使用步骤：",
     "step1": "点击'浏览'选择照片目录（支持RAW/JPG）",
     "step2": "调整三星与精选参数（可选，推荐默认值）",

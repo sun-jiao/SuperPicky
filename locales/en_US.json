@@ -2,10 +2,10 @@
   "_meta": {
     "language_name": "English",
     "language_code": "en_US",
-    "version": "4.0.0"
+    "version": "4.0.1"
   },
   "app": {
-    "title": "SuperPicky - AI Photo Selector v4.0.0",
+    "title": "SuperPicky - AI Photo Selector v4.0.1",
     "window_title": "SuperPicky - AI Photo Selector",
     "brand_name": "SuperPicky"
   },
@@ -458,7 +458,7 @@
     "normalization": "Sharpness normalization method, affects fairness between large and small birds"
   },
   "help": {
-    "welcome_title": "Welcome to SuperPicky V4.0.0 - AI-Powered Bird Photo Selector",
+    "welcome_title": "Welcome to SuperPicky V4.0.1 - AI-Powered Bird Photo Selector",
     "usage_steps_title": "Usage Steps:",
     "step1": "Click 'Browse' to select photo directory (supports RAW/JPG)",
     "step2": "Adjust 3-star and pick flag parameters (optional, defaults recommended)",
