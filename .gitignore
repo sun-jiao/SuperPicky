@@ -19,11 +19,7 @@ test_*.py
 analyze_*.py
 add_*.py
 write_*.py
-find_bird_util.py
-run_batch.py
-config.py
 temp_file_manager.py
-sharpness.py
 *.csv
 .DS_Store
 .env
