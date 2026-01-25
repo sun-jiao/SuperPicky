@@ -3,35 +3,47 @@ import time
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from utils import log_message, write_to_csv
+from tools.utils import log_message, write_to_csv
 from config import config
 # V3.2: 移除未使用的 sharpness 计算器导入
 from iqa_scorer import get_iqa_scorer
 from advanced_config import get_advanced_config
 # V4.2.1
-from i18n import get_i18n
+from tools.i18n import get_i18n
 
 # 禁用 Ultralytics 设置警告
 os.environ['YOLO_VERBOSE'] = 'False'
 
 
-def load_yolo_model():
-    """加载 YOLO 模型（启用MPS GPU加速）"""
+def load_yolo_model(log_callback=None):
+    """加载 YOLO 模型（使用最佳计算设备）"""
     model_path = config.ai.get_model_path()
     model = YOLO(str(model_path))
 
-    # 尝试使用 Apple MPS (Metal Performance Shaders) GPU 加速
+    # 使用统一的设备检测逻辑
     try:
-        import torch
-        t = get_i18n().t
-        if torch.backends.mps.is_available():
-            print(t("ai.mps_detected"))
-            # YOLO模型会自动识别device参数
-            # 注意：不需要手动 model.to('mps')，YOLO会在推理时自动处理
+        from config import get_best_device
+        device = get_best_device()
+        
+        # 直接显示设备类型，不使用翻译（避免i18n未初始化）
+        if device.type == 'mps':
+            msg = f"✅ 使用 MPS (Apple GPU) 加速"
+        elif device.type == 'cuda':
+            msg = f"✅ 使用 CUDA (NVIDIA GPU) 加速"
         else:
-            print(t("ai.mps_unavailable"))
+            msg = f"⚠️  使用 CPU 推理 (GPU不可用)"
+        
+        # 使用日志回调或直接打印
+        if log_callback:
+            log_callback(msg, "info")
+        else:
+            print(msg)
     except Exception as e:
-        print(t("ai.gpu_detect_failed", error=e))
+        error_msg = f"⚠️  设备检测失败: {e}"
+        if log_callback:
+            log_callback(error_msg, "warning")
+        else:
+            print(error_msg)
 
     return model
 
@@ -119,14 +131,18 @@ def detect_and_draw_birds(image_path, model, output_path, dir, ui_settings, i18n
 
     # Step 2: YOLO推理
     step_start = time.time()
-    # 使用MPS设备进行推理（如果可用），失败时降级到CPU
+    # 使用最佳设备进行推理
     try:
-        # 尝试使用MPS设备
-        results = model(image, device='mps')
-    except Exception as mps_error:
-        # MPS失败，降级到CPU
+        from config import get_best_device
+        device = get_best_device()
+        device_str = device.type if device.type != 'cuda' else 'cuda:0'
+        
+        # 使用最佳设备进行推理
+        results = model(image, device=device_str)
+    except Exception as device_error:
+        # 设备推理失败，降级到CPU
         t = i18n.t if i18n else get_i18n().t
-        log_message(t("ai.mps_inference_failed", error=mps_error), dir)
+        log_message(t("ai.device_inference_failed", error=device_error), dir)
         try:
             results = model(image, device='cpu')
         except Exception as cpu_error:

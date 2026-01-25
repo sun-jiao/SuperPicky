@@ -430,7 +430,7 @@ def write_exif_title():
         if not os.path.exists(image_path):
             return jsonify({'success': False, 'error': f'文件不存在: {image_path}'}), 404
 
-        from exiftool_manager import get_exiftool_manager
+        from tools.exiftool_manager import get_exiftool_manager
         exiftool_mgr = get_exiftool_manager()
         success = exiftool_mgr.set_metadata(image_path, {'Title': bird_name})
 
@@ -468,7 +468,7 @@ def write_exif_caption():
         if not os.path.exists(image_path):
             return jsonify({'success': False, 'error': f'文件不存在: {image_path}'}), 404
 
-        from exiftool_manager import get_exiftool_manager
+        from tools.exiftool_manager import get_exiftool_manager
         exiftool_mgr = get_exiftool_manager()
         success = exiftool_mgr.set_metadata(image_path, {'Caption-Abstract': caption})
 

@@ -20,9 +20,9 @@ from PySide6.QtCore import Qt, Signal, Slot, QTimer
 from PySide6.QtGui import QFont, QTextCursor
 
 from post_adjustment_engine import PostAdjustmentEngine, safe_int, safe_float
-from exiftool_manager import get_exiftool_manager
+from tools.exiftool_manager import get_exiftool_manager
 from advanced_config import get_advanced_config
-from i18n import get_i18n
+from tools.i18n import get_i18n
 from constants import RATING_FOLDER_NAMES, get_rating_folder_name
 from ui.styles import COLORS, FONTS, VALUE_STYLE
 from ui.custom_dialogs import StyledMessageBox

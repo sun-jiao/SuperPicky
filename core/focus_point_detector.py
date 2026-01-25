@@ -39,10 +39,9 @@ def _start_exiftool_process(exiftool_path: str = 'exiftool'):
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
-            encoding='utf-8',
+            text=False,  # 使用 bytes 模式，避免自动解码
             creationflags=creationflags,  # 隐藏窗口
-            bufsize=1  # 行缓冲
+            bufsize=0  # 无缓冲（二进制模式不支持行缓冲）
         )
         return _exiftool_process
     except Exception:
@@ -54,7 +53,7 @@ def _stop_exiftool_process():
     global _exiftool_process
     if _exiftool_process is not None:
         try:
-            _exiftool_process.stdin.write('-stay_open\nFalse\n')
+            _exiftool_process.stdin.write('-stay_open\nFalse\n'.encode('utf-8'))
             _exiftool_process.stdin.flush()
             _exiftool_process.wait(timeout=5)
         except Exception:
@@ -751,21 +750,34 @@ class FocusPointDetector:
             
             # 发送命令到常驻进程
             cmd_str = '\n'.join(args) + '\n-execute\n'
-            _exiftool_process.stdin.write(cmd_str)
+            _exiftool_process.stdin.write(cmd_str.encode('utf-8'))
             _exiftool_process.stdin.flush()
             
             # 读取响应（直到 {ready} 标记）
-            output_lines = []
+            output_bytes = b""
             while True:
-                line = _exiftool_process.stdout.readline()
-                if not line:
+                line_bytes = _exiftool_process.stdout.readline()
+                if not line_bytes:
                     break
-                if '{ready}' in line:
+                output_bytes += line_bytes
+                if b'{ready}' in line_bytes:
                     break
-                output_lines.append(line)
+            
+            # 尝试多种编码解码
+            decoded_output = None
+            for encoding in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                try:
+                    decoded_output = output_bytes.decode(encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if decoded_output is None:
+                # 如果所有编码都失败，使用 latin-1 作为最后手段（不会失败）
+                decoded_output = output_bytes.decode('latin-1')
             
             # 解析 JSON
-            output = ''.join(output_lines).strip()
+            output = decoded_output.strip()
             if output:
                 data = json.loads(output)
                 return data[0] if data else None
@@ -787,19 +799,31 @@ class FocusPointDetector:
             result = subprocess.run(
                 [self.exiftool_path, '-charset', 'utf8'] + cmd[1:], 
                 capture_output=True, 
-                text=True, 
-                encoding='utf-8',
+                text=False,  # 使用 bytes 模式，避免自动解码
                 timeout=30, 
                 creationflags=creationflags
             )
             if result.returncode != 0:
                 return None
             
-            stdout = result.stdout or ""
-            if not stdout.strip():
+            stdout_bytes = result.stdout or b""
+            if not stdout_bytes.strip():
                 return None
+            
+            # 尝试多种编码解码
+            decoded_output = None
+            for encoding in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                try:
+                    decoded_output = stdout_bytes.decode(encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if decoded_output is None:
+                # 如果所有编码都失败，使用 latin-1 作为最后手段（不会失败）
+                decoded_output = stdout_bytes.decode('latin-1')
                 
-            data = json.loads(stdout)
+            data = json.loads(decoded_output)
             return data[0] if data else None
         except Exception:
             return None

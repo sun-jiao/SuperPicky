@@ -20,7 +20,7 @@ from PySide6.QtGui import QPixmap, QDragEnterEvent, QDropEvent, QFont
 from ui.styles import COLORS, FONTS
 
 
-from i18n import get_i18n
+from tools.i18n import get_i18n
 
 def get_birdid_data_path(relative_path: str) -> str:
     """获取 birdid/data 目录下的资源路径"""
@@ -1252,7 +1252,7 @@ class BirdIDDockWidget(QDockWidget):
         bird_name = f"{selected['cn_name']} ({selected['en_name']})"
 
         try:
-            from exiftool_manager import get_exiftool_manager
+            from tools.exiftool_manager import get_exiftool_manager
             exiftool_mgr = get_exiftool_manager()
             success = exiftool_mgr.set_metadata(self.current_image_path, {'Title': bird_name})
 

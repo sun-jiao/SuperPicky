@@ -600,7 +600,7 @@ class BirdIDWindow(QMainWindow):
         bird_name = f"{best['cn_name']} ({best['en_name']})"
 
         try:
-            from exiftool_manager import get_exiftool_manager
+            from tools.exiftool_manager import get_exiftool_manager
             exiftool_mgr = get_exiftool_manager()
             success = exiftool_mgr.set_metadata(self.current_image_path, {'Title': bird_name})
 

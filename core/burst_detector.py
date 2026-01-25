@@ -103,11 +103,19 @@ class BurstDetector:
         # 开发环境: 优先使用项目内置的 exiftool
         project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         
+        # Windows 平台优先检查 exiftools_win 目录
         if is_windows:
+            # 1. 检查 exiftools_win 目录
+            exiftools_win = os.path.join(project_root, 'exiftools_win', 'exiftool.exe')
+            if os.path.exists(exiftools_win):
+                return exiftools_win
+            
+            # 2. 检查项目根目录的 exiftool.exe
             builtin_win = os.path.join(project_root, 'exiftool.exe')
             if os.path.exists(builtin_win):
                 return builtin_win
 
+        # 非 Windows 平台或 Windows 平台的其他检查
         builtin = os.path.join(project_root, 'exiftool')
         if os.path.exists(builtin):
             return builtin
@@ -151,22 +159,47 @@ class BurstDetector:
             # 将路径列表转换为换行符分隔的字符串
             paths_input = "\n".join(filepaths)
             
+            # V3.9.4: 在 Windows 上隐藏控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
             result = subprocess.run(
                 cmd,
-                input=paths_input,
+                input=paths_input.encode('utf-8'),  # 转换为字节
                 capture_output=True,
-                text=True,
-                encoding='utf-8',
-                timeout=max(60, len(filepaths) // 10)  # 根据文件数量动态调整超时
+                text=False,  # 使用 bytes 模式，避免自动解码
+                timeout=max(60, len(filepaths) // 10),  # 根据文件数量动态调整超时
+                creationflags=creationflags
             )
             
-            stdout = result.stdout or ""
-            if not stdout.strip():
+            stdout_bytes = result.stdout or b""
+            if not stdout_bytes.strip():
                 if result.stderr:
-                    print(f"⚠️ ExifTool 输出为空: {result.stderr}")
+                    stderr_bytes = result.stderr
+                    decoded_stderr = None
+                    for encoding in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                        try:
+                            decoded_stderr = stderr_bytes.decode(encoding)
+                            break
+                        except UnicodeDecodeError:
+                            continue
+                    if decoded_stderr is None and stderr_bytes:
+                        decoded_stderr = stderr_bytes.decode('latin-1')
+                    print(f"⚠️ ExifTool 输出为空: {decoded_stderr}")
                 return []
             
-            exif_data = json.loads(stdout)
+            # 解码输出
+            decoded_output = None
+            for encoding in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                try:
+                    decoded_output = stdout_bytes.decode(encoding)
+                    break
+                except UnicodeDecodeError:
+                    continue
+            
+            if decoded_output is None:
+                decoded_output = stdout_bytes.decode('latin-1')
+            
+            exif_data = json.loads(decoded_output)
             return self._parse_exif_timestamps(exif_data)
             
         except subprocess.TimeoutExpired:

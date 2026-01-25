@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Signal, QObject, Slot, QTimer, QPropertyAnimation, QEasingCurve, QMimeData, QThread
 from PySide6.QtGui import QFont, QPixmap, QIcon, QAction, QTextCursor, QColor, QDragEnterEvent, QDropEvent
 
-from i18n import get_i18n
+from tools.i18n import get_i18n
 from advanced_config import get_advanced_config
 from ui.styles import (
     GLOBAL_STYLE, TITLE_STYLE, SUBTITLE_STYLE, VERSION_STYLE, VALUE_STYLE,
@@ -180,7 +180,10 @@ class WorkerThread(threading.Thread):
         # 从设置文件读取国家/区域配置
         try:
             import json
+            import re
             import sys as sys_module
+            import os
+            
             if sys_module.platform == 'darwin':
                 birdid_settings_dir = os.path.expanduser('~/Documents/SuperPicky_Data')
             else:
@@ -199,7 +202,6 @@ class WorkerThread(threading.Thread):
                     selected_country = birdid_settings.get('selected_country', '自动检测 (GPS)')
                     if selected_country and selected_country != '自动检测 (GPS)':
                         # 从 "澳大利亚 (AU)" 格式中提取代码
-                        import re
                         match = re.search(r'\(([A-Z]{2,3})\)', selected_country)
                         if match:
                             birdid_country_code = match.group(1)
@@ -222,7 +224,11 @@ class WorkerThread(threading.Thread):
             print(f"[DEBUG] BirdID 设置读取: auto_identify={birdid_auto_identify}, country={birdid_country_code}, region={birdid_region_code}, confidence={birdid_confidence_threshold}%")
         except Exception as e:
             print(f"[DEBUG] BirdID 设置读取失败: {e}")
-            pass  # BirdID 设置读取失败不影响主流程
+            # BirdID 设置读取失败不影响主流程
+            # 使用默认值
+            birdid_use_ebird = True
+            birdid_country_code = None
+            birdid_region_code = None
 
         settings = ProcessingSettings(
             ai_confidence=self.ui_settings[0],
@@ -271,7 +277,7 @@ class WorkerThread(threading.Thread):
         # V4.0: 连拍检测（处理完成后执行）
         if settings.detect_burst:
             from core.burst_detector import BurstDetector
-            from exiftool_manager import get_exiftool_manager
+            from tools.exiftool_manager import get_exiftool_manager
             
             log_callback(self.i18n.t("logs.burst_detecting"), "info")
             
@@ -402,8 +408,8 @@ class SuperPickyMainWindow(QMainWindow):
         self._really_quit = False  # 标记是否真正退出
         self._background_mode = False  # V4.0: 标记是否进入后台模式（不停止服务器）
         
-        # V4.2: 默认最大化窗口
-        self.showMaximized()
+        # V4.2: 使用默认窗口大小，不最大化
+        # self.showMaximized()  # 注释掉这行，使用默认大小
 
     def keyPressEvent(self, event):
         """全局键盘事件 - 粘贴图片自动识鸟"""
@@ -1446,8 +1452,8 @@ class SuperPickyMainWindow(QMainWindow):
                 log_signal.emit(msg)
 
             try:
-                from exiftool_manager import get_exiftool_manager
-                from find_bird_util import reset
+                from tools.exiftool_manager import get_exiftool_manager
+                from tools.find_bird_util import reset
                 import shutil
 
                 exiftool_mgr = get_exiftool_manager()
@@ -1718,28 +1724,37 @@ class SuperPickyMainWindow(QMainWindow):
             self._log(self.i18n.t("server.api_stopped"), "info")
 
     def _auto_start_birdid_server(self):
-        """自动启动识鸟 API 服务器（使用服务器管理器）"""
-        try:
-            from server_manager import get_server_status, start_server_daemon
-            
-            # 检查是否已有服务器在运行
-            status = get_server_status()
-            if status['healthy']:
-                self._log(self.i18n.t("server.api_reused"), "success")
-                self.birdid_server_action.setText(self.i18n.t("menu.stop_server"))
-                return
-            
-            # 启动服务器（守护进程模式）
-            success, msg, pid = start_server_daemon(log_callback=lambda m: print(m))
-            
-            if success:
-                self.birdid_server_action.setText(self.i18n.t("menu.stop_server"))
-                self._log(self.i18n.t("server.api_auto_started", port=5156), "success")
-            else:
-                self._log(self.i18n.t("server.start_failed", error=msg), "warning")
+        """自动启动识鸟 API 服务器（使用服务器管理器） - 在后台线程中运行"""
+        import threading
+        
+        def start_server_task():
+            try:
+                from server_manager import get_server_status, start_server_daemon
                 
-        except Exception as e:
-            self._log(self.i18n.t("server.start_failed", error=str(e)), "warning")
+                # 检查是否已有服务器在运行
+                status = get_server_status()
+                if status['healthy']:
+                    self.log_signal.emit(self.i18n.t("server.api_reused"), "success")
+                    # 在主线程中更新UI（使用QTimer.singleShot确保在主线程执行）
+                    QTimer.singleShot(0, lambda: self.birdid_server_action.setText(self.i18n.t("menu.stop_server")))
+                    return
+                
+                # 启动服务器（守护进程模式）
+                success, msg, pid = start_server_daemon(log_callback=lambda m: print(m))
+                
+                if success:
+                    # 在主线程中更新UI（使用QTimer.singleShot确保在主线程执行）
+                    QTimer.singleShot(0, lambda: self.birdid_server_action.setText(self.i18n.t("menu.stop_server")))
+                    self.log_signal.emit(self.i18n.t("server.api_auto_started", port=5156), "success")
+                else:
+                    self.log_signal.emit(self.i18n.t("server.start_failed", error=msg), "warning")
+                    
+            except Exception as e:
+                self.log_signal.emit(self.i18n.t("server.start_failed", error=str(e)), "warning")
+        
+        # 在后台线程中启动服务器，不阻塞UI
+        thread = threading.Thread(target=start_server_task, daemon=True)
+        thread.start()
 
     def _stop_birdid_server(self):
         """停止识鸟 API 服务器（使用服务器管理器）"""
@@ -1805,9 +1820,9 @@ class SuperPickyMainWindow(QMainWindow):
     def _show_initial_help(self):
         """显示初始帮助信息"""
         t = self.i18n.t
-        help_text = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+        help_text = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   {t("help.welcome_title")}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {t("help.usage_steps_title")}
   1. {t("help.step1")}
@@ -1899,9 +1914,9 @@ class SuperPickyMainWindow(QMainWindow):
         """显示 Lightroom 指南"""
         t = self.i18n.t
         guide = f"""
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   {t("lightroom_guide.title")}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {t("lightroom_guide.method1_title")}
   1. {t("lightroom_guide.method1_step1")}
@@ -1922,7 +1937,7 @@ class SuperPickyMainWindow(QMainWindow):
   · {t("lightroom_guide.debug_explain3")}
   · {t("lightroom_guide.debug_explain4")}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
         self._log(guide)
 
@@ -1981,35 +1996,35 @@ class SuperPickyMainWindow(QMainWindow):
         
         def preload_task():
             try:
-
-                self._log(self.i18n.t("preload.preloading_models"))
+                # 使用信号发送日志，确保线程安全
+                self.log_signal.emit(self.i18n.t("preload.preloading_models"), "info")
                 
-                # 1. YOLO 检测模型
+                # 1. YOLO 检测模型 - 使用GUI日志回调
                 from ai_model import load_yolo_model
-                load_yolo_model()
-                self._log(self.i18n.t("preload.yolo_loaded"))
+                load_yolo_model(log_callback=lambda msg, tag="info": self.log_signal.emit(msg, tag))
+                self.log_signal.emit(self.i18n.t("preload.yolo_loaded"), "success")
                 
                 # 2. 关键点检测模型
                 from core.keypoint_detector import get_keypoint_detector
                 kp_detector = get_keypoint_detector()
                 kp_detector.load_model()
-                self._log(self.i18n.t("preload.keypoint_loaded"))
+                self.log_signal.emit(self.i18n.t("preload.keypoint_loaded"), "success")
                 
                 # 3. 飞版检测模型
                 from core.flight_detector import get_flight_detector
                 flight_detector = get_flight_detector()
                 flight_detector.load_model()
-                self._log(self.i18n.t("preload.flight_loaded"))
+                self.log_signal.emit(self.i18n.t("preload.flight_loaded"), "success")
                 
                 # 4. 识鸟模型
                 from birdid.bird_identifier import get_bird_model
                 get_bird_model()
-                self._log(self.i18n.t("preload.birdid_loaded"))
+                self.log_signal.emit(self.i18n.t("preload.birdid_loaded"), "success")
                 
-                self._log(self.i18n.t("preload.preload_complete"))
+                self.log_signal.emit(self.i18n.t("preload.preload_complete"), "success")
                 
             except Exception as e:
-                self._log(self.i18n.t("preload.preload_failed", error=str(e)), "warning")
+                self.log_signal.emit(self.i18n.t("preload.preload_failed", error=str(e)), "warning")
         
         # 在后台线程中执行，不阻塞UI
         thread = threading.Thread(target=preload_task, daemon=True)
@@ -2030,7 +2045,7 @@ class SuperPickyMainWindow(QMainWindow):
         
         def _do_check():
             try:
-                from update_checker import UpdateChecker
+                from tools.update_checker import UpdateChecker
                 checker = UpdateChecker("4.0.1")  # 使用测试版本号
                 has_update, update_info = checker.check_for_updates()
                 print(f"[DEBUG] 更新检查完成: has_update={has_update}, silent={silent}")

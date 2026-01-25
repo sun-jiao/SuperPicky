@@ -6,6 +6,7 @@ import os
 import sys
 from dataclasses import dataclass
 from typing import List, Dict
+import torch
 
 
 def resource_path(relative_path):
@@ -133,6 +134,31 @@ class Config:
         """检查是否为 JPG 格式文件"""
         _, ext = os.path.splitext(filename)
         return ext.lower() in self.file.JPG_EXTENSIONS
+
+
+def get_best_device():
+    """
+    获取最佳计算设备
+    遵循用户期望的逻辑：
+    1. 先检测平台，MAC就用mps
+    2. Windows就先验证是否支持CUDA
+    3. 如果支持就使用CUDA
+    4. 如果不支持就用CPU
+    """
+    try:
+        # 检查 MPS (Apple GPU)
+        if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            return torch.device("mps")
+        
+        # 检查 CUDA (NVIDIA GPU)
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        
+        # 默认使用 CPU
+        return torch.device("cpu")
+    except Exception:
+        # 如果 torch 导入失败或其他异常，回退到 CPU
+        return torch.device("cpu")
 
 
 # 全局配置实例

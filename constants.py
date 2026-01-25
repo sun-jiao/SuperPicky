@@ -34,7 +34,7 @@ def get_rating_folder_names():
         dict: {评分: 文件夹名称}
     """
     try:
-        from i18n import get_i18n
+        from tools.i18n import get_i18n
         i18n = get_i18n()
         if i18n.current_lang.startswith('en'):
             return RATING_FOLDER_NAMES_EN.copy()

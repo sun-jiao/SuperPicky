@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, Slot
 
 from advanced_config import get_advanced_config
-from i18n import get_i18n
+from tools.i18n import get_i18n
 from ui.styles import COLORS, FONTS
 from ui.custom_dialogs import StyledMessageBox
 

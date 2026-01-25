@@ -24,9 +24,9 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 # 现有模块
-from find_bird_util import raw_to_jpeg
+from tools.find_bird_util import raw_to_jpeg
 from ai_model import load_yolo_model, detect_and_draw_birds
-from exiftool_manager import get_exiftool_manager
+from tools.exiftool_manager import get_exiftool_manager
 from advanced_config import get_advanced_config
 from core.rating_engine import RatingEngine, create_rating_engine_from_config
 from core.keypoint_detector import KeypointDetector, get_keypoint_detector
@@ -37,7 +37,7 @@ from core.focus_point_detector import get_focus_detector, verify_focus_in_bbox
 from constants import RATING_FOLDER_NAMES, RAW_EXTENSIONS, JPG_EXTENSIONS, get_rating_folder_name, get_rating_folder_names
 
 # 国际化
-from i18n import get_i18n
+from tools.i18n import get_i18n
 
 
 @dataclass
@@ -1482,11 +1482,34 @@ class PhotoProcessor:
                 filename in self.temp_converted_jpegs):
                 jpg_path = os.path.join(self.dir_path, filename)
                 try:
+                    # 使用绝对路径并确保路径存在
                     if os.path.exists(jpg_path):
+                        # 尝试删除文件
                         os.remove(jpg_path)
                         deleted_count += 1
+                    else:
+                        # 文件可能已经被移动或不存在，跳过
+                        continue
                 except Exception as e:
-                    self._log(self.i18n.t("logs.delete_failed", filename=filename, error=str(e)), "warning")
+                    # 记录错误但不中断处理
+                    error_msg = str(e)
+                    # 如果是中文路径问题，提供更详细的错误信息
+                    if "系统找不到指定的文件" in error_msg or "WinError 2" in error_msg:
+                        # 检查路径编码
+                        try:
+                            # 尝试使用原始字节路径
+                            jpg_path_bytes = jpg_path.encode('utf-8')
+                            # 检查文件是否存在（使用原始路径）
+                            if os.path.exists(jpg_path):
+                                # 再次尝试删除
+                                os.remove(jpg_path)
+                                deleted_count += 1
+                            else:
+                                self._log(f"  ⚠️ 文件不存在或已被移动: {filename}", "warning")
+                        except Exception as e2:
+                            self._log(f"  ⚠️ 清理失败: {filename} ({error_msg})", "warning")
+                    else:
+                        self._log(f"  ⚠️ 清理失败: {filename} ({error_msg})", "warning")
         
         if deleted_count > 0:
             self._log(self.i18n.t("logs.temp_deleted", count=deleted_count))

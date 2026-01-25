@@ -17,7 +17,24 @@ import sys
 from typing import Optional, List, Dict, Tuple, Set
 
 # ==================== 设备配置 ====================
-CLASSIFIER_DEVICE = torch.device("cpu")
+def get_classifier_device():
+    """获取分类器的最佳设备"""
+    try:
+        # 检查 MPS (Apple GPU)
+        if hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            return torch.device("mps")
+        
+        # 检查 CUDA (NVIDIA GPU)
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        
+        # 默认使用 CPU
+        return torch.device("cpu")
+    except Exception:
+        # 如果 torch 导入失败或其他异常，回退到 CPU
+        return torch.device("cpu")
+
+CLASSIFIER_DEVICE = get_classifier_device()
 
 # ==================== 可选依赖检测 ====================
 
@@ -365,10 +382,27 @@ def extract_gps_from_exif(image_path: str) -> Tuple[Optional[float], Optional[fl
         exiftool_path = None
         for path in exiftool_paths:
             try:
-                result = subprocess.run([path, '-ver'], capture_output=True, timeout=5)
+                result = subprocess.run([path, '-ver'], capture_output=True, text=False, timeout=5)
                 if result.returncode == 0:
-                    exiftool_path = path
-                    break
+                    # 解码输出
+                    stdout_bytes = result.stdout
+                    # 尝试多种编码解码
+                    decoded_output = None
+                    for encoding in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                        try:
+                            decoded_output = stdout_bytes.decode(encoding)
+                            break
+                        except UnicodeDecodeError:
+                            continue
+                    
+                    if decoded_output is None:
+                        # 如果所有编码都失败，使用 latin-1 作为最后手段（不会失败）
+                        decoded_output = stdout_bytes.decode('latin-1')
+                    
+                    # 检查是否成功获取版本
+                    if decoded_output.strip():
+                        exiftool_path = path
+                        break
             except:
                 continue
         
@@ -377,12 +411,26 @@ def extract_gps_from_exif(image_path: str) -> Tuple[Optional[float], Optional[fl
             result = subprocess.run(
                 [exiftool_path, '-j', '-GPSLatitude', '-GPSLongitude', '-GPSLatitudeRef', '-GPSLongitudeRef', image_path],
                 capture_output=True,
-                text=True,
+                text=False,  # 使用 bytes 模式，避免自动解码
                 timeout=10
             )
             
             if result.returncode == 0 and result.stdout:
-                data = json_module.loads(result.stdout)
+                stdout_bytes = result.stdout
+                # 尝试多种编码解码
+                decoded_output = None
+                for encoding in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                    try:
+                        decoded_output = stdout_bytes.decode(encoding)
+                        break
+                    except UnicodeDecodeError:
+                        continue
+                
+                if decoded_output is None:
+                    # 如果所有编码都失败，使用 latin-1 作为最后手段（不会失败）
+                    decoded_output = stdout_bytes.decode('latin-1')
+                
+                data = json_module.loads(decoded_output)
                 if data and len(data) > 0:
                     gps_data = data[0]
                     

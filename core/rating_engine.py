@@ -33,6 +33,10 @@ class RatingResult:
     @property
     def star_display(self) -> str:
         """获取星级显示字符串"""
+        # 使用全局i18n实例
+        from tools.i18n import get_i18n
+        i18n = get_i18n()
+        
         if self.rating == 3:
             return "⭐⭐⭐"
         elif self.rating == 2:
@@ -91,7 +95,7 @@ class RatingEngine:
         self.nima_threshold = nima_threshold
         
         # 国际化
-        from i18n import get_i18n
+        from tools.i18n import get_i18n
         self.i18n = get_i18n()
     
     def calculate(

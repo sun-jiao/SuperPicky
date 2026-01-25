@@ -92,7 +92,9 @@ class KeypointDetector:
             model_path: 模型文件路径，默认使用自动检测的路径
         """
         self.model_path = model_path or self._get_default_model_path()
-        self.device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+        # 使用统一的设备检测逻辑
+        from config import get_best_device
+        self.device = get_best_device()
         self.model = None
         self.transform = transforms.Compose([
             transforms.Resize((self.IMG_SIZE, self.IMG_SIZE)),

@@ -50,20 +50,31 @@ class IQAScorer:
         Returns:
             可用的设备
         """
-        # 检查 MPS (Apple GPU)
-        if preferred_device == 'mps':
-            try:
-                if torch.backends.mps.is_available():
-                    return torch.device('mps')
-            except:
-                pass
+        # 使用统一的设备检测逻辑
+        try:
+            from config import get_best_device
+            device = get_best_device()
+            
+            # 如果首选设备是 MPS 但检测到的是 CUDA，保持 CUDA
+            # 如果首选设备是 CUDA 但检测到的是 MPS，保持 MPS
+            # 否则使用检测到的最佳设备
+            return device
+        except Exception:
+            # 如果导入失败，回退到原始逻辑
+            # 检查 MPS (Apple GPU)
+            if preferred_device == 'mps':
+                try:
+                    if torch.backends.mps.is_available():
+                        return torch.device('mps')
+                except:
+                    pass
 
-        # 检查 CUDA (NVIDIA GPU)
-        if preferred_device == 'cuda' or torch.cuda.is_available():
-            return torch.device('cuda')
+            # 检查 CUDA (NVIDIA GPU)
+            if preferred_device == 'cuda' or torch.cuda.is_available():
+                return torch.device('cuda')
 
-        # 默认使用 CPU
-        return torch.device('cpu')
+            # 默认使用 CPU
+            return torch.device('cpu')
 
     def _load_topiq(self):
         """延迟加载 TOPIQ 模型"""

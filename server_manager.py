@@ -17,7 +17,7 @@ import json
 import threading
 
 # V4.2.1: I18n support
-from i18n import get_i18n
+from tools.i18n import get_i18n
 
 def get_t():
     """Get translator function"""
@@ -62,9 +62,17 @@ def check_server_health(port=5156, host='127.0.0.1', timeout=2):
     """检查服务器健康状态"""
     try:
         import urllib.request
+        import ssl
+        
         url = f'http://{host}:{port}/health'
         req = urllib.request.Request(url, method='GET')
-        with urllib.request.urlopen(req, timeout=timeout) as response:
+        
+        # macOS SSL证书问题修复
+        ssl_context = ssl.create_default_context()
+        ssl_context.check_hostname = False
+        ssl_context.verify_mode = ssl.CERT_NONE
+        
+        with urllib.request.urlopen(req, timeout=timeout, context=ssl_context) as response:
             if response.status == 200:
                 data = json.loads(response.read().decode('utf-8'))
                 return data.get('status') == 'ok'
@@ -159,7 +167,8 @@ def start_server_thread(port=5156, log_callback=None):
     def log(msg):
         if log_callback:
             log_callback(msg)
-        print(msg)
+        else:
+            print(msg)
     
     # 检查是否已经运行
     t = get_t()
@@ -177,12 +186,20 @@ def start_server_thread(port=5156, log_callback=None):
         def run_server():
             global _server_instance
             try:
-                # 预加载模型
-                log(t("server.loading_models"))
-                ensure_models_loaded()
-                log(t("server.models_loaded"))
+                # 异步预加载模型（不阻塞服务器启动）
+                def load_models_async():
+                    try:
+                        log(t("server.loading_models"))
+                        ensure_models_loaded()
+                        log(t("server.models_loaded"))
+                    except Exception as e:
+                        log(t("server.model_load_error", error=e))
                 
-                # 创建并运行服务器
+                # 在后台线程中加载模型
+                model_thread = threading.Thread(target=load_models_async, daemon=True)
+                model_thread.start()
+                
+                # 立即启动服务器，不等待模型加载完成
                 _server_instance = make_server('127.0.0.1', port, app, threaded=True)
                 log(t("server.server_started", port=port))
                 _server_instance.serve_forever()
@@ -193,8 +210,8 @@ def start_server_thread(port=5156, log_callback=None):
         _server_thread = threading.Thread(target=run_server, daemon=True, name="BirdID-API-Server")
         _server_thread.start()
         
-        # 等待服务器启动（最多 30 秒，因为模型加载需要时间）
-        for i in range(60):
+        # 等待服务器启动（最多 10 秒，因为服务器启动很快）
+        for i in range(20):
             time.sleep(0.5)
             if check_server_health(port):
                 log(t("server.server_health_ok", port=port))
@@ -227,7 +244,8 @@ def start_server_daemon(port=5156, log_callback=None):
     def log(msg):
         if log_callback:
             log_callback(msg)
-        print(msg)
+        else:
+            print(msg)
     
     # 检查是否已经运行
     t = get_t()
@@ -264,7 +282,8 @@ def _start_server_subprocess(port=5156, log_callback=None):
     def log(msg):
         if log_callback:
             log_callback(msg)
-        print(msg)
+        else:
+            print(msg)
     
     python_exe = sys.executable
     server_script = get_server_script_path()
@@ -288,14 +307,36 @@ def _start_server_subprocess(port=5156, log_callback=None):
                 start_new_session=True,
                 close_fds=True
             )
+        elif sys.platform == 'win32':
+            # Windows: 使用 CREATE_NO_WINDOW 标志避免显示控制台窗口
+            # 注意：CREATE_NO_WINDOW 在 Python 3.7+ 中可用
+            try:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW,
+                    start_new_session=False
+                )
+            except AttributeError:
+                # 如果 CREATE_NO_WINDOW 不可用，使用 CREATE_NEW_CONSOLE 和 DETACHED_PROCESS
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NEW_CONSOLE | subprocess.DETACHED_PROCESS,
+                    start_new_session=False
+                )
         else:
+            # Linux/Unix
             process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 stdin=subprocess.DEVNULL,
-                creationflags=subprocess.DETACHED_PROCESS if sys.platform == 'win32' else 0,
-                start_new_session=True if sys.platform != 'win32' else False
+                start_new_session=True
             )
         
         write_pid(process.pid)
@@ -331,7 +372,8 @@ def stop_server(log_callback=None):
     def log(msg):
         if log_callback:
             log_callback(msg)
-        print(msg)
+        else:
+            print(msg)
     
     t = get_t()
     pid = read_pid()
@@ -339,7 +381,20 @@ def stop_server(log_callback=None):
     if pid and is_process_running(pid):
         log(t("server.stop_server", pid=pid))
         try:
-            os.kill(pid, signal.SIGTERM)
+            # Windows 平台使用不同的信号处理
+            if sys.platform == 'win32':
+                # Windows 没有 SIGTERM/SIGKILL，使用 terminate() 方法
+                import subprocess
+                try:
+                    # 尝试使用 taskkill 命令
+                    subprocess.run(['taskkill', '/F', '/PID', str(pid)], 
+                                  capture_output=True, timeout=5)
+                except Exception:
+                    # 如果 taskkill 失败，尝试其他方法
+                    pass
+            else:
+                # Unix/Linux/macOS 平台使用信号
+                os.kill(pid, signal.SIGTERM)
             
             # 等待进程退出
             for i in range(10):
@@ -347,8 +402,8 @@ def stop_server(log_callback=None):
                 if not is_process_running(pid):
                     break
             
-            # 如果还没退出，强制终止
-            if is_process_running(pid):
+            # 如果还没退出，强制终止（仅限非Windows平台）
+            if is_process_running(pid) and sys.platform != 'win32':
                 log(t("server.force_kill"))
                 os.kill(pid, signal.SIGKILL)
                 time.sleep(0.5)
@@ -357,7 +412,7 @@ def stop_server(log_callback=None):
             log(t("server.server_stopped"))
             return True, "Server stopped"
             
-        except (ProcessLookupError, PermissionError) as e:
+        except Exception as e:
             log(t("server.stop_failed", error=e))
             remove_pid()
             return False, str(e)
