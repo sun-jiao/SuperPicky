@@ -49,16 +49,20 @@
 ## 📥 下载安装
 
 ### macOS
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/%E6%85%A7%E7%9C%BC%E9%80%89%E9%B8%9F/SuperPicky_v3.9.0.dmg) | [Google Drive](https://drive.google.com/file/d/1rn_VctgLMW8SOAAfm3I1tGX7W_RCcBgm/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1ezKPFsviTYfU_jFbmfAhxw?pwd=kdbx) 提取码: kdbx
+**Apple Silicon (M1/M2/M3/M4)**
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/latest) | [Google Drive](https://drive.google.com/open?id=14xve-1d14Ieb2sfVf4thd6-pv4O9af3a) | [百度网盘](https://pan.baidu.com/s/12qwZTAKymHjFzUnOLcYzvA?pwd=h73a) 提取码: h73a
 
-1. 下载 `SuperPicky_v3.9.0.dmg`
+**Intel (2020年前 Mac)**
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v3.9.4/SuperPicky_v3.9.4_x64.dmg) | [Google Drive](https://drive.google.com/file/d/1ljvJU5f8wV9DNtQ3HxoXqlv-UyQc7vta/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/15D6S8CtzoKWpJVhDBhVfzQ?pwd=rpij) 提取码: rpij
+
+1. 下载对应版本的 DMG 文件
 2. 双击 DMG 文件，将应用拖入 Applications
 3. 首次打开：右键点击应用选择"打开"
 
-### Windows
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/%E6%85%A7%E7%9C%BC%E9%80%89%E9%B8%9F/SuperPicky_v3.8_Win.zip) | [Google Drive](https://drive.google.com/file/d/19cmFJxdyzeUoGZBEidQILWRQsP-ChYHj/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/14PUWtAZiwSiCo1k_jRAaIw?pwd=a8xv) 提取码: a8xv
+### Windows (v3.9.4)
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v3.9.4/SuperPicky_Win_3.9.4_Lyapunov.zip) | [Google Drive](https://drive.google.com/file/d/1vQSifh8Qky7lHDwDD1tipL91gCML_skm/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1nVJYvanFHevwAQwveAdVyg?pwd=vs8p) 提取码: vs8p
 
-1. 下载并解压 `SuperPicky_v3.8_Win.zip`
+1. 下载并解压 ZIP 文件
 2. 运行 `SuperPicky.exe`
 
 ### 从源码运行
