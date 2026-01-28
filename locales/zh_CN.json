@@ -10,7 +10,8 @@
     "brand_name": "慧眼选鸟"
   },
   "menu": {
-    "settings": "设置",
+    "settings_menu": "设置",
+    "settings": "参数设置...",
     "advanced_settings": "高级设置...",
     "help": "帮助",
     "about": "关于慧眼选鸟...",

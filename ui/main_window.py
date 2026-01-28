@@ -511,17 +511,26 @@ class SuperPickyMainWindow(QMainWindow):
         self.birdid_dock_action.setChecked(True)
         self.birdid_dock_action.triggered.connect(self._toggle_birdid_dock)
         birdid_menu.addAction(self.birdid_dock_action)
+        
+        birdid_menu.addSeparator()
+        
+        # V4.0: 后台运行（最小化到托盘，保持识鸟服务）
+        minimize_tray_action = QAction(self.i18n.t("menu.background_mode"), self)
+        minimize_tray_action.triggered.connect(self._minimize_to_tray)
+        birdid_menu.addAction(minimize_tray_action)
 
-        # 帮助菜单
-        help_menu = menubar.addMenu(self.i18n.t("menu.help"))
+        # 设置菜单
+        settings_menu = menubar.addMenu(self.i18n.t("menu.settings_menu"))
         
         # 参数设置
         settings_action = QAction(self.i18n.t("menu.settings"), self)
         settings_action.triggered.connect(self._show_advanced_settings)
-        help_menu.addAction(settings_action)
+        settings_menu.addAction(settings_action)
+        
+        settings_menu.addSeparator()
         
         # 界面语言子菜单
-        lang_menu = help_menu.addMenu(self.i18n.t("menu.language"))
+        lang_menu = settings_menu.addMenu(self.i18n.t("menu.language"))
         
         # 简体中文
         zh_action = QAction(self.i18n.t("menu.lang_zh"), self)
@@ -538,18 +547,14 @@ class SuperPickyMainWindow(QMainWindow):
         lang_menu.addAction(en_action)
         
         self.lang_actions = {"zh_CN": zh_action, "en": en_action}
-        
-        help_menu.addSeparator()
+
+        # 帮助菜单
+        help_menu = menubar.addMenu(self.i18n.t("menu.help"))
         
         # 检查更新
         update_action = QAction(self.i18n.t("menu.check_update"), self)
         update_action.triggered.connect(self._check_for_updates)
         help_menu.addAction(update_action)
-        
-        # V4.0: 后台运行（最小化到托盘）
-        minimize_tray_action = QAction(self.i18n.t("menu.background_mode"), self)
-        minimize_tray_action.triggered.connect(self._minimize_to_tray)
-        help_menu.addAction(minimize_tray_action)
         
         help_menu.addSeparator()
         

@@ -10,7 +10,8 @@
     "brand_name": "SuperPicky"
   },
   "menu": {
-    "settings": "Settings",
+    "settings_menu": "Settings",
+    "settings": "Preferences...",
     "advanced_settings": "Advanced Settings...",
     "help": "Help",
     "about": "About SuperPicky...",
