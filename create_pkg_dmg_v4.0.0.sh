@@ -280,13 +280,13 @@ fi
 # 6. 安装 Lightroom 导出预设
 echo ""
 echo "正在安装 Lightroom 导出预设..."
-PRESET_SOURCE="$APP_PATH/Contents/Resources/SuperBirdIDPlugin.lrplugin/慧眼选鸟.lrtemplate"
+PRESET_SOURCE="$APP_PATH/Contents/Resources/SuperBirdIDPlugin.lrplugin/SuperPicky.lrtemplate"
 PRESET_DIR="$REAL_HOME/Library/Application Support/Adobe/Lightroom/Export Presets/User Presets"
 
 if [ -f "$PRESET_SOURCE" ]; then
     mkdir -p "$PRESET_DIR"
     cp "$PRESET_SOURCE" "$PRESET_DIR/"
-    chown "$REAL_USER" "$PRESET_DIR/慧眼选鸟.lrtemplate"
+    chown "$REAL_USER" "$PRESET_DIR/SuperPicky.lrtemplate"
     echo "✓ 导出预设已安装到: $PRESET_DIR"
 else
     echo "⚠ 未找到导出预设文件，跳过"
