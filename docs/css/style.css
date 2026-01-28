@@ -2302,3 +2302,17 @@ footer {
         justify-content: center;
     }
 }
+
+/* FAQ Image */
+.faq-image {
+    margin: var(--space-md) 0;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+}
+
+.faq-image img {
+    width: 100%;
+    display: block;
+}
