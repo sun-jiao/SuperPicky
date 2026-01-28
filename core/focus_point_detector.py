@@ -16,6 +16,7 @@ from dataclasses import dataclass
 from typing import Optional, Tuple
 import subprocess
 import json
+import math
 import numpy as np
 import atexit
 import sys
@@ -973,7 +974,7 @@ def verify_focus_in_bbox(
     
     # 检查是否在头部区域内
     if head_center is not None and head_radius is not None:
-        dist = np.sqrt((focus_px[0] - head_center[0])**2 + (focus_px[1] - head_center[1])**2)
+        dist = math.sqrt((focus_px[0] - head_center[0])**2 + (focus_px[1] - head_center[1])**2)
         if dist <= head_radius:
             return (1.1, 1.0)  # V4.0: 对焦在头部区域，锐度+10%奖励
     
