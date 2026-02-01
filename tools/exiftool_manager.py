@@ -8,6 +8,7 @@ ExifTool管理器
 import os
 import subprocess
 import sys
+import tempfile
 from typing import Optional, List, Dict
 from pathlib import Path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,6 +22,8 @@ class ExifToolManager:
         """初始化ExifTool管理器"""
         # 获取exiftool路径（支持PyInstaller打包）
         self.exiftool_path = self._get_exiftool_path()
+        # Windows 下 exiftool.exe 需在其所在目录运行才能找到 exiftool_files 中的 DLL/perl
+        self._exiftool_cwd = os.path.dirname(os.path.abspath(self.exiftool_path))
 
         # 验证exiftool可用性
         if not self._verify_exiftool():
@@ -129,7 +132,8 @@ class ExifToolManager:
                 capture_output=True,
                 text=False,  # 使用 bytes 模式，避免自动解码
                 timeout=5,
-                creationflags=creationflags
+                creationflags=creationflags,
+                cwd=self._exiftool_cwd  # Windows: 使 exiftool.exe 能找到 exiftool_files 中的 DLL
             )
             print(f"   Return code: {result.returncode}")
             
@@ -230,7 +234,8 @@ class ExifToolManager:
                 capture_output=True,
                 text=False,  # 使用 bytes 模式，避免自动解码
                 timeout=30,
-                creationflags=creationflags
+                creationflags=creationflags,
+                cwd=self._exiftool_cwd
             )
 
             if result.returncode == 0:
@@ -283,6 +288,12 @@ class ExifToolManager:
             统计结果 {'success': 成功数, 'failed': 失败数}
         """
         stats = {'success': 0, 'failed': 0}
+        caption_temp_files: List[str] = []  # 用于写入 caption 的临时 UTF-8 文件，执行后删除
+        first_caption_image_path: Optional[str] = None  # 第一个写入 caption 的图片，用于执行后读回对比
+
+        # 诊断：本次调用有多少条带 caption（若无则不会出现 [ExifTool Caption] 详细日志）
+        num_with_caption = sum(1 for it in files_metadata if it.get('caption'))
+        print(f"[ExifTool] batch_set_metadata: {len(files_metadata)} 条, 其中 {num_with_caption} 条带 caption")
 
         # ExifTool批量模式：使用 -execute 分隔符为每个文件单独设置参数
         # V3.9.1: 改用 XMP 字段，XMP 原生支持 UTF-8 中文
@@ -335,9 +346,30 @@ class ExifToolManager:
                 cmd.append(f'-XMP:Country={focus_status}')
             
             # V4.0: 详细评分说明 → XMP:Description（题注）
+            # 通过临时 UTF-8 文件写入，避免 Windows 命令行编码导致 Lightroom 中 caption 乱码
             if caption is not None:
-                # V4.2: 恢复换行符支持，并在 Windows 下通过 -charset utf8 保证正确写入
-                cmd.append(f'-XMP:Description={caption}')
+                try:
+                    # 诊断：Python 端 caption
+                    _preview = caption[:120] + "..." if len(caption) > 120 else caption
+                    print(f"[ExifTool Caption] Python caption len={len(caption)}, preview={repr(_preview)}")
+                    fd, tmp_path = tempfile.mkstemp(suffix='.txt', prefix='sp_caption_')
+                    with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                        f.write(caption)
+                    caption_temp_files.append(tmp_path)
+                    if first_caption_image_path is None:
+                        first_caption_image_path = file_path
+                    # 诊断：临时文件写回读
+                    with open(tmp_path, 'rb') as rb:
+                        head_bytes = rb.read(80)
+                    with open(tmp_path, 'r', encoding='utf-8') as ru:
+                        head_text = ru.read(150)
+                    print(f"[ExifTool Caption] Temp file: {tmp_path}")
+                    print(f"[ExifTool Caption] Temp file head(hex): {head_bytes[:50].hex()}")
+                    print(f"[ExifTool Caption] Temp file head(text): {repr(head_text)}")
+                    cmd.append(f'-XMP:Description<={tmp_path}')
+                except Exception as e:
+                    print(f"⚠️ Caption temp file failed: {e}, fallback to inline")
+                    cmd.append(f'-XMP:Description={caption}')
             
             # V4.2: 鸟种名称 → XMP:Title（标题）
             title = item.get('title', None)
@@ -362,10 +394,10 @@ class ExifToolManager:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=False,  # 使用 bytes 模式，避免自动解码
-                encoding='utf-8',
+                text=False,  # 使用 bytes 模式，避免 exiftool 输出非 UTF-8 时解码异常
                 timeout=300,  # 5分钟超时
-                creationflags=creationflags
+                creationflags=creationflags,
+                cwd=self._exiftool_cwd
             )
 
             if result.returncode == 0:
@@ -373,6 +405,25 @@ class ExifToolManager:
                 # V3.1.2: 只在处理多个文件时显示完成消息
                 if len(files_metadata) > 1:
                     print(f"✅ Batch complete: {stats['success']} success, {stats['failed']} failed")
+                
+                # 诊断：读回第一个写入 caption 的文件的 XMP:Description，与 Python 端对比
+                if first_caption_image_path and os.path.exists(first_caption_image_path):
+                    try:
+                        rr = subprocess.run(
+                            [self.exiftool_path, '-charset', 'utf8', '-XMP:Description', '-s', '-s', '-s', first_caption_image_path],
+                            capture_output=True,
+                            text=False,
+                            timeout=10,
+                            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0,
+                            cwd=self._exiftool_cwd,
+                        )
+                        if rr.returncode == 0 and rr.stdout:
+                            read_back = rr.stdout.decode('utf-8', errors='replace').strip()
+                            print(f"[ExifTool Caption] Read-back from image (first 200 chars): {repr(read_back[:200])}")
+                        else:
+                            print(f"[ExifTool Caption] Read-back failed: returncode={rr.returncode}")
+                    except Exception as e:
+                        print(f"[ExifTool Caption] Read-back error: {e}")
                 
                 # V3.9.2: 为 RAF/ORF 文件创建 XMP 侧车文件
                 # Lightroom 无法读取嵌入在这些格式中的 XMP，需要侧车文件
@@ -395,6 +446,13 @@ class ExifToolManager:
         except Exception as e:
             print(f"❌ Batch error: {e}")
             stats['failed'] = len(files_metadata)
+        finally:
+            for tmp_path in caption_temp_files:
+                try:
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+                except Exception as e:
+                    print(f"⚠️ Caption temp file cleanup failed: {tmp_path} - {e}")
 
         return stats
     
@@ -430,7 +488,7 @@ class ExifToolManager:
                 # V3.9.4: 在 Windows 上隐藏控制台窗口
                 creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
                 
-                result = subprocess.run(cmd, capture_output=True, text=False, timeout=30, creationflags=creationflags)
+                result = subprocess.run(cmd, capture_output=True, text=False, timeout=30, creationflags=creationflags, cwd=self._exiftool_cwd)
                 # 不需要打印成功消息，避免刷屏
             except Exception:
                 pass  # 侧车文件创建失败不影响主流程
@@ -469,7 +527,8 @@ class ExifToolManager:
                 capture_output=True,
                 text=False,  # 使用 bytes 模式，避免自动解码
                 timeout=10,
-                creationflags=creationflags
+                creationflags=creationflags,
+                cwd=self._exiftool_cwd
             )
 
             if result.returncode == 0:
@@ -533,10 +592,10 @@ class ExifToolManager:
             result = subprocess.run(
                 cmd,
                 capture_output=True,
-                text=False,  # 使用 bytes 模式，避免自动解码
+                text=False,  # 使用 bytes 模式，避免 exiftool 输出非 UTF-8 时解码异常
                 timeout=30,
-                encoding='utf-8',
-                creationflags=creationflags
+                creationflags=creationflags,
+                cwd=self._exiftool_cwd
             )
 
             if result.returncode == 0:
@@ -638,7 +697,8 @@ class ExifToolManager:
                     capture_output=True,
                     text=False,  # 使用 bytes 模式，避免自动解码
                     timeout=300,  # 增加超时到5分钟，处理ARW文件需要更长时间
-                    creationflags=creationflags
+                    creationflags=creationflags,
+                    cwd=self._exiftool_cwd
                 )
 
                 if result.returncode == 0:

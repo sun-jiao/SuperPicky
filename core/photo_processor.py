@@ -829,56 +829,41 @@ class PhotoProcessor:
             target_file_path = None
             target_extension = None
             
+            # V4.0: 标签、对焦状态、详细评分说明（RAW 与纯 JPEG 共用，纯 JPEG 也写入 EXIF 题注/星级）
+            label = None
+            if is_flying:
+                label = 'Green'
+            elif focus_sharpness_weight > 1.0:  # 头部对焦 (1.1)
+                label = 'Red'
+            
+            caption_lines = []
+            caption_lines.append(self.i18n.t("logs.caption_final", rating=rating_value, reason=reason))
+            sharpness_str = f"{head_sharpness:.2f}" if head_sharpness else "N/A"
+            topiq_str = f"{topiq:.2f}" if topiq else "N/A"
+            caption_lines.append(self.i18n.t("logs.caption_data", conf=confidence, sharp=sharpness_str, nima=topiq_str, vis=best_eye_visibility))
+            flying_str = self.i18n.t("logs.flying_yes") if is_flying else self.i18n.t("logs.flying_no")
+            caption_lines.append(self.i18n.t("logs.caption_factors", sharp_w=focus_sharpness_weight, aes_w=focus_topiq_weight, flying=flying_str))
+            adj_sharpness = head_sharpness * focus_sharpness_weight if head_sharpness else 0
+            if is_flying and head_sharpness:
+                adj_sharpness = adj_sharpness * 1.2
+            adj_topiq_val = 0.0
+            if topiq:
+                adj_topiq_val = topiq * focus_topiq_weight
+                if is_flying:
+                    adj_topiq_val = adj_topiq_val * 1.1
+            caption_lines.append(self.i18n.t("logs.caption_adjusted", sharp=adj_sharpness, nima=adj_topiq_val))
+            visibility_weight = max(0.5, min(1.0, best_eye_visibility * 2))
+            if visibility_weight < 1.0:
+                caption_lines.append(self.i18n.t("logs.caption_vis_weight", weight=visibility_weight))
+            caption = "\n".join(caption_lines)
+            
             if original_prefix in raw_dict:
                 # 有对应的 RAW 文件
                 raw_extension = raw_dict[original_prefix]
                 target_file_path = os.path.join(self.dir_path, original_prefix + raw_extension)
                 target_extension = raw_extension
                 
-                # 写入 EXIF（仅限 RAW 文件）
                 if os.path.exists(target_file_path):
-                    # V4.0: 标签逻辑 - 飞鸟绿色优先，头部对焦红色
-                    label = None
-                    if is_flying:
-                        label = 'Green'
-                    elif focus_sharpness_weight > 1.0:  # 头部对焦 (1.1)
-                        label = 'Red'
-                    
-                    # V4.0: 构建详细评分说明（使用换行符提高可读性）
-                    caption_lines = []
-                    
-                    # 最终评分
-                    caption_lines.append(self.i18n.t("logs.caption_final", rating=rating_value, reason=reason))
-                    
-                    # 原始数据
-                    sharpness_str = f"{head_sharpness:.2f}" if head_sharpness else "N/A"
-                    topiq_str = f"{topiq:.2f}" if topiq else "N/A"
-                    caption_lines.append(self.i18n.t("logs.caption_data", conf=confidence, sharp=sharpness_str, nima=topiq_str, vis=best_eye_visibility))
-                    
-                    # Adjustment factors
-                    flying_str = self.i18n.t("logs.flying_yes") if is_flying else self.i18n.t("logs.flying_no")
-                    caption_lines.append(self.i18n.t("logs.caption_factors", sharp_w=focus_sharpness_weight, aes_w=focus_topiq_weight, flying=flying_str))
-                    
-                    # Adjusted values
-                    adj_sharpness = head_sharpness * focus_sharpness_weight if head_sharpness else 0
-                    if is_flying and head_sharpness:
-                        adj_sharpness = adj_sharpness * 1.2
-                    
-                    adj_topiq_val = 0.0
-                    if topiq:
-                        adj_topiq_val = topiq * focus_topiq_weight
-                        if is_flying:
-                            adj_topiq_val = adj_topiq_val * 1.1
-                            
-                    caption_lines.append(self.i18n.t("logs.caption_adjusted", sharp=adj_sharpness, nima=adj_topiq_val))
-                    
-                    # Visibility weight
-                    visibility_weight = max(0.5, min(1.0, best_eye_visibility * 2))
-                    if visibility_weight < 1.0:
-                        caption_lines.append(self.i18n.t("logs.caption_vis_weight", weight=visibility_weight))
-                    
-                    caption = "\n".join(caption_lines)
-                    
                     # V4.2: 自动鸟种识别（对2星及以上照片执行）
                     bird_title = None
                     if self.settings.auto_identify and rating_value >= 2:
@@ -940,19 +925,46 @@ class PhotoProcessor:
                         'file': target_file_path,
                         'rating': rating_value if rating_value >= 0 else 0,
                         'pick': pick,
-                        'sharpness': adj_sharpness if 'adj_sharpness' in dir() else head_sharpness,  # V4.0: 使用调整后的值
-                        'nima_score': adj_topiq if 'adj_topiq' in dir() else topiq,  # V4.0: 使用调整后的值
+                        'sharpness': adj_sharpness,
+                        'nima_score': adj_topiq_val,
                         'label': label,
-                        'focus_status': focus_status,  # V3.9: 对焦状态写入 Country 字段
-                        'caption': caption,  # V4.0: 详细评分说明
-                        'title': bird_title,  # V4.2: 鸟种名称写入 Title
+                        'focus_status': focus_status,
+                        'caption': caption,
+                        'title': bird_title,
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)
+                    # RAW+JPEG 时也写入当前 JPEG，便于单独查看 JPEG 时也有星级/题注（DNG/ARW/NEF 等同理）
+                    if target_file_path != filepath and os.path.exists(filepath):
+                        jpeg_batch = [{
+                            'file': filepath,
+                            'rating': rating_value if rating_value >= 0 else 0,
+                            'pick': pick,
+                            'sharpness': adj_sharpness,
+                            'nima_score': adj_topiq_val,
+                            'label': label,
+                            'focus_status': focus_status,
+                            'caption': caption,
+                            'title': bird_title,
+                        }]
+                        exiftool_mgr.batch_set_metadata(jpeg_batch)
             else:
-                # V3.4: 纯 JPEG 文件（没有对应 RAW）
-                target_file_path = filepath  # 使用当前处理的 JPEG 路径
+                # V3.4: 纯 JPEG 文件（没有对应 RAW）- 同样写入 caption/星级 到 JPEG EXIF（XMP:Description 用临时文件保证 UTF-8，避免 Lightroom 乱码）
+                target_file_path = filepath
                 target_extension = os.path.splitext(filename)[1]
-            
+                if os.path.exists(target_file_path):
+                    single_batch = [{
+                        'file': target_file_path,
+                        'rating': rating_value if rating_value >= 0 else 0,
+                        'pick': pick,
+                        'sharpness': adj_sharpness,
+                        'nima_score': adj_topiq_val,
+                        'label': label,
+                        'focus_status': focus_status,
+                        'caption': caption,
+                        'title': None,  # 纯 JPEG 的鸟种名在下方自动识鸟成功后单独写入
+                    }]
+                    exiftool_mgr.batch_set_metadata(single_batch)
+
             # V3.4: 以下操作对 RAW 和纯 JPEG 都执行
             if target_file_path and os.path.exists(target_file_path):
                 # V4.1: 计算调整后锐度（用于 CSV，保证重新评星一致性）
