@@ -43,6 +43,7 @@ TESTING_*.md
 # 临时目录
 temp/
 .superpicky_temp/
+ebird_cache/
 
 # 虚拟环境
 .venv/
