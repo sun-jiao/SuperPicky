@@ -5,8 +5,8 @@
     "version": "4.0.3"
   },
   "app": {
-    "title": "SuperPicky - AI Culling Tool v4.0.3",
-    "window_title": "SuperPicky - AI Culling Tool",
+    "title": "SuperPicky - AI Bird Photo Culling Tool v4.0.3",
+    "window_title": "SuperPicky - AI Bird Photo Culling Tool",
     "brand_name": "SuperPicky"
   },
   "menu": {
@@ -54,11 +54,11 @@
     "normalization": "Sharpness Normalization Method:",
     "processing": "Culling",
     "log": "Run Log:",
-    "app_title": "SuperPicky - AI-Powered Culling",
+    "app_title": "SuperPicky - AI-Powered Bird Photo Culling",
     "select_photo_dir": "Select Source Folder",
     "rating_params": "Rating Parameters",
     "browse": "Browse",
-    "subtitle": "AI Culling Tool",
+    "subtitle": "AI Bird Photo Culling Tool",
     "photo_directory": "Photo Folder",
     "selection_params": "Culling Parameters",
     "flight_detection": "BIF Detection",
@@ -534,7 +534,7 @@
     "normalization": "Sharpness normalization method, affects fairness between large and small birds"
   },
   "help": {
-    "welcome_title": "Welcome to SuperPicky V4.0.3 - AI-Powered Culling Tool",
+    "welcome_title": "Welcome to SuperPicky V4.0.3 - AI Bird Photo Culling Tool",
     "usage_steps_title": "Usage Steps:",
     "step1": "Click 'Browse' to select source folder (supports RAW/JPG)",
     "step2": "Adjust 3-star and pick parameters (optional, defaults recommended)",
@@ -554,7 +554,7 @@
     "folder_info": "📂 Folder assignment: 3★→3star_excellent/ | 2★→2star_good/ | 1★→1star_average/ | Rejects→0star_reject/",
     "ready": "Ready? Select a folder to begin!",
     "tools_list_title": "More free tools by James:",
-    "tool_1": "SuperPicky: AI bird photography culling tool",
+    "tool_1": "SuperPicky: AI Bird Photo Culling Tool",
     "tool_2": "Bird Identifier: AI bird species recognition (Mac/Win Lightroom plugin)",
     "tool_3": "Bird Finder: eBird information retrieval tool (Web beta)",
     "tool_4": "Star Remover: AI Milky Way star removal (Mac Photoshop plugin)",
