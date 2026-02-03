@@ -453,6 +453,29 @@ class ExifToolManager:
                         os.remove(tmp_path)
                 except Exception as e:
                     print(f"⚠️ Caption temp file cleanup failed: {tmp_path} - {e}")
+            
+            # V4.0.3: 清理 ExifTool 产生的 _exiftool_tmp 文件
+            # 只有当原文件存在时才删除临时文件，防止数据丢失
+            files_to_clean = [item['file'] for item in files_metadata]
+            self.cleanup_temp_files(files_to_clean)
+
+    def cleanup_temp_files(self, file_paths: List[str]):
+        """
+        清理由于 ExifTool 异常退出可能残留的 _exiftool_tmp 文件
+        只有当原文件存在且大小时才删除临时文件
+        """
+        for path in file_paths:
+            tmp_path = f"{path}_exiftool_tmp"
+            if os.path.exists(tmp_path):
+                # 只有当原文件存在时才删除临时文件
+                if os.path.exists(path):
+                    try:
+                        os.remove(tmp_path)
+                        print(f"🧹 Cleaned up residual temp file: {tmp_path}")
+                    except OSError as e:
+                        print(f"⚠️ Failed to clean temp file: {tmp_path} - {e}")
+                else:
+                    print(f"⚠️ Original file missing, keeping temp file: {tmp_path}")
 
         return stats
     
@@ -739,6 +762,9 @@ class ExifToolManager:
                     log(f"  ❌ {i18n.t('logs.batch_error', start=batch_start+1, end=batch_end, error=str(e))}")
                 else:
                     log(f"  ❌ 批次 {batch_start+1}-{batch_end} 错误: {e}")
+
+        # V4.0.3: 清理潜在残留的临时文件
+        self.cleanup_temp_files(file_paths)
 
         if i18n:
             log(f"\n{i18n.t('logs.batch_complete', success=stats['success'], skipped=0, failed=stats['failed'])}")
