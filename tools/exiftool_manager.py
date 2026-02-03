@@ -291,6 +291,11 @@ class ExifToolManager:
         caption_temp_files: List[str] = []  # 用于写入 caption 的临时 UTF-8 文件，执行后删除
         first_caption_image_path: Optional[str] = None  # 第一个写入 caption 的图片，用于执行后读回对比
 
+        # V4.0.3: 预先清理可能存在的残留 _exiftool_tmp 文件，防止 ExifTool 报错
+        # "Error: Temporary file already exists"
+        files_to_process = [item['file'] for item in files_metadata]
+        self.cleanup_temp_files(files_to_process)
+
         # 诊断：本次调用有多少条带 caption（若无则不会出现 [ExifTool Caption] 详细日志）
         num_with_caption = sum(1 for it in files_metadata if it.get('caption'))
         print(f"[ExifTool] batch_set_metadata: {len(files_metadata)} 条, 其中 {num_with_caption} 条带 caption")
@@ -687,6 +692,9 @@ class ExifToolManager:
 
             if not valid_files:
                 continue
+
+            # V4.0.3: 预先清理可能存在的残留 _exiftool_tmp 文件
+            self.cleanup_temp_files(valid_files)
 
             # 构建ExifTool命令（移除-if条件，强制重置）
             # V4.0: 添加 XMP 字段清除（City/State/Country/Description）
