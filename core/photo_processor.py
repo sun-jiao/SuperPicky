@@ -13,8 +13,11 @@ Core Photo Processor - 核心照片处理器
 """
 
 import os
+import sys
 import time
 import json
+import math
+import subprocess
 import shutil
 import numpy as np
 from pathlib import Path
@@ -167,6 +170,63 @@ class PhotoProcessor:
         """内部进度更新"""
         if self.callbacks.progress:
             self.callbacks.progress(percent)
+    
+    # ============ V4.3: ISO 锐度归一化 ============
+    # 高 ISO 噪点会虚高 Tenengrad 锐度值，需要根据 ISO 进行归一化补偿
+    ISO_BASE = 800          # 基准 ISO（此值及以下不惩罚）
+    ISO_PENALTY_FACTOR = 0.05   # 每翻一倍 ISO 扣 5%
+    ISO_MIN_FACTOR = 0.5        # 最低系数（最多扣 50%）
+    
+    def _read_iso(self, filepath: str) -> int:
+        """
+        从 EXIF 读取 ISO 值
+        
+        Args:
+            filepath: 图片文件路径（RAW 或 JPEG）
+            
+        Returns:
+            ISO 值（整数），读取失败返回 None
+        """
+        try:
+            # 使用 exiftool 读取 ISO
+            exiftool_mgr = get_exiftool_manager()
+            exiftool_path = exiftool_mgr.exiftool_path
+            
+            # 隐藏 Windows 控制台窗口
+            creationflags = subprocess.CREATE_NO_WINDOW if sys.platform.startswith('win') else 0
+            
+            result = subprocess.run(
+                [exiftool_path, '-ISO', '-s', '-s', '-s', filepath],
+                capture_output=True, text=True, timeout=3,
+                creationflags=creationflags
+            )
+            iso_str = result.stdout.strip()
+            if iso_str:
+                return int(iso_str)
+        except Exception:
+            pass
+        return None
+    
+    def _get_iso_sharpness_factor(self, iso_value: int) -> float:
+        """
+        计算 ISO 锐度归一化系数
+        
+        基于对数衰减：每翻一倍 ISO 扣 5%
+        例如：ISO 800 = 1.0, ISO 1600 = 0.95, ISO 3200 = 0.90, ISO 6400 = 0.85
+        
+        Args:
+            iso_value: ISO 值
+            
+        Returns:
+            归一化系数 (0.5 - 1.0)
+        """
+        if iso_value is None or iso_value <= self.ISO_BASE:
+            return 1.0
+        
+        # penalty = 0.05 * log₂(ISO / 800)
+        penalty = self.ISO_PENALTY_FACTOR * math.log2(iso_value / self.ISO_BASE)
+        factor = max(self.ISO_MIN_FACTOR, 1.0 - penalty)
+        return factor
     
     def process(
         self,
@@ -619,12 +679,35 @@ class PhotoProcessor:
                 if topiq is not None:
                     rating_topiq = topiq + 0.5
             
+            # V4.3: ISO 锐度归一化 - 高 ISO 噪点会虚高锐度值，需要补偿
+            # 从 RAW 或 JPEG 读取 ISO 值并计算归一化系数
+            iso_value = None
+            iso_sharpness_factor = 1.0
+            
+            # 优先从 RAW 文件读取 ISO（更可靠）
+            if original_prefix in raw_dict:
+                raw_ext = raw_dict[original_prefix]
+                raw_path = os.path.join(self.dir_path, original_prefix + raw_ext)
+                if os.path.exists(raw_path):
+                    iso_value = self._read_iso(raw_path)
+            
+            # 如果 RAW 没有 ISO，尝试从 JPEG 读取
+            if iso_value is None:
+                iso_value = self._read_iso(filepath)
+            
+            # 计算归一化系数（ISO 800 及以下为 1.0，之后每翻倍扣 5%）
+            iso_sharpness_factor = self._get_iso_sharpness_factor(iso_value)
+            
+            # 应用 ISO 归一化到锐度
+            normalized_sharpness = head_sharpness * iso_sharpness_factor
+            
             # V4.0 优化: 先计算初步评分（不考虑对焦），只对 1 星以上做对焦检测
             # 这样 0 星和 -1 星照片不需要调用 exiftool，节省大量时间
+            # V4.3: 使用 ISO 归一化后的锐度进行评分
             preliminary_result = self.rating_engine.calculate(
                 detected=detected,
                 confidence=confidence,
-                sharpness=head_sharpness,   # V4.0: 原始锐度（飞鸟加成在引擎内）
+                sharpness=normalized_sharpness,   # V4.3: 使用 ISO 归一化后的锐度
                 topiq=topiq,                # V4.0: 原始美学（飞鸟加成在引擎内）
                 all_keypoints_hidden=all_keypoints_hidden,
                 best_eye_visibility=best_eye_visibility,
@@ -729,10 +812,11 @@ class PhotoProcessor:
             
             # V4.0: 最终评分计算（传入对焦权重和飞鸟状态）
             # 注意: 现在总是重新计算，因为需要传入 is_flying 参数
+            # V4.3: 使用 ISO 归一化后的锐度
             rating_result = self.rating_engine.calculate(
                 detected=detected,
                 confidence=confidence,
-                sharpness=head_sharpness,  # V4.0: 使用原始锐度，权重在引擎内应用
+                sharpness=normalized_sharpness,  # V4.3: 使用 ISO 归一化后的锐度
                 topiq=topiq,              # V4.0: 使用原始美学，权重在引擎内应用
                 all_keypoints_hidden=all_keypoints_hidden,
                 best_eye_visibility=best_eye_visibility,
