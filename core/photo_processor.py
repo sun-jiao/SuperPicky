@@ -1267,9 +1267,62 @@ class PhotoProcessor:
                         }]
                         exiftool_mgr.batch_set_metadata(jpeg_batch)
             else:
-                # V3.4: 纯 JPEG 文件（没有对应 RAW）- 同样写入 caption/星级 到 JPEG EXIF（XMP:Description 用临时文件保证 UTF-8，避免 Lightroom 乱码）
+                # V3.4: 纯 JPEG 文件（没有对应 RAW）
                 target_file_path = filepath
                 target_extension = os.path.splitext(filename)[1]
+                
+                # V4.0.5: 先执行识鸟，然后一次性写入 EXIF
+                jpeg_bird_title = None
+                if self.settings.auto_identify and rating_value >= 2:
+                    if original_prefix not in self.file_bird_species:
+                        try:
+                            from birdid.bird_identifier import identify_bird
+                            
+                            birdid_result = identify_bird(
+                                filepath,
+                                use_yolo=True,
+                                use_gps=True,
+                                use_ebird=self.settings.birdid_use_ebird,
+                                country_code=self.settings.birdid_country_code,
+                                region_code=self.settings.birdid_region_code,
+                                top_k=1
+                            )
+                            
+                            if birdid_result.get('success') and birdid_result.get('results'):
+                                top_result = birdid_result['results'][0]
+                                birdid_confidence = top_result.get('confidence', 0)
+                                
+                                if birdid_confidence >= self.settings.birdid_confidence_threshold:
+                                    cn_name = top_result.get('cn_name', '')
+                                    en_name = top_result.get('en_name', '')
+                                    
+                                    if self.i18n.current_lang.startswith('en'):
+                                        bird_log = en_name or cn_name
+                                    else:
+                                        bird_log = cn_name or en_name
+                                    self._log(f"  🐦 Bird ID: {bird_log} ({birdid_confidence:.0f}%)")
+                                    
+                                    species_entry = {'cn_name': cn_name, 'en_name': en_name}
+                                    if not any(s.get('cn_name') == cn_name for s in self.stats['bird_species']):
+                                        self.stats['bird_species'].append(species_entry)
+                                    if cn_name:
+                                        self.file_bird_species[original_prefix] = {
+                                            'cn_name': cn_name,
+                                            'en_name': en_name
+                                        }
+                                    
+                                    # V4.0.5: 设置 bird_title 用于 EXIF 写入
+                                    if self.i18n.current_lang.startswith('en'):
+                                        jpeg_bird_title = en_name
+                                    else:
+                                        jpeg_bird_title = cn_name
+                                    if not jpeg_bird_title:
+                                        jpeg_bird_title = cn_name or en_name
+                                else:
+                                    self._log(f"  🐦 Low confidence: {top_result.get('cn_name', '?')} ({birdid_confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
+                        except Exception as e:
+                            self._log(f"  ⚠️ Bird ID failed: {e}", "warning")
+                
                 if os.path.exists(target_file_path):
                     single_batch = [{
                         'file': target_file_path,
@@ -1280,7 +1333,7 @@ class PhotoProcessor:
                         'label': label,
                         'focus_status': focus_status,
                         'caption': caption,
-                        'title': None,  # 纯 JPEG 的鸟种名在下方自动识鸟成功后单独写入
+                        'title': jpeg_bird_title,  # V4.0.5: 已合并识鸟结果
                     }]
                     exiftool_mgr.batch_set_metadata(single_batch)
 
@@ -1326,59 +1379,8 @@ class PhotoProcessor:
                 self.file_ratings[original_prefix] = rating_value
                 
                 # V4.0.1: 自动鸟种识别（移至共同路径，对 RAW 和纯 JPG 都执行）
-                # 注意：对于 RAW 文件，在上面的分支中已经执行过；这里主要处理纯 JPG
-                if self.settings.auto_identify and rating_value >= 2:
-                    # 检查是否已经识别过（RAW 文件在上面已处理）
-                    if original_prefix not in self.file_bird_species:
-                        try:
-                            from birdid.bird_identifier import identify_bird
-                            
-                            birdid_result = identify_bird(
-                                filepath,  # 使用当前文件路径
-                                use_yolo=True,
-                                use_gps=True,
-                                use_ebird=self.settings.birdid_use_ebird,
-                                country_code=self.settings.birdid_country_code,
-                                region_code=self.settings.birdid_region_code,
-                                top_k=1
-                            )
-                            
-                            if birdid_result.get('success') and birdid_result.get('results'):
-                                top_result = birdid_result['results'][0]
-                                birdid_confidence = top_result.get('confidence', 0)
-                                
-                                if birdid_confidence >= self.settings.birdid_confidence_threshold:
-                                    cn_name = top_result.get('cn_name', '')
-                                    en_name = top_result.get('en_name', '')
-                                    # V4.2: Display bird name in current locale language
-                                    if self.i18n.current_lang.startswith('en'):
-                                        bird_log = en_name or cn_name
-                                    else:
-                                        bird_log = cn_name or en_name
-                                    self._log(f"  🐦 Bird ID: {bird_log} ({birdid_confidence:.0f}%)")
-                                    
-                                    species_entry = {'cn_name': cn_name, 'en_name': en_name}
-                                    if not any(s.get('cn_name') == cn_name for s in self.stats['bird_species']):
-                                        self.stats['bird_species'].append(species_entry)
-                                    if cn_name:
-                                        self.file_bird_species[original_prefix] = {
-                                            'cn_name': cn_name,
-                                            'en_name': en_name
-                                        }
-                                    
-                                    # V4.0.1: Localize EXIF Title for pure JPEG
-                                    if self.i18n.current_lang.startswith('en'):
-                                        bird_title = en_name
-                                    else:
-                                        bird_title = cn_name
-                                        
-                                    if not bird_title:
-                                        bird_title = cn_name or en_name
-                                    exiftool_mgr.batch_set_metadata([{'file': target_file_path, 'title': bird_title}])
-                                else:
-                                    self._log(f"  🐦 Low confidence: {top_result.get('cn_name', '?')} ({birdid_confidence:.0f}% < {self.settings.birdid_confidence_threshold}%)")
-                        except Exception as e:
-                            self._log(f"  ⚠️ Bird ID failed: {e}", "warning")
+                # V4.0.5: 纯 JPEG 的识鸟已移到 EXIF 写入前，这里只处理 RAW 的后续操作
+                # 注意：对于 RAW 文件，在上面的分支中已经执行过
                 
                 # 记录2星原因（用于分目录）（V3.8: 使用加成后的值）
                 if rating_value == 2:
