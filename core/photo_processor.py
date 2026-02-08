@@ -456,18 +456,33 @@ class PhotoProcessor:
             highest_rating_folder = get_rating_folder_name(highest_rating)
             highest_rating_dir = os.path.join(self.dir_path, highest_rating_folder)
             
-            # V4.0.5: 查找连拍组中是否有鸟种识别，以便将 burst 目录放在鸟种子目录内
+            # V4.0.5: 查找连拍组中是否有鸟种识别，优先查找最高星级照片的鸟种
             bird_species_name = None
+            # 先查找最高星级的照片
             for f in current_files:
-                prefix = f['prefix']
-                if prefix in self.file_bird_species:
-                    bird_info = self.file_bird_species[prefix]
-                    if self.i18n.current_lang.startswith('en'):
-                        bird_species_name = bird_info.get('en_name', '').replace(' ', '_')
-                    else:
-                        bird_species_name = bird_info.get('cn_name', '')
-                    if bird_species_name:
-                        break
+                if f['rating'] == highest_rating:
+                    prefix = f['prefix']
+                    if prefix in self.file_bird_species:
+                        bird_info = self.file_bird_species[prefix]
+                        if self.i18n.current_lang.startswith('en'):
+                            bird_species_name = bird_info.get('en_name', '').replace(' ', '_')
+                        else:
+                            bird_species_name = bird_info.get('cn_name', '')
+                        if bird_species_name:
+                            break
+            # 如果最高星级照片没有鸟种，查找其他任意照片
+            if not bird_species_name:
+                for f in current_files:
+                    prefix = f['prefix']
+                    if prefix in self.file_bird_species:
+                        bird_info = self.file_bird_species[prefix]
+                        if self.i18n.current_lang.startswith('en'):
+                            bird_species_name = bird_info.get('en_name', '').replace(' ', '_')
+                        else:
+                            bird_species_name = bird_info.get('cn_name', '')
+                        if bird_species_name:
+                            break
+
             
             # 读取评分数据选择最佳
             for f in current_files:
