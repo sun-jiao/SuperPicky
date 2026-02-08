@@ -497,10 +497,44 @@ class BirdIDDockWidget(QDockWidget):
         self.ebird_checkbox.setChecked(self.settings.get('use_ebird', True))
         self.auto_identify_checkbox.setChecked(self.settings.get('auto_identify', False))
         
+        # V4.0.4: 优先使用 country_code 来匹配，而不是 selected_country 文本
+        country_code = self.settings.get('country_code')
         saved_country = self.settings.get('selected_country', self.i18n.t('birdid.country_auto_gps'))
-        idx = self.country_combo.findText(saved_country)
-        if idx >= 0:
-            self.country_combo.setCurrentIndex(idx)
+        
+        matched = False
+        if country_code:
+            # 通过 country_code 找到对应的显示名称
+            for display_name, code in self.country_list.items():
+                if code == country_code:
+                    idx = self.country_combo.findText(display_name)
+                    if idx >= 0:
+                        self.country_combo.setCurrentIndex(idx)
+                        matched = True
+                        print(f"[DEBUG] 通过 country_code={country_code} 匹配到: {display_name}")
+                    break
+        
+        if not matched:
+            # 回退：使用文本匹配
+            idx = self.country_combo.findText(saved_country)
+            if idx >= 0:
+                self.country_combo.setCurrentIndex(idx)
+                print(f"[DEBUG] 通过文本匹配到: {saved_country}")
+            else:
+                # 如果都找不到，可能是从"更多国家"选的，需要动态添加
+                if country_code and country_code not in [None, "GLOBAL", "MORE"]:
+                    # 从 regions_data 获取国家名称
+                    for country in self.regions_data.get('countries', []):
+                        if country.get('code') == country_code:
+                            display_name = saved_country or country.get('name_cn') or country.get('name')
+                            # 添加到列表
+                            t = self.i18n.t
+                            more_idx = self.country_combo.findText(t("birdid.country_more"))
+                            if more_idx >= 0:
+                                self.country_combo.insertItem(more_idx, display_name)
+                                self.country_list[display_name] = country_code
+                                self.country_combo.setCurrentText(display_name)
+                                print(f"[DEBUG] 动态添加国家: {display_name} ({country_code})")
+                            break
         
         # 等待 _on_country_changed 填充区域列表后再设置区域
         # 使用 QTimer 延迟设置

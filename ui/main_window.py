@@ -206,10 +206,23 @@ class WorkerThread(threading.Thread):
                     if not birdid_country_code:
                         selected_country = birdid_settings.get('selected_country', '自动检测 (GPS)')
                         if selected_country and selected_country != '自动检测 (GPS)':
-                            # 从 "澳大利亚 (AU)" 格式中提取代码
+                            # 尝试从 "澳大利亚 (AU)" 格式中提取代码
                             match = re.search(r'\(([A-Z]{2,3})\)', selected_country)
                             if match:
                                 birdid_country_code = match.group(1)
+                            else:
+                                # V4.0.4: 名称到代码的映射（兼容旧设置文件）
+                                country_name_to_code = {
+                                    '澳大利亚': 'AU', '中国': 'CN', '美国': 'US',
+                                    '日本': 'JP', '英国': 'GB', '新西兰': 'NZ',
+                                    '加拿大': 'CA', '印度': 'IN', '德国': 'DE',
+                                    '法国': 'FR', '巴西': 'BR', '南非': 'ZA',
+                                    '韩国': 'KR', '台湾': 'TW', '香港': 'HK',
+                                    '新加坡': 'SG', '马来西亚': 'MY', '泰国': 'TH',
+                                    '印度尼西亚': 'ID', '菲律宾': 'PH', '意大利': 'IT',
+                                    '西班牙': 'ES', '荷兰': 'NL', '哥斯达黎加': 'CR',
+                                }
+                                birdid_country_code = country_name_to_code.get(selected_country.strip())
                     
                     # V4.0.4: 直接读取 region_code（新格式）
                     birdid_region_code = birdid_settings.get('region_code')
