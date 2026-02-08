@@ -105,6 +105,11 @@ _bird_info = None
 _db_manager = None
 _yolo_detector = None
 
+# V4.0.5: 性能优化 - 全局缓存
+_ebird_filter = None  # eBirdCountryFilter 单例
+_species_cache = {}  # {region_code: species_set} 物种列表缓存
+_gps_detected_region_cache = None  # GPS 检测的区域缓存，避免重复 Nominatim 查询
+
 
 # ==================== 模型加密解密 ====================
 
@@ -210,6 +215,39 @@ def get_yolo_detector():
         if os.path.exists(YOLO_MODEL_PATH):
             _yolo_detector = YOLOBirdDetector(YOLO_MODEL_PATH)
     return _yolo_detector
+
+
+def get_ebird_filter():
+    """V4.0.5: 懒加载 eBirdCountryFilter（单例模式）"""
+    global _ebird_filter
+    if _ebird_filter is None:
+        try:
+            from birdid.ebird_country_filter import eBirdCountryFilter
+            api_key = os.environ.get('EBIRD_API_KEY', '60nan25sogpo')
+            cache_dir = os.path.join(get_user_data_dir(), 'ebird_cache')
+            offline_dir = get_birdid_path('data/offline_ebird_data')
+            _ebird_filter = eBirdCountryFilter(api_key, cache_dir=cache_dir, offline_dir=offline_dir)
+        except Exception as e:
+            print(f"[eBird] 初始化失败: {e}")
+            return None
+    return _ebird_filter
+
+
+def get_species_list_cached(region_code: str) -> set:
+    """V4.0.5: 获取物种列表（带内存缓存）"""
+    global _species_cache
+    if region_code not in _species_cache:
+        ebird_filter = get_ebird_filter()
+        if ebird_filter:
+            species_set = ebird_filter.get_country_species_list(region_code)
+            if species_set:
+                _species_cache[region_code] = species_set
+                print(f"[eBird] 首次加载 {region_code} 物种列表: {len(species_set)} 个物种")
+            else:
+                return None
+        else:
+            return None
+    return _species_cache.get(region_code)
 
 
 # ==================== YOLO 鸟类检测器 ====================
@@ -741,29 +779,39 @@ def identify_bird(
         else:
             print(f"[YOLO调试] YOLO未启用或不可用")
 
-        # eBird 区域过滤
+        # eBird 区域过滤 (V4.0.5: 全面优化)
         ebird_species_set = None
-        detected_region = None
+        effective_region = None
+        data_source = None
         
         if use_ebird:
+            global _gps_detected_region_cache
+            
             try:
-                from birdid.ebird_country_filter import eBirdCountryFilter
-                import os as os_module
+                # V4.0.5: 使用单例模式的 eBirdCountryFilter
+                ebird_filter = get_ebird_filter()
+                if not ebird_filter:
+                    raise ImportError("eBird 过滤模块不可用")
                 
-                api_key = os_module.environ.get('EBIRD_API_KEY', '60nan25sogpo')
-                cache_dir = os_module.path.join(get_user_data_dir(), 'ebird_cache')
-                offline_dir = get_birdid_path('data/offline_ebird_data')
+                # V4.0.5: 三层优化策略确定区域
+                # 1. 用户已设置 region_code/country_code → 直接用
+                # 2. 用户未设置，但缓存中已有 GPS 检测结果 → 直接用缓存
+                # 3. 用户未设置且缓存为空 → 执行 GPS + Nominatim，并缓存结果
                 
-                ebird_filter = eBirdCountryFilter(api_key, cache_dir=cache_dir, offline_dir=offline_dir)
+                user_has_preset_region = bool(region_code or country_code)
                 
-                # 确定要使用的区域
-                effective_region = None
-                data_source = None
-                gps_detected_region = None
-                gps_region_name = None
-                
-                # 如果启用 GPS，先尝试从 EXIF 提取 GPS 并检测区域
-                if use_gps:
+                if region_code:
+                    effective_region = region_code
+                    data_source = f"手动选择: {region_code}"
+                elif country_code:
+                    effective_region = country_code
+                    data_source = f"手动选择: {country_code}"
+                elif _gps_detected_region_cache:
+                    # V4.0.5: 使用缓存的 GPS 检测结果，避免重复 Nominatim 查询
+                    effective_region = _gps_detected_region_cache
+                    data_source = f"GPS缓存: {_gps_detected_region_cache}"
+                elif use_gps:
+                    # 首次执行 GPS 检测（仅当未设置且无缓存时）
                     lat, lon, gps_msg = extract_gps_from_exif(image_path)
                     if lat and lon:
                         result['gps_info'] = {
@@ -771,31 +819,17 @@ def identify_bird(
                             'longitude': lon,
                             'info': gps_msg
                         }
-                        # 用 GPS 判定国家/区域代码
                         gps_detected_region, gps_region_name = ebird_filter.get_region_code_from_gps(lat, lon)
                         if gps_detected_region:
-                            print(f"[GPS] 自动检测区域: {gps_detected_region} ({gps_region_name})")
+                            # 缓存 GPS 检测结果，后续照片直接使用
+                            _gps_detected_region_cache = gps_detected_region
+                            effective_region = gps_detected_region
+                            data_source = f"GPS自动检测: {gps_detected_region} ({gps_region_name})"
+                            print(f"[GPS] 首次检测区域: {gps_detected_region}，后续将使用缓存")
                 
-                # 优先级：
-                # 1. 手动选择的 region_code（如 AU-SA）
-                # 2. GPS 检测的区域（优先于手动选择的国家，因为更精确）
-                # 3. 手动选择的 country_code
-                if region_code:
-                    effective_region = region_code
-                    data_source = f"手动选择: {region_code}"
-                elif gps_detected_region:
-                    effective_region = gps_detected_region
-                    data_source = f"GPS自动检测: {gps_detected_region}"
-                elif country_code:
-                    effective_region = country_code
-                    data_source = f"手动选择: {country_code}"
-                
-                # 使用区域代码获取物种列表（优先离线数据）
+                # V4.0.5: 使用缓存的物种列表
                 if effective_region:
-                    species_set = ebird_filter.get_country_species_list(effective_region)
-                    if species_set:
-                        ebird_species_set = species_set
-                        print(f"[eBird] 使用区域 {effective_region} 的物种列表: {len(species_set)} 个物种")
+                    ebird_species_set = get_species_list_cached(effective_region)
                 
                 # 记录 eBird 过滤信息
                 if ebird_species_set:
