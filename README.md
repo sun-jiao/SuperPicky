@@ -57,10 +57,10 @@
 
 ### macOS
 **Apple Silicon (M1/M2/M3/M4)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.4/SuperPicky_v4.0.4.dmg) | [Google Drive](待更新) | [百度网盘](待更新)
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.4/SuperPicky_v4.0.4.dmg) | [Google Drive](https://drive.google.com/file/d/1JpPJUjSe64YJL-E-4nn8lsIqtDXae7CH/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1OGiZYBFaKYpxPZDHfLxFwA?pwd=i1eq) 提取码: i1eq
 
 **Intel (2020年前 Mac)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v3.9.4/SuperPicky_v3.9.4_x64.dmg) | [Google Drive](https://drive.google.com/file/d/1ljvJU5f8wV9DNtQ3HxoXqlv-UyQc7vta/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/15D6S8CtzoKWpJVhDBhVfzQ?pwd=rpij) 提取码: rpij
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.4/SuperPicky_v4.0.4_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/1DghPd1yBRkMjEdM-GpxGNV8GFQBXgXiS/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1iyDhNj1QP-Vg82QN9yoACQ?pwd=xh6u) 提取码: xh6u
 
 1. 下载对应版本的 DMG 文件
 2. 双击 DMG 文件，将应用拖入 Applications

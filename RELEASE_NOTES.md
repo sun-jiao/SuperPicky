@@ -1,6 +1,6 @@
 # SuperPicky Release Notes
 
-## V4.0.4 (2026-02-09) - 连拍优化与稳定性改进
+## V4.0.4 beta (2026-02-09) - 连拍优化与稳定性改进
 
 ### Bug Fixes
 - [Fix] 启用识鸟但无结果时，照片放入"其他鸟类"子目录而非根目录
@@ -88,12 +88,14 @@
 ## Downloads
 
 ### macOS Apple Silicon (M1/M2/M3/M4)
-- GitHub: [v4.0.4](https://github.com/jamesphotography/SuperPicky/releases/tag/v4.0.4)
-- Google Drive: [待更新]
-- 百度网盘: [待更新]
+- GitHub: [v4.0.4 beta](https://github.com/jamesphotography/SuperPicky/releases/tag/v4.0.4)
+- Google Drive: [SuperPicky_v4.0.4_Silicon.dmg](https://drive.google.com/file/d/1JpPJUjSe64YJL-E-4nn8lsIqtDXae7CH/view?usp=sharing)
+- 百度网盘: [SuperPicky_v4.0.4_Silicon.dmg](https://pan.baidu.com/s/1OGiZYBFaKYpxPZDHfLxFwA?pwd=i1eq) 提取码: i1eq
 
 ### macOS Intel
-- GitHub: [v3.9.4](https://github.com/jamesphotography/SuperPicky/releases/tag/v3.9.4)
+- GitHub: [v4.0.4 beta](https://github.com/jamesphotography/SuperPicky/releases/tag/v4.0.4)
+- Google Drive: [SuperPicky_v4.0.4_Intel.dmg](https://drive.google.com/file/d/1DghPd1yBRkMjEdM-GpxGNV8GFQBXgXiS/view?usp=sharing)
+- 百度网盘: [SuperPicky_v4.0.4_Intel.dmg](https://pan.baidu.com/s/1iyDhNj1QP-Vg82QN9yoACQ?pwd=xh6u) 提取码: xh6u
 
 ### Windows
 - GitHub: [v4.0.1](https://github.com/jamesphotography/SuperPicky/releases/tag/v4.0.2)
