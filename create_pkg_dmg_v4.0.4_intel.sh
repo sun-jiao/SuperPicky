@@ -1,9 +1,9 @@
-#!/bin/bash
-# SuperPicky V4.0.4 - PKG + DMG 完整打包脚本
+# SuperPicky V4.0.4 (Intel) - PKG + DMG 完整打包脚本
 # 包含: PyInstaller打包 → PKG组件 → Distribution PKG → DMG → 签名公证
 # 特色: 自动安装 Lightroom 插件
 # 作者: James Zhen Yu
-# 日期: 2026-02-08
+# 日期: 2026-02-09
+# 架构: Intel x64
 
 set -e  # 遇到错误立即退出
 
@@ -20,8 +20,8 @@ APPLE_ID="james@jamesphotography.com.au"
 TEAM_ID="JWR6FDB52H"
 APP_PASSWORD=$(security find-generic-password -a "${APPLE_ID}" -s "SuperPicky-Notarize" -w)
 
-PKG_NAME="${APP_NAME}_v${VERSION}_Installer.pkg"
-DMG_NAME="${APP_NAME}_v${VERSION}.dmg"
+PKG_NAME="${APP_NAME}_v${VERSION}_Intel_Installer.pkg"
+DMG_NAME="${APP_NAME}_v${VERSION}_Intel.dmg"
 
 # 颜色输出
 RED='\033[0;31m'
