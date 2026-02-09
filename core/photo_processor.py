@@ -486,10 +486,16 @@ class PhotoProcessor:
             # 按综合分数选最佳
             best_file = max(current_files, key=lambda x: x['sharpness'] * 0.5 + x['topiq'] * 0.5)
             
-            # 创建 burst 目录（V4.0.5: 如果有鸟种识别，放在鸟种子目录内）
+            # 创建 burst 目录（V4.0.6: 无识别结果时放入"其他鸟类"）
             if bird_species_name and highest_rating >= 2:
+                # 有鸟种识别结果，放在鸟种子目录
                 burst_dir = os.path.join(highest_rating_dir, bird_species_name, f"burst_{group_id:03d}")
+            elif self.settings.auto_identify and highest_rating >= 2:
+                # 启用了识鸟功能但没有识别结果，放在"其他鸟类"子目录
+                other_birds = self.i18n.t("logs.folder_other_birds")
+                burst_dir = os.path.join(highest_rating_dir, other_birds, f"burst_{group_id:03d}")
             else:
+                # 未启用识鸟功能或低星级，直接放在评分目录
                 burst_dir = os.path.join(highest_rating_dir, f"burst_{group_id:03d}")
             os.makedirs(burst_dir, exist_ok=True)
 

@@ -1269,6 +1269,15 @@ class SuperPickyMainWindow(QMainWindow):
             extra_notes.append(self.i18n.t("dialogs.note_flight"))
         if self.birdid_check.isChecked():
             extra_notes.append(self.i18n.t("dialogs.note_birdid"))
+            # 显示当前国家/区域设置
+            if hasattr(self, 'birdid_dock') and self.birdid_dock:
+                country_display = self.birdid_dock.country_combo.currentText()
+                region_display = self.birdid_dock.region_combo.currentText()
+                # 构建显示文本
+                location_info = f"  🌍 {country_display}"
+                if region_display and region_display != self.i18n.t("birdid.region_entire_country"):
+                    location_info += f" - {region_display}"
+                extra_notes.append(location_info)
             # V4.3: 检查是否选择了国家，如果是 Auto Detect GPS 则提示
             if hasattr(self, 'birdid_dock') and self.birdid_dock:
                 country_display = self.birdid_dock.country_combo.currentText()

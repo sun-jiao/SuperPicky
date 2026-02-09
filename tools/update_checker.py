@@ -14,8 +14,9 @@ from typing import Optional, Tuple, Dict
 from packaging import version
 
 
-# 当前版本号（与 main_window.py 保持一致）
-CURRENT_VERSION = "4.0.3"
+# 当前版本号（从 constants.py 统一获取）
+from constants import APP_VERSION
+CURRENT_VERSION = APP_VERSION
 
 # GitHub API 配置
 GITHUB_REPO = "jamesphotography/SuperPicky"
