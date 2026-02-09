@@ -44,7 +44,7 @@ def main():
     
     # 设置应用属性
     app.setApplicationName("SuperPicky")
-    app.setApplicationDisplayName("慧眼选鸟v4.0.4 (111db4d6)")
+    app.setApplicationDisplayName("慧眼选鸟v4.0.4 (1bf7c61a)")
     app.setOrganizationName("JamesPhotography")
     app.setOrganizationDomain("jamesphotography.com.au")
     
