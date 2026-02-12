@@ -157,12 +157,9 @@ class AboutDialog(QDialog):
         return """James Yu (詹姆斯·于震)
 Australian-Chinese Professional Photographer, Author of "James' Landscape Photography Notes" Trilogy
 
-Contact
-james@jamesphotography.com.au
-WeChat: jamesyz001 XiaoHongShu(小红书): 4916440495
 
-Bird Eye Detection Model: Jordan Yu
-Windows Version: 小平, Lyapunov
+Model Training: Jordan Yu
+Development Team: Xiaoping, Lyapunov, osk.sh
 
 Open Source Models
 YOLO11 - Bird Detection (AGPL-3.0)
@@ -170,12 +167,6 @@ TOPIQ - Aesthetic Scoring by Chaofeng Chen et al. (IEEE TIP 2024)
   github.com/chaofengc/IQA-PyTorch
   License: CC BY-NC-SA 4.0
 
-Free Tools by James
-• SuperPicky - AI Bird Photo Selector
-• BirdID - AI Species Recognition (Lightroom)
-• BirdFind - eBird Search (Web)
-• StarRemover - AI Milky Way Processing (Photoshop)
-• PhotoMemory - Bird Collection (iOS)
-• TravelBook - AI Travel Journal (iOS)
+
 
 © 2024-2025 James Yu"""
