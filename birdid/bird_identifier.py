@@ -12,6 +12,7 @@ from PIL import Image, ImageEnhance, ImageFilter
 from PIL.ExifTags import TAGS, GPSTAGS
 import json
 import cv2
+import io
 import os
 import sys
 from typing import Optional, List, Dict, Tuple, Set
@@ -148,6 +149,12 @@ def decrypt_model(encrypted_path: str, password: str) -> bytes:
     return plaintext_padded[:-padding_length]
 
 
+def _load_torchscript_from_bytes(model_data: bytes):
+    """Load TorchScript from bytes to avoid Windows non-ASCII temp path issues."""
+    buffer = io.BytesIO(model_data)
+    return torch.jit.load(buffer, map_location='cpu')
+
+
 # ==================== 懒加载函数 ====================
 
 def get_classifier():
@@ -159,17 +166,17 @@ def get_classifier():
         if os.path.exists(MODEL_PATH_ENC):
             # 加载加密模型
             model_data = decrypt_model(MODEL_PATH_ENC, SECRET_PASSWORD)
-            import tempfile
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pt') as tmp:
-                tmp.write(model_data)
-                tmp_path = tmp.name
-            _classifier = torch.jit.load(tmp_path, map_location='cpu')
-            try:
-                os.unlink(tmp_path)
-            except:
-                pass
+            _classifier = _load_torchscript_from_bytes(model_data)
         elif os.path.exists(MODEL_PATH):
-            _classifier = torch.jit.load(MODEL_PATH, map_location='cpu')
+            try:
+                _classifier = torch.jit.load(MODEL_PATH, map_location='cpu')
+            except RuntimeError as e:
+                # Some Windows builds fail fopen on non-ASCII paths.
+                if 'open file failed' not in str(e) or 'fopen' not in str(e):
+                    raise
+                with open(MODEL_PATH, 'rb') as f:
+                    model_data = f.read()
+                _classifier = _load_torchscript_from_bytes(model_data)
         else:
             raise RuntimeError(f"未找到分类模型: {MODEL_PATH}")
 
