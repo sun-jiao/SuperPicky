@@ -409,6 +409,10 @@ class PhotoProcessor:
             if self.stats['total'] > 0 else 0
         )
         
+        # 关闭数据库连接（在所有阶段完成后）
+        if hasattr(self, 'report_db') and self.report_db:
+            self.report_db.close()
+        
         return ProcessingResult(
             stats=self.stats.copy(),
             file_ratings=self.file_ratings.copy(),
@@ -1911,9 +1915,7 @@ class PhotoProcessor:
         # SQLite 数据库会在 _update_csv_keypoint_data 中自动提交
         # 无需手动 flush
         
-        # 关闭数据库连接
-        if self.report_db:
-            self.report_db.close()
+        # 注意：report_db 在 run() 方法结束时关闭，因为后续阶段仍需要使用
         
         self._perf_finalize()
         
