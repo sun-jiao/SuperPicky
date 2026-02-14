@@ -408,6 +408,7 @@ class AdvancedSettingsDialog(QDialog):
 
         # 保存
         save_btn = QPushButton(self.i18n.t("advanced_settings.save"))
+        save_btn.setObjectName("secondary")
         save_btn.setMinimumWidth(80)
         save_btn.clicked.connect(self._save_settings)
         btn_layout.addWidget(save_btn)
