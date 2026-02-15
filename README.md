@@ -1,173 +1,87 @@
-# SuperPicky - 慧眼选鸟 🦅
+# SuperPicky - AI Bird Photo Culling Tool 🦅
 
 [![Version](https://img.shields.io/badge/version-4.0.5-blue.svg)](https://github.com/jamesphotography/SuperPicky)
 [![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
 [![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 
-**智能鸟类照片筛选工具 - 让AI帮你挑选最美的鸟类照片**
+[**中文文档 (Chinese)**](README_zh.md) | [**Release Notes**](RELEASE_NOTES.md)
 
-拍片一时爽，选片照样爽！一款专门为鸟类摄影师设计的智能照片筛选软件，使用多模型AI技术自动识别、评分和筛选鸟类照片，大幅提升后期整理效率。
+**Smart AI Culling Tool for Bird Photographers**
 
----
-
-## 🌟 核心功能
-
-### 🤖 多模型协作
-- **YOLO11 检测**: 精准识别照片中的鸟类位置和分割掩码
-- **SuperEyes 鸟眼**: 检测鸟眼位置和可见度，计算头部区域锐度
-- **SuperFlier 飞鸟**: 识别飞行姿态，给予飞版照片额外加分
-- **TOPIQ 美学**: 评估整体画面美感、构图和光影
-
-### ⭐ 智能评分系统 (0-3星)
-| 星级 | 条件 | 含义 |
-|------|------|------|
-| ⭐⭐⭐ | 锐度达标 + 美学达标 | 优选照片，值得后期处理 |
-| ⭐⭐ | 锐度达标 或 美学达标 | 良好照片，可考虑保留 |
-| ⭐ | 有鸟但都未达标 | 普通照片，通常可删除 |
-| 0 | 无鸟/质量太差 | 建议删除 |
-
-### ⚙️ 摄影水平预设 (New)
-根据您的拍摄经验自动设定筛选标准：
-- **🐣 新手 Beginner**: 锐度>300, 美学>4.5 (保留更多)
-- **📷 初级 Intermediate**: 锐度>380, 美学>4.8 (平衡)
-- **👑 大师 Master**: 锐度>520, 美学>5.5 (严苛)
-
-
-### 🏷️ 特殊标记
-- **Pick 精选**: 3星照片中锐度+美学双排名前25%的交集
-- **Flying 飞鸟**: AI检测到飞行姿态，额外加分并标记绿色
-- **Exposure 曝光** (可选): 检测过曝/欠曝问题，降一星处理
-
-### 📂 自动整理
-- **按星级分类**: 自动移动到 0星/1星/2星/3星 文件夹
-- **EXIF写入**: 评分、旗标、锐度/美学值写入RAW文件元数据
-- **Lightroom兼容**: 导入即可按评分排序和筛选
-- **可撤销**: 一键重置恢复原始状态
+Shoot freely, cull easily! A smart photo culling software designed specifically for bird photographers. It uses multi-model AI technology to automatically identify, rate, and filter bird photos, significantly improving post-processing efficiency.
 
 ---
 
-## 📋 系统要求
+## 🌟 Core Features
 
-- **macOS**: macOS 14+ · Apple Silicon (M1/M2/M3/M4) · 1.5GB空间
-- **Windows**: Windows 10+ · NVIDIA GPU (建议) · 2GB空间
+### 🤖 Multi-Model Synergy
+- **YOLO11 Detection**: Precise bird detection and segmentation masks.
+- **SuperEyes**: Detects eye visibility and calculates head sharpness.
+- **SuperFlier**: Identifies flight poses for bonus points.
+- **TOPIQ Aesthetics**: Assesses overall image aesthetics, composition, and lighting.
+
+### ⭐ Smart Rating System (0-3 Stars)
+| Stars | Condition | Meaning |
+|-------|-----------|---------|
+| ⭐⭐⭐ | Sharpness OK + Aesthetics OK | Excellent, worth editing |
+| ⭐⭐ | Sharpness OK OR Aesthetics OK | Good, consider keeping |
+| ⭐ | Bird found but below threshold | Average, usually delete |
+| 0 | No bird / Poor quality | Delete |
+
+### ⚙️ Skill Level Presets (New)
+Automatically set thresholds based on your experience:
+- **🐣 Beginner**: Sharpness>300, Aesthetics>4.5 (Keep more)
+- **📷 Intermediate**: Sharpness>380, Aesthetics>4.8 (Balanced)
+- **👑 Master**: Sharpness>520, Aesthetics>5.5 (Strict)
+
+### 🏷️ Special Tags
+- **Pick (Flag)**: Top 25% intersection of sharpness & aesthetics among 3-star photos.
+- **Flying**: Green label for bird-in-flight photos.
+- **Exposure**: Filters over/under-exposed shots (Optional).
+
+### 📂 Auto-Organization
+- **Sort by Stars**: Auto-move to 0star/1star/2star/3star folders.
+- **EXIF Write**: Writes ratings, flags, and scores to RAW metadata.
+- **Lightroom Compatible**: Sort and filter immediately after import.
+- **Undo**: One-click reset to restore original state.
 
 ---
 
-## 📥 下载安装
+## 📥 Downloads
 
 ### macOS
 **Apple Silicon (M1/M2/M3/M4)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_v4.0.5.dmg) | [Google Drive](https://drive.google.com/file/d/PLACEHOLDER/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/PLACEHOLDER?pwd=code) 提取码: code
+- [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_v4.0.5.dmg)
 
-**Intel (2020年前 Mac)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_v4.0.5_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/PLACEHOLDER/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/PLACEHOLDER?pwd=code) 提取码: code
-
-1. 下载对应版本的 DMG 文件
-2. 双击 DMG 文件，将应用拖入 Applications
-3. 首次打开：右键点击应用选择"打开"
+**Intel (Pre-2020 Mac)**
+- [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.5/SuperPicky_v4.0.5_Intel.dmg)
 
 ### Windows (v4.0.4)
-- CPU (1GB): [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.4/SuperPicky4.0.4_Win64_No_CUDA.zip) | [Google Drive](https://drive.google.com/file/d/1QWfDsb4L7wMoUoo17p6iiW1L9Lf-OAEv/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1zhWtMwAzthrLAeKxKf4SZw?pwd=2mrt) 提取码: 2mrt
-- CUDA-GPU (3.4GB): [Google Drive](https://drive.google.com/file/d/1QkBqBYxylpIlN7jByVUC3m9QEM40DYga/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1dM79au9DpnWZQoWdUISPQA?pwd=1usg) 提取码: 1usg
-
-1. 下载并解压 ZIP 文件
-2. 运行 `SuperPicky.exe`
-
-### 从源码运行
-
-```bash
-git clone https://github.com/jamesphotography/SuperPicky.git
-cd SuperPicky
-python3 -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
-```
+*(See release page for Windows links)*
 
 ---
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-1. **选择文件夹**: 拖入或浏览选择包含鸟类照片的文件夹
-2. **调整阈值** (可选): 锐度阈值 (200-600)、美学阈值 (4.0-7.0)
-3. **开关功能** (可选): 飞鸟检测、曝光检测
-4. **开始处理**: 点击按钮等待AI处理完成
-5. **查看结果**: 照片自动分类，导入Lightroom即可使用
-
----
-
-## 📝 更新日志
-
-### v4.0.4 (2026-02-09)
-- 🔧 **连拍优化**: 启用识鸟但无结果时，放入"其他鸟类"子目录
-- 🔧 **版本管理**: 版本号统一从 constants.py 获取
-- 🔧 **UI 改进**: 确认对话框显示当前选择的国家/区域
-
-### v4.0.3 (2026-01-30)
-- ⚙️ **新增摄影水平预设**: 新手/初级/大师三种模式，一键设定最佳筛选阈值
-- 🦜 **AI 鸟类识别**: 集成 11,000+ 种鸟类识别模型，自动写入元数据
-- 🔌 **Lightroom 插件**: 支持在 LR 中直接调用 AI 识别
-- 🌏 **eBird 集成**: 基于地理位置优化识别结果
-
-### v3.9.0 (2026-01-09)
-- 📷 **新增连拍检测**: 自动识别连拍组，选出最佳照片
-  - 支持 pHash 相似度验证，提高准确率
-  - 最佳照片标记紫色标签，其仙移入 burst_XXX 子目录
-- 📦 CLI 新增 `burst` 命令，支持独立连拍检测
-- 🔄 `reset` 和 `restar` 命令自动处理 burst 子目录
-- 🎮 GUI 新增「连拍」开关（默认开启）
-
-### v3.8.0 (2026-01-02)
-- ✨ **新增曝光检测**: 检测鸟区域过曝/欠曝，可选功能默认关闭
-  - 过曝判定：亮度 ≥235 的像素超过 10%
-  - 欠曝判定：亮度 ≤15 的像素超过 10%
-  - 有曝光问题的照片评分降一星
-- 📊 新增曝光问题统计和日志标签 【曝光】
-- 🎚️ 曝光阈值可在高级设置中调整 (5%-20%)
-
-### v3.7.0 (2026-01-01)
-- ✨ 重构评分逻辑，使用 TOPIQ 替代 NIMA
-- 🦅 飞鸟检测加成：锐度+100，美学+0.5
-- 👁️ 眼睛可见度封顶逻辑优化
-- 🔧 UI 优化和 Bug 修复
-
-### v3.6.0 (2025-12-30)
-- ✨ 飞鸟照片绿色标签
-- 📊 飞鸟统计计数
-- 🔄 纯JPEG文件支持
+1. **Select Folder**: Drag & drop or browse for a folder with bird photos.
+2. **Adjust Thresholds** (Optional): Sharpness (200-600), Aesthetics (4.0-7.0).
+3. **Toggle Features**: Flight detection, Exposure check.
+4. **Start**: Click to begin AI processing.
+5. **Review**: Photos are organized; import to Lightroom to see ratings.
 
 ---
 
-## 👨‍💻 开发团队
+## 📝 Update Log
 
-| 角色 | 成员 | 贡献 |
-|------|------|------|
-| 开发者 | [James Yu (詹姆斯·于震)](https://github.com/jamesphotography) | 核心开发 |
-| 模型训练 | [Jordan Yu (于若君)](https://github.com/jordan-yrj) | SuperEyes · SuperFlier |
-| Windows版 | [小平](https://github.com/thp2024) | Windows移植 |
-
----
-
-## 🙏 致谢
-
-- [YOLO11](https://github.com/ultralytics/ultralytics) - Ultralytics 目标检测模型
-- [TOPIQ](https://github.com/chaofengc/IQA-PyTorch) - Chaofeng Chen 等人的图像质量评估模型
-- [ExifTool](https://exiftool.org/) - Phil Harvey 的 EXIF 处理工具
+### v4.0.5 (2026-02-15)
+- 🚀 **Architecture**: SQLite migration, ~1.9x speedup.
+- 🌟 **Community**: Thanks @OscarKing888 for Sony ARW & UTF-8 fixes.
+- 🧹 **Clean**: Unified temp files to hidden cache dir.
+- 🔧 **Fixes**: Chinese path support, ExifTool deadlock, Plugin metadata.
 
 ---
 
-## 📄 许可证
+## 📄 License
 
-本软件使用 **AGPL-3.0 License** 开源。
-
-- **AGPL-3.0**: 适用于 SuperPicky 主程序代码 (基于 Ultralytics YOLO 的开源要求)
-- **CC-BY-NC-SA 4.0**: 适用于包含的 TOPIQ 模型权重 (仅限非商业研究与个人使用)
-
-这意味着：
-1. 您可以免费下载、使用和修改本软件。
-2. 如果您分发修改后的版本，必须同样开源并使用 AGPL-3.0 协议。
-3. **严禁将本软件或其组件用于商业销售或盈利目的** (受 TOPIQ 权重协议限制)。
-
-详见 [LICENSE](LICENSE) 文件。
-
-**让SuperPicky成为你鸟类摄影的得力助手！** 🦅📸
+Open sourced under **AGPL-3.0 License**.
+TOPIQ weights are **CC-BY-NC-SA 4.0** (Non-commercial use only).

@@ -1,5 +1,33 @@
 # SuperPicky Release Notes
 
+## V4.0.5 (2026-02-15) - 性能跃升与架构升级 / Performance & Architecture Upgrade
+
+This release brings a major architectural overhaul, migrating from CSV to SQLite database, and integrates key community fixes.
+本次更新带来了底层的重大重构，从 CSV 迁移至 SQLite 数据库，并整合了社区贡献的多项关键修复。
+
+### 🚀 Architecture & Performance / 架构与性能
+- **[Core] 核心架构升级 (Core Architecture Upgrade)**
+  - Migrated report storage from CSV to SQLite (报告存储从 CSV 迁移至 SQLite).
+  - **Speed**: ~1.9x speedup (速度提升 1.9倍).
+  - **Stability**: Resolved file lock conflicts (解决文件锁冲突).
+- **[Core] 统一临时文件管理 (Unified Temp File Management)**
+  - All cache moved to `.superpicky/cache/` (所有缓存移至隐藏目录).
+  - Smart cleanup logic (智能清理逻辑).
+
+### 🌟 Special Thanks / 特别致谢
+- **@OscarKing888 (osk.ch)**: 
+  - [Fix] Sony ARW compatibility (Sidecar XMP).
+  - [Fix] EXIF Caption UTF-8 encoding.
+  - [Dev] Windows CUDA setup script.
+
+### 🐛 Bug Fixes
+- **[Fix]** Debug Path Persistence & Ghost Paths cleanup.
+- **[Fix]** Chinese Path Support (中文路径支持).
+- **[Fix]** Burst Merge DB connection error.
+- **[Plugin]** Metadata writing reliability.
+
+---
+
 ## V4.0.4 beta (2026-02-09) - 连拍优化与稳定性改进
 
 ### Bug Fixes
