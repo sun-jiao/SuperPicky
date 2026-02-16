@@ -112,10 +112,8 @@ _bird_info = None
 _db_manager = None
 _yolo_detector = None
 
-# V4.0.5: 性能优化 - 全局缓存
-_ebird_filter = None  # eBirdCountryFilter 单例
-_species_cache = {}  # {region_code: species_set} 物种列表缓存
-_gps_detected_region_cache = None  # GPS 检测的区域缓存，避免重复 Nominatim 查询
+# V4.0.5: 离线物种过滤
+_avonet_filter = None  # AvonetFilter 单例
 
 
 # ==================== 模型加密解密 ====================
@@ -240,37 +238,21 @@ def get_yolo_detector():
     return _yolo_detector
 
 
-def get_ebird_filter():
-    """V4.0.5: 懒加载 eBirdCountryFilter（单例模式）"""
-    global _ebird_filter
-    if _ebird_filter is None:
+def get_species_filter():
+    """懒加载 AvonetFilter（单例模式）"""
+    global _avonet_filter
+    if _avonet_filter is None:
         try:
-            from birdid.ebird_country_filter import eBirdCountryFilter
-            api_key = os.environ.get('EBIRD_API_KEY', '60nan25sogpo')
-            cache_dir = os.path.join(get_user_data_dir(), 'ebird_cache')
-            offline_dir = get_birdid_path('data/offline_ebird_data')
-            _ebird_filter = eBirdCountryFilter(api_key, cache_dir=cache_dir, offline_dir=offline_dir)
-        except Exception as e:
-            print(f"[eBird] 初始化失败: {e}")
-            return None
-    return _ebird_filter
-
-
-def get_species_list_cached(region_code: str) -> set:
-    """V4.0.5: 获取物种列表（带内存缓存）"""
-    global _species_cache
-    if region_code not in _species_cache:
-        ebird_filter = get_ebird_filter()
-        if ebird_filter:
-            species_set = ebird_filter.get_country_species_list(region_code)
-            if species_set:
-                _species_cache[region_code] = species_set
-                print(f"[eBird] 首次加载 {region_code} 物种列表: {len(species_set)} 个物种")
+            from birdid.avonet_filter import AvonetFilter
+            _avonet_filter = AvonetFilter()
+            if _avonet_filter.is_available():
+                print("[Avonet] 离线物种过滤器已加载")
             else:
-                return None
-        else:
+                _avonet_filter = None
+        except Exception as e:
+            print(f"[Avonet] 初始化失败: {e}")
             return None
-    return _species_cache.get(region_code)
+    return _avonet_filter
 
 
 # ==================== YOLO 鸟类检测器 ====================
@@ -621,7 +603,7 @@ OSEA_TRANSFORM = transforms.Compose([
 def predict_bird(
     image: Image.Image,
     top_k: int = 5,
-    ebird_species_set: Optional[Set[str]] = None
+    species_class_ids: Optional[Set[int]] = None
 ) -> List[Dict]:
     """
     识别鸟类（OSEA ResNet34）
@@ -629,7 +611,7 @@ def predict_bird(
     Args:
         image: PIL Image 对象
         top_k: 返回前 K 个结果
-        ebird_species_set: eBird 物种代码集合（用于过滤）
+        species_class_ids: 区域物种的 class_id 集合（用于过滤）
 
     Returns:
         识别结果列表 [{cn_name, en_name, confidence, ebird_code, ...}, ...]
@@ -656,15 +638,15 @@ def predict_bird(
     best_probs = torch.nn.functional.softmax(output / TEMPERATURE, dim=0)
 
     # 获取 top-k 结果
-    k = min(100 if ebird_species_set else top_k, len(best_probs))
+    k = min(100 if species_class_ids else top_k, len(best_probs))
     top_probs, top_indices = torch.topk(best_probs, k)
 
     results = []
     for i in range(len(top_indices)):
         class_id = top_indices[i].item()
         confidence = top_probs[i].item() * 100
-        # 置信度阈值：使用 eBird 过滤时降低阈值以保留更多候选
-        min_confidence = 0.3 if ebird_species_set else 1.0
+        # 置信度阈值：使用区域过滤时降低阈值以保留更多候选
+        min_confidence = 0.3 if species_class_ids else 1.0
         if confidence < min_confidence:
             continue
 
@@ -693,19 +675,13 @@ def predict_bird(
             cn_name = f"Unknown (ID: {class_id})"
             en_name = f"Unknown (ID: {class_id})"
 
-        # eBird 过滤
-        ebird_match = False
-        if ebird_species_set:
-            if not ebird_code and db_manager and en_name:
-                ebird_code = db_manager.get_ebird_code_by_english_name(en_name)
-
-            if ebird_code and ebird_code in ebird_species_set:
-                ebird_match = True
-            elif ebird_species_set:
-                # 调试：显示被过滤掉的候选
-                if i < 5:  # 只显示前5个被过滤的
-                    print(f"[eBird过滤] 跳过: {cn_name} ({en_name}), ebird_code={ebird_code}, 置信度={confidence:.1f}%")
-                continue  # 不在列表中，跳过
+        # Avonet 地理过滤
+        region_match = False
+        if species_class_ids:
+            if class_id in species_class_ids:
+                region_match = True
+            else:
+                continue  # 不在区域物种列表中，跳过
 
         results.append({
             'class_id': class_id,
@@ -714,7 +690,7 @@ def predict_bird(
             'scientific_name': scientific_name,
             'confidence': confidence,
             'ebird_code': ebird_code,
-            'ebird_match': ebird_match,
+            'region_match': region_match,
             'description': description or ''
         })
 
@@ -784,74 +760,48 @@ def identify_bird(
         else:
             print(f"[YOLO调试] YOLO未启用或不可用")
 
-        # eBird 区域过滤 (V4.0.5: 全面优化)
-        ebird_species_set = None
-        effective_region = None
-        data_source = None
-        
-        if use_ebird:
-            global _gps_detected_region_cache
-            
+        # Avonet 地理过滤
+        species_class_ids = None
+
+        if use_ebird:  # 参数名保持兼容，实际使用 Avonet
             try:
-                # V4.0.5: 使用单例模式的 eBirdCountryFilter
-                ebird_filter = get_ebird_filter()
-                if not ebird_filter:
-                    raise ImportError("eBird 过滤模块不可用")
-                
-                # V4.0.5: 三层优化策略确定区域
-                # 1. 用户已设置 region_code/country_code → 直接用
-                # 2. 用户未设置，但缓存中已有 GPS 检测结果 → 直接用缓存
-                # 3. 用户未设置且缓存为空 → 执行 GPS + Nominatim，并缓存结果
-                
-                user_has_preset_region = bool(region_code or country_code)
-                
-                if region_code:
-                    effective_region = region_code
-                    data_source = f"手动选择: {region_code}"
-                elif country_code:
-                    effective_region = country_code
-                    data_source = f"手动选择: {country_code}"
-                elif _gps_detected_region_cache:
-                    # V4.0.5: 使用缓存的 GPS 检测结果，避免重复 Nominatim 查询
-                    effective_region = _gps_detected_region_cache
-                    data_source = f"GPS缓存: {_gps_detected_region_cache}"
-                elif use_gps:
-                    # 首次执行 GPS 检测（仅当未设置且无缓存时）
-                    lat, lon, gps_msg = extract_gps_from_exif(image_path)
-                    if lat and lon:
-                        result['gps_info'] = {
-                            'latitude': lat,
-                            'longitude': lon,
-                            'info': gps_msg
+                species_filter = get_species_filter()
+                if not species_filter:
+                    print("[Avonet] 离线过滤器不可用")
+                else:
+                    # 优先使用 GPS 坐标
+                    if use_gps:
+                        lat, lon, gps_msg = extract_gps_from_exif(image_path)
+                        if lat and lon:
+                            result['gps_info'] = {
+                                'latitude': lat,
+                                'longitude': lon,
+                                'info': gps_msg
+                            }
+                            species_class_ids = species_filter.get_species_by_gps(lat, lon)
+                            if species_class_ids:
+                                print(f"[Avonet] GPS ({lat:.2f}, {lon:.2f}): {len(species_class_ids)} 个物种")
+
+                    # 回退到区域代码
+                    if species_class_ids is None and (region_code or country_code):
+                        effective_region = region_code or country_code
+                        species_class_ids = species_filter.get_species_by_region(effective_region)
+                        if species_class_ids:
+                            print(f"[Avonet] 区域 {effective_region}: {len(species_class_ids)} 个物种")
+
+                    # 记录过滤信息
+                    if species_class_ids:
+                        result['ebird_info'] = {  # 保持键名兼容
+                            'enabled': True,
+                            'species_count': len(species_class_ids),
+                            'data_source': 'avonet.db (offline)'
                         }
-                        gps_detected_region, gps_region_name = ebird_filter.get_region_code_from_gps(lat, lon)
-                        if gps_detected_region:
-                            # 缓存 GPS 检测结果，后续照片直接使用
-                            _gps_detected_region_cache = gps_detected_region
-                            effective_region = gps_detected_region
-                            data_source = f"GPS自动检测: {gps_detected_region} ({gps_region_name})"
-                            print(f"[GPS] 首次检测区域: {gps_detected_region}，后续将使用缓存")
-                
-                # V4.0.5: 使用缓存的物种列表
-                if effective_region:
-                    ebird_species_set = get_species_list_cached(effective_region)
-                
-                # 记录 eBird 过滤信息
-                if ebird_species_set:
-                    result['ebird_info'] = {
-                        'enabled': True,
-                        'region': effective_region,
-                        'species_count': len(ebird_species_set),
-                        'data_source': data_source
-                    }
-                    
-            except ImportError:
-                print("eBird 过滤模块不可用")
+
             except Exception as e:
-                print(f"eBird 过滤初始化失败: {e}")
+                print(f"[Avonet] 过滤初始化失败: {e}")
 
         # 执行识别
-        results = predict_bird(image, top_k=top_k, ebird_species_set=ebird_species_set)
+        results = predict_bird(image, top_k=top_k, species_class_ids=species_class_ids)
 
         result['success'] = True
         result['results'] = results
