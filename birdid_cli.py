@@ -83,6 +83,12 @@ def identify_single_osea(args, image_path: str) -> dict:
                     if cropped:
                         image = cropped
                         result['yolo_info'] = info
+                    else:
+                        # 严格模式：YOLO 未检测到鸟类，直接短路返回
+                        result['success'] = True
+                        result['results'] = []
+                        result['yolo_info'] = {'bird_count': 0}
+                        return result
 
         # 获取 OSEA 分类器
         classifier = get_osea_classifier()
@@ -132,6 +138,7 @@ def display_result(result: dict, verbose: bool = True):
     results = result.get('results', [])
     if not results:
         print(t("cli.no_bird"))
+        print(t("cli.no_bird_hint"))
         return False
     
     print(t("cli.result_title", count=len(results)))

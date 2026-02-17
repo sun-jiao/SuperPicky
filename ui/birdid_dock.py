@@ -768,32 +768,19 @@ class BirdIDDockWidget(QDockWidget):
         filter_layout.addLayout(country_row)
         
         # 区域选择行
-        region_row = QHBoxLayout()
-        region_label = QLabel(self.i18n.t("birdid.region"))
-        region_label.setStyleSheet(f"""
-            color: {COLORS['text_tertiary']};
-            font-size: 11px;
-        """)
-        region_row.addWidget(region_label)
+        # 区域选择行 (V4.2: 二级区域已移除，隐藏整行)
+        # region_row = QHBoxLayout()
+        # region_label = QLabel(self.i18n.t("birdid.region"))
+        # ... (label styling removed) ...
+        # region_row.addWidget(region_label)
         
         self.region_combo = QComboBox()
         self.region_combo.addItem(self.i18n.t("birdid.region_entire_country"))
-        self.region_combo.setStyleSheet(f"""
-            QComboBox {{
-                background-color: {COLORS['bg_input']};
-                border: 1px solid {COLORS['border_subtle']};
-                border-radius: 4px;
-                padding: 4px 8px;
-                color: {COLORS['text_secondary']};
-                font-size: 11px;
-            }}
-            QComboBox:hover {{
-                border-color: {COLORS['accent']};
-            }}
-        """)
+        self.region_combo.hide() # 隐藏
         self.region_combo.currentTextChanged.connect(self._on_region_changed)
-        region_row.addWidget(self.region_combo, 1)
-        filter_layout.addLayout(region_row)
+        
+        # region_row.addWidget(self.region_combo, 1)
+        # filter_layout.addLayout(region_row)
         
         # V4.2: 移除 eBird 过滤开关（默认启用，选择"全球"可禁用）
         # V4.2: 移除自动识别开关（已移到主界面的"识鸟"按钮）
@@ -1155,22 +1142,74 @@ class BirdIDDockWidget(QDockWidget):
     def on_identify_finished(self, result: dict):
         """识别完成"""
         self.progress.hide()
+        t = self.i18n.t
 
+        # === 构建状态信息 ===
+        info_lines = []
+
+        # 1. YOLO 检测状态
+        yolo_info = result.get('yolo_info')
+        if yolo_info is not None:
+            if isinstance(yolo_info, dict) and yolo_info.get('bird_count', 1) == 0:
+                info_lines.append(t("birdid.info_yolo_fail"))
+            else:
+                info_lines.append(t("birdid.info_yolo_ok"))
+
+        # 2. 地理过滤状态
+        gps_info = result.get('gps_info')
+        ebird_info = result.get('ebird_info')
+
+        if gps_info and gps_info.get('latitude'):
+            # GPS 过滤生效
+            count = ebird_info.get('species_count', 0) if ebird_info else 0
+            lat = f"{gps_info['latitude']:.2f}"
+            lon = f"{gps_info['longitude']:.2f}"
+            info_lines.append(t("birdid.info_gps", lat=lat, lon=lon, count=count))
+        elif ebird_info and ebird_info.get('enabled'):
+            # 区域过滤生效
+            region = ebird_info.get('region_code', '')
+            count = ebird_info.get('species_count', 0)
+            if region:
+                info_lines.append(t("birdid.info_region", region=region, count=count))
+            else:
+                info_lines.append(t("birdid.info_region", region="—", count=count))
+        else:
+            info_lines.append(t("birdid.info_global"))
+
+        # === 处理失败/无结果 ===
         if not result.get('success'):
-            self.status_label.setText("识别失败")
-            self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['error']};")
+            info_lines.append(t("birdid.info_identify_fail"))
+            self._show_info_panel(info_lines)
             return
 
         results = result.get('results', [])
         if not results:
-            self.status_label.setText("未能识别")
-            self.status_label.setStyleSheet(f"font-size: 11px; color: {COLORS['warning']};")
+            # 无鸟或无结果
+            if isinstance(yolo_info, dict) and yolo_info.get('bird_count', 1) == 0:
+                info_lines.append(t("birdid.info_no_bird_hint"))
+            else:
+                info_lines.append(t("birdid.info_no_result"))
+            self._show_info_panel(info_lines)
             return
 
-        # 显示结果
+        # === 显示信息面板 + 结果卡片 ===
         self.results_frame.show()
-        self.result_cards = []  # 保存卡片引用
-        self.selected_index = 0  # 默认选中第一个
+        self.result_cards = []
+        self.selected_index = 0
+
+        # 信息标签（在结果卡片之前）
+        if info_lines:
+            info_label = QLabel('\n'.join(info_lines))
+            info_label.setWordWrap(True)
+            info_label.setStyleSheet(f"""
+                color: {COLORS['text_secondary']};
+                font-size: 11px;
+                padding: 8px 10px;
+                background-color: {COLORS['bg_elevated']};
+                border-radius: 6px;
+                line-height: 1.4;
+            """)
+            self.results_layout.addWidget(info_label)
 
         for i, r in enumerate(results, 1):
             card = ResultCard(
@@ -1179,9 +1218,7 @@ class BirdIDDockWidget(QDockWidget):
                 en_name=r.get('en_name', 'Unknown'),
                 confidence=r.get('confidence', 0)
             )
-            # 连接点击信号
             card.clicked.connect(self.on_result_card_clicked)
-            # 默认选中第一个
             if i == 1:
                 card.set_selected(True)
             self.result_cards.append(card)
@@ -1192,9 +1229,23 @@ class BirdIDDockWidget(QDockWidget):
         # 保存结果
         self.identify_results = results
 
-
         # 状态显示选中的候选
         self._update_status_label()
+
+    def _show_info_panel(self, info_lines: list):
+        """显示纯信息面板（无结果卡片时使用）"""
+        self.results_frame.show()
+        info_label = QLabel('\n'.join(info_lines))
+        info_label.setWordWrap(True)
+        info_label.setStyleSheet(f"""
+            color: {COLORS['text_secondary']};
+            font-size: 11px;
+            padding: 10px 12px;
+            background-color: {COLORS['bg_elevated']};
+            border-radius: 6px;
+            line-height: 1.5;
+        """)
+        self.results_layout.addWidget(info_label)
 
     def on_identify_error(self, error_msg: str):
         """识别出错"""

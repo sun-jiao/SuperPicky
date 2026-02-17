@@ -809,6 +809,11 @@ def identify_bird(
                         print(f"[YOLO调试] ✅ 已裁剪鸟类区域")
                     else:
                         print(f"[YOLO调试] ⚠️ 未检测到鸟类")
+                        # 严格模式：YOLO 未检测到鸟类，直接短路返回
+                        result['success'] = True
+                        result['results'] = []
+                        result['yolo_info'] = {'bird_count': 0}
+                        return result
             else:
                 print(f"[YOLO调试] 图片太小，跳过YOLO裁剪")
         else:
@@ -848,7 +853,8 @@ def identify_bird(
                         result['ebird_info'] = {  # 保持键名兼容
                             'enabled': True,
                             'species_count': len(species_class_ids),
-                            'data_source': 'avonet.db (offline)'
+                            'data_source': 'avonet.db (offline)',
+                            'region_code': region_code or country_code if not result.get('gps_info') else None
                         }
 
             except Exception as e:

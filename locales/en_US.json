@@ -762,7 +762,15 @@
     "search_country_placeholder": "Search country...",
     "country_dialog_title": "Select Country",
     "country_prompt_title": "Select Region",
-    "country_prompt_message": "Currently using 'Auto Detect GPS' mode.\n\nIf your photos don't have GPS data, we recommend selecting a country/region for more accurate results.\n\nWould you like to select now?"
+    "country_prompt_message": "Currently using 'Auto Detect GPS' mode.\n\nIf your photos don't have GPS data, we recommend selecting a country/region for more accurate results.\n\nWould you like to select now?",
+    "info_yolo_ok": "Detection: Bird found",
+    "info_yolo_fail": "Detection: No bird found",
+    "info_gps": "GPS: {lat}, {lon} | {count}",
+    "info_region": "Region: {region} | {count}",
+    "info_global": "Global mode (no geo filter)",
+    "info_no_bird_hint": "Try lowering detection sensitivity or retake",
+    "info_identify_fail": "Identification failed",
+    "info_no_result": "No bird identified"
   },
   "cli": {
     "banner": "  🐦 SuperPicky CLI v{version} - AI Photo Selector (Command Line)",
@@ -793,6 +801,7 @@
     "gps_info": "🌍 GPS Location: {info}",
     "ebird_info": "🗺️  eBird Filter: {region} ({count} species)",
     "no_bird": "⚠️  No bird identified",
+    "no_bird_hint": "💡 Tip: try lowering detection sensitivity or retake the photo",
     "result_title": "\n🐦 Identification Results (Top-{count}):",
     "confidence_skip": "  ⚠️  Confidence {confidence:.1f}% < {threshold}%, skipping write",
     "exif_success": "  ✅ EXIF write successful",
