@@ -685,8 +685,8 @@ def predict_bird(
     num_classes = min(len(bird_data), output.shape[0])
     output = output[:num_classes]
 
-    # Softmax（温度=0.7 折中选择：置信度适中，用户体验好）
-    TEMPERATURE = 0.7
+    # Softmax（温度=0.9 更平滑：降低过高置信度，避免 99%+ 输出）
+    TEMPERATURE = 0.9
     best_probs = torch.nn.functional.softmax(output / TEMPERATURE, dim=0)
 
     # 获取 top-k 结果
