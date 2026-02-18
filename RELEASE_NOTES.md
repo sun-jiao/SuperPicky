@@ -1,5 +1,24 @@
 # SuperPicky Release Notes
 
+## V4.0.6 (2026-02-18) - OSEA Model & Offline Intelligence / OSEA 模型与离线智能
+
+### New Features
+- **[AI] OSEA ResNet34 Model**: 
+  - Integrated OSEA model for higher accuracy bird identification.
+  - Replaces legacy birdid2024 model.
+- **[Data] Offline Avonet Database**: 
+  - Full offline support for species filtering using Avonet database.
+  - Replaces eBird API dependency for better reliability and privacy.
+- **[UI] Simplified Country Selection**:
+  - Streamlined country list to 48 supported regions.
+  - Smart filtering based on offline data availability.
+
+### Improvements
+- **[Perf]** Optimized country filtering performance.
+- **[UX]** Updated installation guide and welcome messages.
+
+---
+
 ## V4.0.5 (2026-02-15) - 性能跃升与架构升级 / Performance & Architecture Upgrade
 
 This release brings a major architectural overhaul, migrating from CSV to SQLite database, and integrates key community fixes.

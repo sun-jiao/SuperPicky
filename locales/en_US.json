@@ -719,7 +719,7 @@
   "about": {
     "window_title": "About James",
     "subtitle": "AI Bird Photo Culling Tool",
-    "content": "James Yu\nAustralian-Chinese Professional Photographer, Author of \"James' Landscape Photography Notes\" Trilogy\n\nModel Training: Jordan Yu\nDevelopment Team: Xiaoping, Lyapunov, osk.sh\n\nOpen Source Models\nYOLO11 - Bird Detection (AGPL-3.0)\nTOPIQ - Aesthetic Scoring by Chaofeng Chen et al. (IEEE TIP 2024)\n  github.com/chaofengc/IQA-PyTorch\n  License: CC BY-NC-SA 4.0\n\n© 2024-2025 James Yu"
+    "content": "James Yu\nAustralian-Chinese Professional Photographer, Author of \"James' Landscape Photography Notes\" Trilogy\n\nModel Training: Jordan Yu\nDevelopment Team: Xiaoping, Lyapunov, osk.sh\n\nOpen Source Models\nYOLO11 - Bird Detection by Ultralytics\nOSEA - Bird Classification by Sun Jiao\nTOPIQ - Aesthetic Scoring by Chaofeng Chen et al.\n\nLicense: GPL-3.0\n© 2024-2025 James Yu"
   },
   "birdid": {
     "title": "Bird ID",

@@ -1815,8 +1815,9 @@ class SuperPickyMainWindow(QMainWindow):
     def _show_initial_help(self):
         """显示初始帮助信息"""
         t = self.i18n.t
+        from constants import APP_VERSION
         help_text = f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  {t("help.welcome_title")}
+  {t("help.welcome_title", version=APP_VERSION)}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {t("help.usage_steps_title")}

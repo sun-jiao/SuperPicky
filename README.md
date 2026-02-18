@@ -1,8 +1,8 @@
 # SuperPicky - AI Bird Photo Culling Tool 🦅
 
-[![Version](https://img.shields.io/badge/version-4.0.5-blue.svg)](https://github.com/jamesphotography/SuperPicky)
+[![Version](https://img.shields.io/badge/version-4.0.6-blue.svg)](https://github.com/jamesphotography/SuperPicky)
 [![Platform](https://img.shields.io/badge/platform-macOS%20|%20Windows-lightgrey.svg)](https://github.com/jamesphotography/SuperPicky/releases)
-[![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 
 [**中文文档 (Chinese)**](README_zh.md) | [**Release Notes**](RELEASE_NOTES.md)
 
@@ -91,5 +91,9 @@ Automatically set thresholds based on your experience:
 
 ## 📄 License
 
-Open sourced under **AGPL-3.0 License**.
-TOPIQ weights are **CC-BY-NC-SA 4.0** (Non-commercial use only).
+Open sourced under **GPL-3.0 License**.
+
+This project uses:
+- **YOLO11** by Ultralytics
+- **OSEA** by Sun Jiao (github.com/sun-jiao/osea)
+- **TOPIQ** by Chaofeng Chen et al.
