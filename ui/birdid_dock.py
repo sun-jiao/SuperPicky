@@ -1279,11 +1279,11 @@ class BirdIDDockWidget(QDockWidget):
             self.results_layout.addWidget(focus_label)
             self.results_layout.addStretch()
 
-    def show_completion_message(self, debug_dir: str):
+    def show_completion_message(self, stats: dict):
         """
-        V4.2: 处理完成后显示目录路径，隐藏预览图
+        V4.2: 处理完成后显示统计摘要，隐藏预览图
         Args:
-            debug_dir: debug_crops 目录路径
+            stats: photo_processor 返回的统计字典
         """
         # 隐藏预览图
         self.preview_label.hide()
@@ -1294,19 +1294,63 @@ class BirdIDDockWidget(QDockWidget):
         self.placeholder_frame.hide()
         self.results_frame.show()
 
-        # 创建完成信息标签
-        from PySide6.QtWidgets import QLabel
-        
-        info_label = QLabel(f"✅ 分析完成\n\n📁 调试图目录:\n{debug_dir}")
+        total      = stats.get('total', 0)
+        star_3     = stats.get('star_3', 0)
+        star_2     = stats.get('star_2', 0)
+        star_1     = stats.get('star_1', 0)
+        star_0     = stats.get('star_0', 0)
+        no_bird    = stats.get('no_bird', 0)
+        total_time = stats.get('total_time', 0)
+        flying     = stats.get('flying', 0)
+        focus_precise = stats.get('focus_precise', 0)
+        bird_species  = stats.get('bird_species', [])
+
+        def pct(n):
+            return f"{n/total*100:.1f}%" if total > 0 else "—"
+
+        lines = [f"✅  分析完成  |  {total} 张  |  {total_time/60:.1f} min", ""]
+        if total > 0:
+            lines.append(f"⭐⭐⭐  {star_3:>4}  ({pct(star_3)})")
+            lines.append(f"⭐⭐    {star_2:>4}  ({pct(star_2)})")
+            lines.append(f"⭐      {star_1:>4}  ({pct(star_1)})")
+            lines.append(f"0⭐     {star_0:>4}  ({pct(star_0)})")
+            lines.append(f"❌      {no_bird:>4}  ({pct(no_bird)})")
+
+        if flying > 0 or focus_precise > 0:
+            lines.append("")
+            if flying > 0:
+                lines.append(f"🟢 飞版: {flying}")
+            if focus_precise > 0:
+                lines.append(f"🔴 精焦: {focus_precise}")
+
+        if bird_species:
+            is_chinese = self.i18n.current_lang.startswith('zh')
+            names = []
+            for sp in bird_species:
+                if isinstance(sp, dict):
+                    name = sp.get('cn_name', '') if is_chinese else sp.get('en_name', '')
+                    if not name:
+                        name = sp.get('en_name', '') or sp.get('cn_name', '')
+                else:
+                    name = str(sp)
+                if name:
+                    names.append(name)
+            if names:
+                lines.append("")
+                lines.append(f"🦜 {len(names)} 种: {', '.join(names)}")
+
+        info_label = QLabel('\n'.join(lines))
         info_label.setStyleSheet(f"""
             color: {COLORS['text_secondary']};
             font-size: 12px;
+            font-family: {FONTS['mono']};
             padding: 16px;
             background-color: {COLORS['bg_elevated']};
             border-radius: 8px;
         """)
         info_label.setWordWrap(True)
         self.results_layout.addWidget(info_label)
+        self.results_layout.addStretch()
 
     def clear_results(self):
         """清空结果区域"""

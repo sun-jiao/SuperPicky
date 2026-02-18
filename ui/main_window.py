@@ -1339,10 +1339,9 @@ class SuperPickyMainWindow(QMainWindow):
         # 显示 Lightroom 指南
         self._show_lightroom_guide()
 
-        # V4.2: 通知 BirdIDDock 显示完成信息
+        # V4.2: 通知 BirdIDDock 显示完成信息（传入 stats 替代 debug_dir）
         if hasattr(self, 'birdid_dock') and self.birdid_dock:
-            debug_dir = os.path.join(self.directory_path, ".superpicky", "cache", "crop_debug")
-            self.birdid_dock.show_completion_message(debug_dir)
+            self.birdid_dock.show_completion_message(stats)
 
         # 播放完成音效
         self._play_completion_sound()
