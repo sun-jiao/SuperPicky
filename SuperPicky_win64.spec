@@ -133,6 +133,11 @@ a = Analysis(
 
 pyz = PYZ(a.pure)
 
+# Windows 使用高精度 icon.ico（由 img/icon.png 生成），macOS 使用 .icns
+_icon_ico = os.path.join(base_path, 'img', 'icon.ico')
+_icon_icns = os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns')
+_exe_icon = _icon_ico if (sys.platform == 'win32' and os.path.exists(_icon_ico)) else (_icon_icns if os.path.exists(_icon_icns) else None)
+
 exe = EXE(
     pyz,
     a.scripts,
@@ -151,7 +156,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns') if os.path.exists(os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns')) else None,
+    icon=_exe_icon,
 )
 
 coll = COLLECT(
@@ -168,7 +173,7 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='SuperPicky.app',
-    icon=os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns') if os.path.exists(os.path.join(base_path, 'img', 'SuperPicky-V0.02.icns')) else None,
+    icon=_icon_icns if os.path.exists(_icon_icns) else None,
     bundle_identifier='com.jamesphotography.superpicky',
     info_plist={
         'CFBundleName': 'SuperPicky',
