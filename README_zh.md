@@ -68,9 +68,12 @@
 2. 双击 DMG 文件，将应用拖入 Applications
 3. 首次打开：右键点击应用选择"打开"
 
-### Windows (v4.0.5)
-**CUDA-GPU Version**
+### Windows
+**CUDA-GPU Version (v4.0.5)**
 - [Google Drive](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link) | [百度网盘](https://pan.baidu.com/s/14tnSXnI2LIeZf4egu4xxNg?pwd=jfuz) 提取码: jfuz
+
+**CPU Version (v4.0.6 Beta)**
+- [百度网盘](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) 提取码: xgnj
 
 
 1. 下载并解压 ZIP 文件

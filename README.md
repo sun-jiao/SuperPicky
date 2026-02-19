@@ -60,11 +60,14 @@ Automatically set thresholds based on your experience:
 - [Google Drive (Mirror)](https://drive.google.com/file/d/12lQhMTRXEnNO_nalIp9K0cIJAFtFuWlT/view?usp=sharing)
 - [Baidu Netdisk](https://pan.baidu.com/s/1oz_tZc7BARktJsVcAwSs9g?pwd=sw35) Code: sw35
 
-### Windows (v4.0.5)
-**CUDA-GPU Version**
+### Windows
+**CUDA-GPU Version (v4.0.5)**
 - [Google Drive (Mirror)](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link)
 - [Baidu Netdisk](https://pan.baidu.com/s/14tnSXnI2LIeZf4egu4xxNg?pwd=jfuz) Code: jfuz
 - [Google Drive (Mirror)](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link)
+
+**CPU Version (v4.0.6 Beta)**
+- [Baidu Netdisk](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) Code: xgnj
 
 
 ---

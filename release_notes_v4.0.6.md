@@ -30,3 +30,6 @@
 - **GitHub**: [SuperPicky_v4.0.6_Intel.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6_Intel.dmg)
 - **Google Drive**: [Download](https://drive.google.com/file/d/12lQhMTRXEnNO_nalIp9K0cIJAFtFuWlT/view?usp=sharing)
 - **Baidu Netdisk**: [Download](https://pan.baidu.com/s/1oz_tZc7BARktJsVcAwSs9g?pwd=sw35) (Code: sw35)
+
+### Windows
+- **CPU Version (v4.0.6 Beta)**: [Baidu Netdisk](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) (Code: xgnj)
