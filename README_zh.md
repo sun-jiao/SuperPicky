@@ -59,18 +59,21 @@
 
 ### macOS
 **Apple Silicon (M1/M2/M3/M4) (v4.0.6 Beta)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6.dmg) | [Google Drive](https://drive.google.com/file/d/1vwKMcXcZQHYSalOyXg3grOV2wYFu2W8_/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1CR1OsRRorAwC0vI5xqw7Rw?pwd=mix5) 提取码: mix5
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6.dmg) | [Google Drive](https://drive.google.com/file/d/1nC4BUlSTSmXR-zKtZfw80ylEbb5GIT56/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1sVjLG0TWhKDrhipNiKr51A?pwd=w65f) 提取码: w65f
 
 **Intel (2020年前 Mac) (v4.0.6 Beta)**
-- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/1eKw_02YlsC9Yrfi1VxOxAX6xSMzIDdQa/view?usp=drive_link) | [百度网盘](https://pan.baidu.com/s/1hMW47CCJKaKtjtqgTiep8g?pwd=6cpu) 提取码: 6cpu
+- [GitHub 下载](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6_Intel.dmg) | [Google Drive](https://drive.google.com/file/d/12lQhMTRXEnNO_nalIp9K0cIJAFtFuWlT/view?usp=sharing) | [百度网盘](https://pan.baidu.com/s/1oz_tZc7BARktJsVcAwSs9g?pwd=sw35) 提取码: sw35
 
 1. 下载对应版本的 DMG 文件
 2. 双击 DMG 文件，将应用拖入 Applications
 3. 首次打开：右键点击应用选择"打开"
 
-### Windows (v4.0.5)
-**CUDA-GPU Version**
+### Windows
+**CUDA-GPU Version (v4.0.5)**
 - [Google Drive](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link) | [百度网盘](https://pan.baidu.com/s/14tnSXnI2LIeZf4egu4xxNg?pwd=jfuz) 提取码: jfuz
+
+**CPU Version (v4.0.6 Beta)**
+- [百度网盘](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) 提取码: xgnj
 
 
 1. 下载并解压 ZIP 文件

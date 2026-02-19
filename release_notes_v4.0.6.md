@@ -23,10 +23,13 @@
 
 ### macOS Apple Silicon (M1/M2/M3/M4)
 - **GitHub**: [SuperPicky_v4.0.6.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6.dmg)
-- **Google Drive**: [Download](https://drive.google.com/file/d/1vwKMcXcZQHYSalOyXg3grOV2wYFu2W8_/view?usp=sharing)
-- **Baidu Netdisk**: [Download](https://pan.baidu.com/s/1CR1OsRRorAwC0vI5xqw7Rw?pwd=mix5) (Code: mix5)
+- **Google Drive**: [Download](https://drive.google.com/file/d/1nC4BUlSTSmXR-zKtZfw80ylEbb5GIT56/view?usp=sharing)
+- **Baidu Netdisk**: [Download](https://pan.baidu.com/s/1sVjLG0TWhKDrhipNiKr51A?pwd=w65f) (Code: w65f)
 
 ### macOS Intel (Pre-2020 Mac)
 - **GitHub**: [SuperPicky_v4.0.6_Intel.dmg](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6_Intel.dmg)
-- **Google Drive**: [Download](https://drive.google.com/file/d/1eKw_02YlsC9Yrfi1VxOxAX6xSMzIDdQa/view?usp=drive_link)
-- **Baidu Netdisk**: [Download](https://pan.baidu.com/s/1hMW47CCJKaKtjtqgTiep8g?pwd=6cpu) (Code: 6cpu)
+- **Google Drive**: [Download](https://drive.google.com/file/d/12lQhMTRXEnNO_nalIp9K0cIJAFtFuWlT/view?usp=sharing)
+- **Baidu Netdisk**: [Download](https://pan.baidu.com/s/1oz_tZc7BARktJsVcAwSs9g?pwd=sw35) (Code: sw35)
+
+### Windows
+- **CPU Version (v4.0.6 Beta)**: [Baidu Netdisk](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) (Code: xgnj)

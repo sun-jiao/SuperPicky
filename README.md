@@ -52,19 +52,22 @@ Automatically set thresholds based on your experience:
 ### macOS
 **Apple Silicon (M1/M2/M3/M4) (v4.0.6 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6.dmg)
-- [Google Drive (Mirror)](https://drive.google.com/file/d/1vwKMcXcZQHYSalOyXg3grOV2wYFu2W8_/view?usp=sharing)
-- [Baidu Netdisk](https://pan.baidu.com/s/1CR1OsRRorAwC0vI5xqw7Rw?pwd=mix5) Code: mix5
+- [Google Drive (Mirror)](https://drive.google.com/file/d/1nC4BUlSTSmXR-zKtZfw80ylEbb5GIT56/view?usp=sharing)
+- [Baidu Netdisk](https://pan.baidu.com/s/1sVjLG0TWhKDrhipNiKr51A?pwd=w65f) Code: w65f
 
 **Intel (Pre-2020 Mac) (v4.0.6 Beta)**
 - [GitHub Download](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_v4.0.6_Intel.dmg)
-- [Google Drive (Mirror)](https://drive.google.com/file/d/1eKw_02YlsC9Yrfi1VxOxAX6xSMzIDdQa/view?usp=drive_link)
-- [Baidu Netdisk](https://pan.baidu.com/s/1hMW47CCJKaKtjtqgTiep8g?pwd=6cpu) Code: 6cpu
+- [Google Drive (Mirror)](https://drive.google.com/file/d/12lQhMTRXEnNO_nalIp9K0cIJAFtFuWlT/view?usp=sharing)
+- [Baidu Netdisk](https://pan.baidu.com/s/1oz_tZc7BARktJsVcAwSs9g?pwd=sw35) Code: sw35
 
-### Windows (v4.0.5)
-**CUDA-GPU Version**
+### Windows
+**CUDA-GPU Version (v4.0.5)**
 - [Google Drive (Mirror)](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link)
 - [Baidu Netdisk](https://pan.baidu.com/s/14tnSXnI2LIeZf4egu4xxNg?pwd=jfuz) Code: jfuz
 - [Google Drive (Mirror)](https://drive.google.com/file/d/17-dFw2pZKXn53zmYAZ7HQNHTyndCT76E/view?usp=drive_link)
+
+**CPU Version (v4.0.6 Beta)**
+- [Baidu Netdisk](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) Code: xgnj
 
 
 ---
