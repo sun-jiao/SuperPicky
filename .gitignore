@@ -5,7 +5,8 @@ __pycache__/
 *.so
 .Python
 *.egg-info/
-dist/*
+build_dist*/*
+dist*/*
 !dist/*.dmg
 build/
 
