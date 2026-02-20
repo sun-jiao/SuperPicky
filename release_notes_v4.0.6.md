@@ -35,4 +35,4 @@
 - **CUDA-GPU Version (v4.0.6 Beta)**: [Baidu Netdisk](https://pan.baidu.com/s/1UUfnal8rT2Mizkdcs0xpwg?pwd=igew) (Code: igew)
 
 ### Windows
-- **CPU Version (v4.0.6 Beta)**: [Baidu Netdisk](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) (Code: xgnj)
+- **CPU Version (v4.0.6 Beta)**: [GitHub](https://github.com/jamesphotography/SuperPicky/releases/download/v4.0.6/SuperPicky_4.0.6_Win64_CPU.zip) | [Google Drive](https://drive.google.com/file/d/1m-IEASCsAa3Znertanw1NcbX3IKKi2M3/view?usp=sharing) | [Baidu Netdisk](https://pan.baidu.com/s/1VtVnNXJQYKEQw4oo_pZRlw) (Code: xgnj)
