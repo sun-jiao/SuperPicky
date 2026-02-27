@@ -30,7 +30,7 @@
 - [百度网盘](https://pan.baidu.com/s/1XBaGXPim_WzjpNBgG-altg?pwd=c2a6) (c2a6) | [Google Drive](https://drive.google.com/file/d/1IKSxB3KbQdDO7VhnsGnHjOb2EgqZIgSB/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/d15276717367)
 
 **Windows CPU**:
-- [GitHub](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip) | [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) (kd45) | [Google Drive](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/462025bd8b3a)
+- [GitHub](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip) | [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) (kd45) | [Google Drive](https://drive.google.com/file/d/1dYzW47KuHEH-hnkHZOnpfZwJNSsl7IkB/view?usp=sharing) | [夸克网盘](https://pan.quark.cn/s/462025bd8b3a)
 
 ---
 
@@ -210,6 +210,6 @@ This release brings a major architectural overhaul, migrating from CSV to SQLite
 **CPU Version**
 - GitHub: [SuperPicky_4.1.0_Win64_CPU.zip](https://github.com/jamesphotography/SuperPicky/releases/download/v4.1.0/SuperPicky_4.1.0_Win64_CPU.zip)
 - [百度网盘](https://pan.baidu.com/s/1krjIG3rsSbUUI4PeVUh2Iw?pwd=kd45) 提取码: kd45
-- [Google Drive](https://drive.google.com/file/d/1UHFUqGt3q-6hXYzZCeR9cUEmkniL48A4/view?usp=sharing)
+- [Google Drive](https://drive.google.com/file/d/1dYzW47KuHEH-hnkHZOnpfZwJNSsl7IkB/view?usp=sharing)
 - [夸克网盘](https://pan.quark.cn/s/462025bd8b3a)
 
