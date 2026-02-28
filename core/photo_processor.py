@@ -2629,32 +2629,6 @@ class PhotoProcessor:
             self._log(self.i18n.t("logs.cache_paths_saved", count=saved_count))
 
     def _cleanup_expired_cache(self):
-        """V4.1: 清理过期的缓存文件"""
-        # Fix: use get_advanced_config() local instance
-        days = get_advanced_config().auto_cleanup_days
-        if days <= 0:
-            return  # 0 = 永久保存
-            
-        cache_dir = os.path.join(self.dir_path, ".superpicky", "cache")
-        if not os.path.exists(cache_dir):
-            return
-            
-        self._log(self.i18n.t("logs.cleaning_expired", days=days))
-        deleted_count = 0
-        now = time.time()
-        expiry_seconds = days * 86400
-        
-        # 递归遍历缓存目录
-        for root, dirs, files in os.walk(cache_dir):
-            for filename in files:
-                file_path = os.path.join(root, filename)
-                try:
-                    mtime = os.path.getmtime(file_path)
-                    if now - mtime > expiry_seconds:
-                        os.remove(file_path)
-                        deleted_count += 1
-                except Exception:
-                    pass
-                    
-        if deleted_count > 0:
-            self._log(self.i18n.t("logs.expired_files_cleaned", count=deleted_count))
+        """V4.3: 已移除基于天数的定期清理（auto_cleanup_days 已删除）。
+        缓存保留与否由 keep_temp_files 控制，此方法保留为空操作以兼容调用方。"""
+        pass
