@@ -769,7 +769,15 @@ class PhotoProcessor:
                     if os.path.exists(f['path']) and not os.path.exists(dest):
                         shutil.move(f['path'], dest)
                         stats['moved'] += 1
-                        
+
+                        # V4.1.1: 同步更新 DB 中的 current_path，避免路径与实际位置不符
+                        if hasattr(self, 'report_db') and self.report_db:
+                            try:
+                                rel_dest = os.path.relpath(dest, self.dir_path)
+                                self.report_db.update_photo(f['prefix'], {'current_path': rel_dest})
+                            except Exception as db_e:
+                                self._log(f"    ⚠️ DB current_path update failed: {db_e}", "warning")
+
                         # 移动 sidecar 文件
                         file_base = os.path.splitext(f['path'])[0]
                         for sidecar_ext in ['.xmp', '.jpg', '.JPG']:
@@ -781,6 +789,7 @@ class PhotoProcessor:
                                     pass
                 except Exception as e:
                     self._log(f"    ⚠️ Move failed: {e}", "warning")
+
             
             stats['groups'] += 1
         

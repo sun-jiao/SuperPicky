@@ -942,6 +942,23 @@ class BirdIDDockWidget(QDockWidget):
             QComboBox::drop-down {{
                 border: none;
             }}
+            QComboBox QAbstractItemView {{
+                background-color: {COLORS['bg_elevated']};
+                border: 1px solid {COLORS['border']};
+                border-radius: 6px;
+                color: {COLORS['text_primary']};
+                selection-background-color: {COLORS['accent_dim']};
+                selection-color: {COLORS['accent']};
+                outline: none;
+            }}
+            QComboBox QAbstractItemView::item {{
+                padding: 5px 8px;
+                min-height: 22px;
+            }}
+            QComboBox QAbstractItemView::item:disabled {{
+                color: {COLORS['border']};
+                background: transparent;
+            }}
         """)
         self.country_combo.currentTextChanged.connect(self._on_country_changed)
         country_row.addWidget(self.country_combo, 1)
@@ -973,6 +990,19 @@ class BirdIDDockWidget(QDockWidget):
             }}
             QComboBox:hover {{ border-color: {COLORS['accent']}; }}
             QComboBox::drop-down {{ border: none; }}
+            QComboBox QAbstractItemView {{
+                background-color: {COLORS['bg_elevated']};
+                border: 1px solid {COLORS['border']};
+                border-radius: 6px;
+                color: {COLORS['text_primary']};
+                selection-background-color: {COLORS['accent_dim']};
+                selection-color: {COLORS['accent']};
+                outline: none;
+            }}
+            QComboBox QAbstractItemView::item {{
+                padding: 5px 8px;
+                min-height: 22px;
+            }}
         """)
         self.region_combo.currentTextChanged.connect(self._on_region_changed)
         region_row_layout.addWidget(self.region_combo, 1)

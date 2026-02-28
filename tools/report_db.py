@@ -469,6 +469,7 @@ class ReportDB:
             - is_flying: List[int]
             - bird_species_cn / bird_species_en: str
             - sort_by: filename | sharpness_desc | aesthetic_desc
+            - picked_only: bool (如果为 True，则在结果集中筛选出 adj_topiq 和 adj_sharpness 均排名前 25% 的照片)
         """
         filters = filters or {}
 
@@ -531,19 +532,40 @@ class ReportDB:
         if where_clauses:
             where_sql = "WHERE " + " AND ".join(where_clauses)
 
-        sort_by = filters.get("sort_by") or "filename"
-        if sort_by == "sharpness_desc":
-            order_sql = "ORDER BY COALESCE(adj_sharpness, head_sharp, -1e99) DESC, filename ASC"
-        elif sort_by == "aesthetic_desc":
-            order_sql = "ORDER BY COALESCE(adj_topiq, nima_score, -1e99) DESC, filename ASC"
+        # Determine initial ordering for the SQL query
+        # If picked_only is True, we'll do a post-processing sort, so initial SQL sort can be filename
+        picked_only = filters.get("picked_only", False)
+        if picked_only:
+            order_sql = "ORDER BY filename ASC" # Default sort for initial fetch
         else:
-            order_sql = "ORDER BY filename ASC"
+            sort_by = filters.get("sort_by") or "filename"
+            if sort_by == "sharpness_desc":
+                order_sql = "ORDER BY COALESCE(adj_sharpness, head_sharp, -1e99) DESC, filename ASC"
+            elif sort_by == "aesthetic_desc":
+                order_sql = "ORDER BY COALESCE(adj_topiq, nima_score, -1e99) DESC, filename ASC"
+            else:
+                order_sql = "ORDER BY filename ASC"
 
         sql = f"SELECT * FROM photos {where_sql} {order_sql}"
 
         with self._lock:
             cursor = self._conn.execute(sql, params)
-            return [dict(row) for row in cursor.fetchall()]
+            results = [dict(row) for row in cursor.fetchall()]
+
+            if picked_only and results:
+                # Sort by adj_topiq (desc) then adj_sharpness (desc)
+                # Use a stable sort by filename for ties
+                results.sort(key=lambda x: (
+                    x.get("adj_topiq", x.get("nima_score", -1e99)),
+                    x.get("adj_sharpness", x.get("head_sharp", -1e99)),
+                    x.get("filename", "")
+                ), reverse=True)
+
+                # Take the top 25%
+                num_to_keep = max(1, int(len(results) * 0.25))
+                results = results[:num_to_keep]
+
+        return results
 
     def get_statistics(self) -> dict:
         """

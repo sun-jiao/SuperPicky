@@ -205,8 +205,8 @@ class DetailPanel(QWidget):
         prev_btn = QPushButton(f"◀  {self.i18n.t('browser.prev')}")
         next_btn = QPushButton(f"{self.i18n.t('browser.next')}  ▶")
         for btn in (prev_btn, next_btn):
-            btn.setFixedHeight(28)
-            btn.setStyleSheet(self._inactive_btn_style())
+            btn.setFixedHeight(30)
+            btn.setStyleSheet(self._nav_btn_style())
         prev_btn.clicked.connect(self.prev_requested)
         next_btn.clicked.connect(self.next_requested)
         nb_layout.addWidget(prev_btn)
@@ -240,35 +240,43 @@ class DetailPanel(QWidget):
         rating_row.addStretch()
 
         dec_btn = QPushButton("▼")
-        dec_btn.setFixedSize(24, 24)
+        dec_btn.setFixedSize(28, 28)
         dec_btn.setToolTip(self.i18n.t("labels.rating_dec_tooltip"))
         dec_btn.setStyleSheet(f"""
             QPushButton {{
-                background: {COLORS['bg_card']};
+                background: {COLORS['bg_input']};
                 border: 1px solid {COLORS['border']};
-                border-radius: 4px;
-                color: {COLORS['text_secondary']};
-                font-size: 12px;
-                padding: 4px 2px;
+                border-radius: 5px;
+                color: {COLORS['text_primary']};
+                font-size: 13px;
+                padding: 2px;
             }}
-            QPushButton:hover {{ background: {COLORS['bg_input']}; }}
+            QPushButton:hover {{
+                background: {COLORS['bg_elevated']};
+                border-color: {COLORS['text_muted']};
+                color: {COLORS['warning']};
+            }}
         """)
         dec_btn.clicked.connect(self._on_rating_dec)
         rating_row.addWidget(dec_btn)
 
         inc_btn = QPushButton("▲")
-        inc_btn.setFixedSize(24, 24)
+        inc_btn.setFixedSize(28, 28)
         inc_btn.setToolTip(self.i18n.t("labels.rating_inc_tooltip"))
         inc_btn.setStyleSheet(f"""
             QPushButton {{
-                background: {COLORS['bg_card']};
-                border: 1px solid {COLORS['border']};
-                border-radius: 4px;
+                background: {COLORS['bg_input']};
+                border: 1px solid {COLORS['accent']};
+                border-radius: 5px;
                 color: {COLORS['accent']};
-                font-size: 12px;
-                padding: 4px 2px;
+                font-size: 13px;
+                padding: 2px;
             }}
-            QPushButton:hover {{ background: {COLORS['bg_input']}; }}
+            QPushButton:hover {{
+                background: {COLORS['accent_dim']};
+                color: {COLORS['accent_hover']};
+                border-color: {COLORS['accent_hover']};
+            }}
         """)
         inc_btn.clicked.connect(self._on_rating_inc)
         rating_row.addWidget(inc_btn)
@@ -514,6 +522,19 @@ class DetailPanel(QWidget):
     def _reset_copy_btn(self):
         self._copy_exif_btn.setText(self.i18n.t("browser.copy_exif"))
         self._copy_exif_btn.setStyleSheet(self._inactive_btn_style())
+
+    def _nav_btn_style(self) -> str:
+        """导航按钮（◀/▶）样式 — 比一般次级按钮更明显。"""
+        return (
+            f"QPushButton {{ background-color: {COLORS['bg_input']};"
+            f" border: 1px solid {COLORS['border']};"
+            f" border-radius: 6px;"
+            f" color: {COLORS['text_primary']};"
+            f" font-size: 12px;"
+            f" padding: 2px 8px; }}"
+            f" QPushButton:hover {{ background-color: {COLORS['bg_card']};"
+            f" border-color: {COLORS['accent']}; color: {COLORS['accent']}; }}"
+        )
 
     def _active_btn_style(self) -> str:
         return (
