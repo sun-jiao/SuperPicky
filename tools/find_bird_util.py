@@ -10,7 +10,7 @@ from .file_utils import ensure_hidden_directory
 
 def raw_to_jpeg(raw_file_path):
     filename = os.path.basename(raw_file_path)
-    file_prefix, _ = os.path.splitext(filename)
+    file_prefix, file_ext = os.path.splitext(filename)
     directory_path = os.path.dirname(raw_file_path)
     
     # V4.1.0: 使用 .superpicky/cache 目录存储临时 JPEG
@@ -30,6 +30,11 @@ def raw_to_jpeg(raw_file_path):
     if not os.path.exists(raw_file_path):
         log_message(f"ERROR, file [{filename}] cannot be found in RAW form", directory_path)
         return None
+
+    # HEIF/HIF 格式（rawpy 不支持）：用 pillow-heif 解码全分辨率图
+    heif_exts = {'.hif', '.heif', '.heic'}
+    if file_ext.lower() in heif_exts:
+        return _raw_to_jpeg_via_heif(raw_file_path, jpg_file_path, directory_path)
 
     try:
         with rawpy.imread(raw_file_path) as raw:
@@ -51,6 +56,24 @@ def raw_to_jpeg(raw_file_path):
     except Exception as e:
         log_message(f"Error occurred while converting the RAW file:{raw_file_path}, Error: {e}", directory_path)
         raise e  # 抛出异常供调用者捕获
+
+
+def _raw_to_jpeg_via_heif(raw_file_path, jpg_file_path, directory_path):
+    """使用 pillow-heif 解码 HEIF/HIF 文件并保存为 JPEG。"""
+    try:
+        import pillow_heif
+        from PIL import Image as _Image
+        heif_file = pillow_heif.read_heif(raw_file_path)
+        img = _Image.frombytes(heif_file.mode, heif_file.size, heif_file.data, "raw").convert("RGB")
+        img.save(jpg_file_path, "JPEG", quality=92)
+        log_message(f"[HEIF] pillow-heif 解码成功: {img.size[0]}x{img.size[1]}", directory_path)
+        return jpg_file_path
+    except ImportError:
+        log_message("pillow-heif 未安装，回退到 ExifTool", directory_path)
+        return _raw_to_jpeg_via_exiftool(raw_file_path, jpg_file_path, directory_path)
+    except Exception as e:
+        log_message(f"HEIF 解码失败 ({os.path.basename(raw_file_path)}): {e}", directory_path)
+        return _raw_to_jpeg_via_exiftool(raw_file_path, jpg_file_path, directory_path)
 
 
 def _raw_to_jpeg_via_exiftool(raw_file_path, jpg_file_path, directory_path):
