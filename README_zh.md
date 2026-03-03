@@ -16,8 +16,8 @@
 
 ### 🤖 多模型协作
 - **YOLO11 检测**: 精准识别照片中的鸟类位置和分割掩码
-- **SuperEyes 鸟眼**: 检测鸟眼位置和可见度，计算头部区域锐度
-- **SuperFlier 飞鸟**: 识别飞行姿态，给予飞版照片额外加分
+- **[SuperEyes 鸟眼](https://github.com/triple333sR9/SuperBirdEye)**: 检测鸟眼位置和可见度，计算头部区域锐度
+- **[SuperFlier 飞鸟](https://github.com/triple333sR9/SuperFlier)**: 识别飞行姿态，给予飞版照片额外加分
 - **TOPIQ 美学**: 评估整体画面美感、构图和光影
 
 ### ⭐ 智能评分系统 (0-3星)
@@ -156,7 +156,7 @@ python main.py
 | 角色 | 成员 | 贡献 |
 |------|------|------|
 | 开发者 | [James Yu (詹姆斯·于震)](https://github.com/jamesphotography) | 核心开发 |
-| 模型训练 | [Jordan Yu (于若君)](https://github.com/jordan-yrj) | SuperEyes · SuperFlier |
+| 模型训练 | [Jordan Yu (于若君)](https://github.com/triple333sR9) | SuperEyes · SuperFlier |
 | Windows版 | [小平](https://github.com/thp2024) | Windows移植 |
 
 ---
@@ -165,6 +165,8 @@ python main.py
 
 - [YOLO11](https://github.com/ultralytics/ultralytics) - Ultralytics 目标检测模型
 - [TOPIQ](https://github.com/chaofengc/IQA-PyTorch) - Chaofeng Chen 等人的图像质量评估模型
+- [SuperEyes (SuperBirdEye)](https://github.com/triple333sR9/SuperBirdEye) - [Jordan Yu (于若君)](https://github.com/triple333sR9) 鸟眼识别模型
+- [SuperFlier](https://github.com/triple333sR9/SuperFlier) - [Jordan Yu (于若君)](https://github.com/triple333sR9) 飞版检测模型
 - [ExifTool](https://exiftool.org/) - Phil Harvey 的 EXIF 处理工具
 
 ---

@@ -29,8 +29,8 @@ python scripts/download_models.py
 
 ### 🤖 Multi-Model Synergy
 - **YOLO11 Detection**: Precise bird detection and segmentation masks.
-- **SuperEyes**: Detects eye visibility and calculates head sharpness.
-- **SuperFlier**: Identifies flight poses for bonus points.
+- **[SuperEyes](https://github.com/triple333sR9/SuperBirdEye)**: Detects eye visibility and calculates head sharpness.
+- **[SuperFlier](https://github.com/triple333sR9/SuperFlier)**: Identifies flight poses for bonus points.
 - **TOPIQ Aesthetics**: Assesses overall image aesthetics, composition, and lighting.
 
 ### ⭐ Smart Rating System (0-3 Stars)
@@ -140,5 +140,7 @@ Open sourced under **GPL-3.0 License**.
 This project uses:
 - **YOLO11** by Ultralytics
 - **OSEA** by Sun Jiao (github.com/sun-jiao/osea)
+- **[SuperEyes (SuperBirdEye)](https://github.com/triple333sR9/SuperBirdEye)** by [Jordan Yu (于若君)](https://github.com/triple333sR9)
+- **[SuperFlier](https://github.com/triple333sR9/SuperFlier)** by [Jordan Yu (于若君)](https://github.com/triple333sR9)
 - **TOPIQ** by Chaofeng Chen et al.
 - **AviList**: AviList Core Team. 2025. AviList: The Global Avian Checklist, v2025. https://doi.org/10.2173/avilist.v2025 — Licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
